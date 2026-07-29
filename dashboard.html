@@ -12,314 +12,205 @@
 
 </head>
 
-
 <body>
-
 
 <button class="logout-floating" onclick="logout()">
     Logout
 </button>
 
-
-
 <div class="dashboard-container">
 
+    <!-- HEADER -->
 
+    <div class="header">
 
-<!-- HEADER -->
+        <img src="pcc.jpg" class="logo-side">
 
-<div class="header">
+        <div class="system-title">
 
+            <h1>SMART STORAGE</h1>
 
-<img src="pcc.jpg" class="logo-side">
+            <h2>MONITORING SYSTEM</h2>
 
+            <p>IoT Environmental Monitoring and Data Logging</p>
 
+            <p>
+                Logged in as:
+                <b id="userEmail">Loading...</b>
+            </p>
 
-<div class="system-title">
+        </div>
 
-<h1>
-SMART STORAGE
-</h1>
+        <img src="bsit.jpeg" class="logo-side">
 
-<h2>
-MONITORING SYSTEM
-</h2>
+    </div>
 
+    <!-- MAIN STATUS -->
 
-<p>
-IoT Environmental Monitoring and Data Logging
-</p>
+    <div class="status-card">
 
+        <div class="storage-icon">
+            📦
+        </div>
+
+        <h2>Storage Status</h2>
+
+        <h1 id="storageStatus">
+            Loading...
+        </h1>
+
+        <p class="online">
+            ● SYSTEM ONLINE
+        </p>
+
+    </div>
+
+    <!-- SENSOR CARDS -->
+
+    <div class="dashboard-grid">
+
+        <!-- Temperature -->
+
+        <div class="sensor-card">
+
+            <div class="sensor-icon">
+                🌡️
+            </div>
+
+            <h3>Temperature</h3>
+
+            <h1 id="temperature">
+                -- °C
+            </h1>
+
+            <p>Current Reading</p>
+
+        </div>
+
+        <!-- Humidity -->
+
+        <div class="sensor-card">
+
+            <div class="sensor-icon">
+                💧
+            </div>
+
+            <h3>Humidity</h3>
+
+            <h1 id="humidity">
+                -- %
+            </h1>
+
+            <p>Current Reading</p>
+
+        </div>
+
+        <!-- Motion -->
+
+        <div class="sensor-card">
+
+            <div class="sensor-icon">
+                🚶
+            </div>
+
+            <h3>Motion Status</h3>
+
+            <h1 id="motion">
+                Loading...
+            </h1>
+
+            <p>Area Condition</p>
+
+        </div>
+
+        <!-- System Status -->
+
+        <div class="sensor-card">
+
+            <div class="sensor-icon">
+                📊
+            </div>
+
+            <h3>System Status</h3>
+
+            <h1 id="systemStatus">
+                Loading...
+            </h1>
+
+            <p>Storage Records</p>
+
+        </div>
+
+    </div>
+
+    <!-- ALERT -->
+
+    <div class="sensor-card">
+
+        <div class="sensor-icon">
+            ⚠️
+        </div>
+
+        <h3>Alert</h3>
+
+        <h2 id="alertMessage">
+            Loading...
+        </h2>
+
+    </div>
+
+    <!-- CHART -->
+
+    <div class="chart-section">
+
+        <h2>Temperature & Humidity History</h2>
+
+        <div class="chart-box">
+
+            <canvas id="environmentChart"></canvas>
+
+        </div>
+
+    </div>
+
+    <!-- FOOTER STATUS -->
+
+    <div class="system-status">
+
+        <p>
+            System Status:
+            <b>Operational</b>
+        </p>
+
+        <p>
+            Monitoring:
+            <b>Active</b>
+        </p>
+
+        <p>
+            Last Update:
+            <b id="lastUpdate">
+                Loading...
+            </b>
+        </p>
+
+    </div>
 
 </div>
 
-
-
-<img src="bsit.jpeg" class="logo-side">
-
-
-
-</div>
-
-
-
-
-
-
-
-<!-- MAIN STATUS -->
-
-
-<div class="status-card">
-
-
-<div class="storage-icon">
-📦
-</div>
-
-
-<h2>
-Storage Status
-</h2>
-
-
-<h1>
-NORMAL
-</h1>
-
-
-<p class="online">
-● SYSTEM ONLINE
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-
-<!-- SENSOR MONITORING -->
-
-
-<div class="dashboard-grid">
-
-
-
-<div class="sensor-card">
-
-
-<div class="sensor-icon">
-🌡️
-</div>
-
-
-<h3>
-Temperature
-</h3>
-
-
-<h1 id="temperature">
---°C
-</h1>
-
-
-<p>
-Current Reading
-</p>
-
-
-</div>
-
-
-
-
-
-
-<div class="sensor-card">
-
-
-<div class="sensor-icon">
-💧
-</div>
-
-
-<h3>
-Humidity
-</h3>
-
-
-<h1 id="humidity">
---%
-</h1>
-
-
-<p>
-Current Reading
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-<div class="sensor-card">
-
-
-<div class="sensor-icon">
-🚶
-</div>
-
-
-<h3>
-Motion Status
-</h3>
-
-
-<h1 id="motion">
-    Loading...
-</h1>
-
-
-<p>
-Area Condition
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-<div class="sensor-card">
-
-
-<div class="sensor-icon">
-📊
-</div>
-
-
-<h3>
-Data Monitoring
-</h3>
-
-
-<h1 id="status">
-    Loading...
-</h1>
-
-
-<p>
-Storage Records
-</p>
-
-
-</div>
-
-
-
-
-
-</div>
-
-
-
-
-
-
-
-<!-- CHART -->
-
-
-<div class="chart-section">
-
-
-<h2>
-Temperature & Humidity History
-</h2>
-
-
-<div class="chart-box">
-
-
-<canvas id="environmentChart"></canvas>
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-<!-- SIMPLE STATUS -->
-
-
-<div class="system-status">
-
-
-<p>
-System Status:
-<b>Operational</b>
-</p>
-
-
-<p>
-Monitoring:
-<b>Active</b>
-</p>
-
-
-<p>
-Last Update:
-<b id="lastUpdate">
-    Loading...
-</b>
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-</div>
-
-
-
-
-
-
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
 
+<!-- Firebase Config -->
 <script src="firebase-config.js"></script>
 
-<script src="login.js"></script>
-
-</body>
-</html>
-
+<!-- Dashboard JS -->
+<script src="dashboard.js"></script>
 
 </body>
 
