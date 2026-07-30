@@ -6,212 +6,113 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Smart Storage Monitoring System</title>
+<title>Dashboard</title>
 
 <link rel="stylesheet" href="style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 
 <body>
 
-<button class="logout-floating" onclick="logout()">
-    Logout
+<div class="sidebar">
+
+<h2>📦 Smart Storage</h2>
+
+<a href="dashboard.html" class="active">🏠 Dashboard</a>
+<a href="history.html">📋 History</a>
+<a href="alerts.html">🚨 Alerts</a>
+<a href="reports.html">📊 Reports</a>
+<a href="settings.html">⚙️ Settings</a>
+<a href="profile.html">👤 Profile</a>
+<a href="about.html">ℹ️ About</a>
+
+<button class="logout-btn" onclick="logout()">
+Logout
 </button>
-
-<div class="dashboard-container">
-
-    <!-- HEADER -->
-
-    <div class="header">
-
-        <img src="pcc.jpg" class="logo-side">
-
-        <div class="system-title">
-
-            <h1>SMART STORAGE</h1>
-
-            <h2>MONITORING SYSTEM</h2>
-
-            <p>IoT Environmental Monitoring and Data Logging</p>
-
-            <p>
-                Logged in as:
-                <b id="userEmail">Loading...</b>
-            </p>
-
-        </div>
-
-        <img src="bsit.jpeg" class="logo-side">
-
-    </div>
-
-    <!-- MAIN STATUS -->
-
-    <div class="status-card">
-
-        <div class="storage-icon">
-            📦
-        </div>
-
-        <h2>Storage Status</h2>
-
-        <h1 id="storageStatus">
-            Loading...
-        </h1>
-
-        <p class="online">
-            ● SYSTEM ONLINE
-        </p>
-
-    </div>
-
-    <!-- SENSOR CARDS -->
-
-    <div class="dashboard-grid">
-
-        <!-- Temperature -->
-
-        <div class="sensor-card">
-
-            <div class="sensor-icon">
-                🌡️
-            </div>
-
-            <h3>Temperature</h3>
-
-            <h1 id="temperature">
-                -- °C
-            </h1>
-
-            <p>Current Reading</p>
-
-        </div>
-
-        <!-- Humidity -->
-
-        <div class="sensor-card">
-
-            <div class="sensor-icon">
-                💧
-            </div>
-
-            <h3>Humidity</h3>
-
-            <h1 id="humidity">
-                -- %
-            </h1>
-
-            <p>Current Reading</p>
-
-        </div>
-
-        <!-- Motion -->
-
-        <div class="sensor-card">
-
-            <div class="sensor-icon">
-                🚶
-            </div>
-
-            <h3>Motion Status</h3>
-
-            <h1 id="motion">
-                Loading...
-            </h1>
-
-            <p>Area Condition</p>
-
-        </div>
-
-        <!-- System Status -->
-
-        <div class="sensor-card">
-
-            <div class="sensor-icon">
-                📊
-            </div>
-
-            <h3>System Status</h3>
-
-            <h1 id="systemStatus">
-                Loading...
-            </h1>
-
-            <p>Storage Records</p>
-
-        </div>
-
-    </div>
-
-    <!-- ALERT -->
-
-    <div class="sensor-card">
-
-        <div class="sensor-icon">
-            ⚠️
-        </div>
-
-        <h3>Alert</h3>
-
-        <h2 id="alertMessage">
-            Loading...
-        </h2>
-
-    </div>
-
-    <!-- CHART -->
-
-    <div class="chart-section">
-
-        <h2>Temperature & Humidity History</h2>
-
-        <div class="chart-box">
-
-            <canvas id="environmentChart"></canvas>
-
-        </div>
-
-    </div>
-
-    <!-- FOOTER STATUS -->
-
-    <div class="system-status">
-
-        <p>
-            System Status:
-            <b>Operational</b>
-        </p>
-
-        <p>
-            Monitoring:
-            <b>Active</b>
-        </p>
-
-        <p>
-            Last Update:
-            <b id="lastUpdate">
-                Loading...
-            </b>
-        </p>
-
-    </div>
 
 </div>
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="main-content">
 
-<!-- Firebase -->
+<div class="top-bar">
+
+<h1>Dashboard</h1>
+
+<div class="user-card">
+
+Logged in as
+
+<b id="userEmail">Loading...</b>
+
+</div>
+
+</div>
+
+<div class="card-grid">
+
+<div class="card">
+
+<h3>🌡 Temperature</h3>
+
+<h1 id="temperature">-- °C</h1>
+
+<p>Waiting for ESP32...</p>
+
+</div>
+
+<div class="card">
+
+<h3>💧 Humidity</h3>
+
+<h1 id="humidity">-- %</h1>
+
+<p>Waiting for ESP32...</p>
+
+</div>
+
+<div class="card">
+
+<h3>🚶 Motion</h3>
+
+<h1 id="motion">Waiting...</h1>
+
+<p>PIR Sensor</p>
+
+</div>
+
+</div>
+
+<div class="status-card">
+
+<h2>Storage Status</h2>
+
+<h1 id="storageStatus">Waiting for ESP32...</h1>
+
+<p id="lastUpdate">
+No data received yet.
+</p>
+
+</div>
+
+<div class="chart-card">
+
+<h2>Live Environment</h2>
+
+<canvas id="environmentChart"></canvas>
+
+</div>
+
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
 
-<!-- Firebase Config -->
 <script src="firebase-config.js"></script>
 
-<!-- Dashboard JS -->
 <script src="dashboard.js"></script>
 
 </body>
-
 </html>
