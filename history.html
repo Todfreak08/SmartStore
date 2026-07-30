@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Sensor History</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<h2>📦 Smart Storage</h2>
+
+<a href="dashboard.html">🏠 Dashboard</a>
+<a href="history.html" class="active">📋 History</a>
+<a href="alerts.html">🚨 Alerts</a>
+<a href="reports.html">📊 Reports</a>
+<a href="settings.html">⚙️ Settings</a>
+<a href="profile.html">👤 Profile</a>
+<a href="about.html">ℹ️ About</a>
+
+<button class="logout-btn" onclick="logout()">
+Logout
+</button>
+
+</div>
+
+<div class="main-content">
+
+<h1>Sensor History</h1>
+
+<div class="table-card">
+
+<input
+type="text"
+id="searchInput"
+placeholder="Search by date or status..."
+onkeyup="searchTable()">
+
+<table id="historyTable">
+
+<thead>
+
+<tr>
+
+<th>Date & Time</th>
+<th>Temperature</th>
+<th>Humidity</th>
+<th>Motion</th>
+<th>Status</th>
+
+</tr>
+
+</thead>
+
+<tbody id="historyBody">
+
+<tr>
+
+<td colspan="5" class="empty-message">
+
+Waiting for ESP32 to send history...
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
+
+<script src="firebase-config.js"></script>
+
+<script src="history.js"></script>
+
+</body>
+</html>

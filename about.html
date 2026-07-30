@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>About</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<h2>📦 Smart Storage</h2>
+
+<a href="dashboard.html">🏠 Dashboard</a>
+<a href="history.html">📋 History</a>
+<a href="alerts.html">🚨 Alerts</a>
+<a href="reports.html">📊 Reports</a>
+<a href="settings.html">⚙️ Settings</a>
+<a href="profile.html">👤 Profile</a>
+<a href="about.html" class="active">ℹ️ About</a>
+
+<button class="logout-btn" onclick="logout()">Logout</button>
+
+</div>
+
+<div class="main-content">
+
+<div class="about-card">
+
+<h1>About the System</h1>
+
+<br>
+
+<p>
+
+The Smart Storage Monitoring System is an IoT-based monitoring platform developed to monitor environmental conditions inside a storage area using an ESP32 microcontroller, DHT11 temperature and humidity sensor, PIR motion sensor, and Firebase Realtime Database.
+
+</p>
+
+<br>
+
+<p>
+
+The system provides real-time monitoring, automatic history logging, alert notifications, and report generation through a web-based dashboard.
+
+</p>
+
+<br>
+
+<p>
+
+Developed for BSIT Capstone Project.
+
+</p>
+
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+
+<script src="firebase-config.js"></script>
+
+<script src="about.js"></script>
+
+</body>
+
+</html>

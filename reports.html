@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Reports</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<h2>📦 Smart Storage</h2>
+
+<a href="dashboard.html">🏠 Dashboard</a>
+<a href="history.html">📋 History</a>
+<a href="alerts.html">🚨 Alerts</a>
+<a href="reports.html" class="active">📊 Reports</a>
+<a href="settings.html">⚙️ Settings</a>
+<a href="profile.html">👤 Profile</a>
+<a href="about.html">ℹ️ About</a>
+
+<button class="logout-btn" onclick="logout()">
+Logout
+</button>
+
+</div>
+
+<div class="main-content">
+
+<h1>System Reports</h1>
+
+<div class="card-grid">
+
+<div class="card">
+<h3>Total Records</h3>
+<h1 id="totalRecords">--</h1>
+</div>
+
+<div class="card">
+<h3>Average Temperature</h3>
+<h1 id="avgTemp">-- °C</h1>
+</div>
+
+<div class="card">
+<h3>Average Humidity</h3>
+<h1 id="avgHumidity">-- %</h1>
+</div>
+
+<div class="card">
+<h3>Motion Events</h3>
+<h1 id="motionCount">--</h1>
+</div>
+
+</div>
+
+<div class="report-card">
+
+<h2>Latest Reading</h2>
+
+<p id="latestReading">
+
+Waiting for ESP32...
+
+</p>
+
+</div>
+
+<div class="report-card">
+
+<button class="save-btn" onclick="exportCSV()">
+
+Export Report (CSV)
+
+</button>
+
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
+
+<script src="firebase-config.js"></script>
+<script src="reports.js"></script>
+
+</body>
+
+</html>
