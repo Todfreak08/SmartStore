@@ -1,92 +1,224 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
 
+```
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
 <title>Sensor History</title>
 
 <link rel="stylesheet" href="style.css">
+```
 
 </head>
 
 <body>
 
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
+
 <div class="sidebar">
 
+```
 <h2>📦 Smart Storage</h2>
 
-<a href="dashboard.html">🏠 Dashboard</a>
-<a href="history.html" class="active">📋 History</a>
-<a href="alerts.html">🚨 Alerts</a>
-<a href="reports.html">📊 Reports</a>
-<a href="settings.html">⚙️ Settings</a>
-<a href="profile.html">👤 Profile</a>
-<a href="about.html">ℹ️ About</a>
 
-<button class="logout-btn" onclick="logout()">
-Logout
+<a href="dashboard.html">
+    🏠 Dashboard
+</a>
+
+
+<a
+    href="history.html"
+    class="active"
+>
+    📋 History
+</a>
+
+
+<a href="alerts.html">
+    🚨 Alerts
+</a>
+
+
+<a href="reports.html">
+    📊 Reports
+</a>
+
+
+<a href="settings.html">
+    ⚙️ Settings
+</a>
+
+
+<a href="profile.html">
+    👤 Profile
+</a>
+
+
+<a href="about.html">
+    ℹ️ About
+</a>
+
+
+<button
+    class="logout-btn"
+    onclick="logout()"
+>
+    Logout
 </button>
+```
 
 </div>
+
+<!-- =====================================================
+     MAIN CONTENT
+===================================================== -->
 
 <div class="main-content">
 
-<h1>Sensor History</h1>
+```
+<div class="top-bar">
+
+    <div>
+
+        <h1>
+            Sensor History
+        </h1>
+
+        <p style="color:#666; margin-top:5px;">
+            Environmental data and device activity
+        </p>
+
+    </div>
+
+
+    <div class="user-card">
+
+        Logged in as
+
+        <b id="userEmail">
+            Loading...
+        </b>
+
+    </div>
+
+</div>
+
+
+
+<!-- =================================================
+     HISTORY TABLE
+================================================== -->
 
 <div class="table-card">
 
-<input
-type="text"
-id="searchInput"
-placeholder="Search by date or status..."
-onkeyup="searchTable()">
 
-<table id="historyTable">
+    <input
+        type="text"
+        id="searchInput"
+        placeholder="Search by date, status, source, or device..."
+        onkeyup="searchTable()"
+    >
 
-<thead>
 
-<tr>
+    <div style="overflow-x:auto;">
 
-<th>Date & Time</th>
-<th>Temperature</th>
-<th>Humidity</th>
-<th>Motion</th>
-<th>Status</th>
+        <table>
 
-</tr>
+            <thead>
 
-</thead>
+                <tr>
 
-<tbody id="historyBody">
+                    <th>
+                        Date & Time
+                    </th>
 
-<tr>
+                    <th>
+                        Temperature
+                    </th>
 
-<td colspan="5" class="empty-message">
+                    <th>
+                        Humidity
+                    </th>
 
-Waiting for ESP32 to send history...
+                    <th>
+                        Motion
+                    </th>
 
-</td>
+                    <th>
+                        Status
+                    </th>
 
-</tr>
+                    <th>
+                        Device
+                    </th>
 
-</tbody>
+                    <th>
+                        Source
+                    </th>
 
-</table>
+                </tr>
+
+            </thead>
+
+
+            <tbody id="historyBody">
+
+                <tr>
+
+                    <td
+                        colspan="7"
+                        class="empty-message"
+                    >
+
+                        Loading Firebase history...
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+```
 
 </div>
 
-</div>
+<!-- =====================================================
+     FIREBASE
+===================================================== -->
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
 
+<!-- =====================================================
+     FIREBASE CONFIG
+===================================================== -->
+
 <script src="firebase-config.js"></script>
+
+<!-- =====================================================
+     HISTORY JAVASCRIPT
+===================================================== -->
 
 <script src="history.js"></script>
 
 </body>
+
 </html>
