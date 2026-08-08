@@ -1,505 +1,1322 @@
-<!DOCTYPE html>
-<html lang="en">
+// ==========================================================
+// SMART STORAGE MONITORING SYSTEM
+// COMPLETE UPDATED DASHBOARD.JS
+// Firebase Realtime Database
+// ==========================================================
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Smart Storage Monitoring System</title>
+// ==========================================================
+// AUTHENTICATION
+// ==========================================================
 
-    <link rel="stylesheet" href="style.css">
+auth.onAuthStateChanged((user) => {
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
+    if (!user) {
 
-<body>
+        window.location.href = "index.html";
 
-    <!-- =========================
-         SIDEBAR
-    ========================== -->
+        return;
+    }
 
-    <div class="sidebar">
 
-        <h2>📦 Smart Storage</h2>
+    const userEmail =
+        document.getElementById("userEmail");
 
-        <a href="dashboard.html" class="active">
-            🏠 Dashboard
-        </a>
 
-        <a href="history.html">
-            📋 History
-        </a>
+    if (userEmail) {
 
-        <a href="alerts.html">
-            🚨 Alerts
-        </a>
+        userEmail.innerHTML =
+            user.email;
 
-        <a href="reports.html">
-            📊 Reports
-        </a>
+    }
 
-        <a href="settings.html">
-            ⚙️ Settings
-        </a>
+});
 
-        <a href="profile.html">
-            👤 Profile
-        </a>
 
-        <a href="about.html">
-            ℹ️ About
-        </a>
+// ==========================================================
+// LOGOUT
+// ==========================================================
 
-        <button class="logout-btn" onclick="logout()">
-            Logout
-        </button>
+function logout() {
 
-    </div>
+    auth.signOut()
 
+        .then(() => {
 
-    <!-- =========================
-         MAIN CONTENT
-    ========================== -->
+            window.location.href =
+                "index.html";
 
-    <div class="main-content">
+        })
 
-        <!-- TOP BAR -->
+        .catch((error) => {
 
-        <div class="top-bar">
+            console.error(
+                "Logout error:",
+                error
+            );
 
-            <h1>Dashboard</h1>
+            alert(
+                "Logout failed: " +
+                error.message
+            );
 
-            <div class="user-card">
+        });
 
-                Logged in as
+}
 
-                <b id="userEmail">
-                    Loading...
-                </b>
 
-            </div>
+// ==========================================================
+// FIREBASE CONNECTION STATUS
+// ==========================================================
 
-        </div>
+const firebaseStatus =
+    document.getElementById(
+        "firebaseStatus"
+    );
 
 
-        <!-- =========================
-             ENVIRONMENT CARDS
-        ========================== -->
+function firebaseConnected() {
 
-        <div class="card-grid">
+    if (!firebaseStatus) return;
 
-            <!-- TEMPERATURE -->
+    firebaseStatus.innerHTML =
+        "● Connected";
 
-            <div class="card">
+    firebaseStatus.classList.remove(
+        "firebase-error"
+    );
 
-                <h3>🌡 Temperature</h3>
+    firebaseStatus.classList.add(
+        "firebase-connected"
+    );
 
-                <h1 id="temperature">
-                    -- °C
-                </h1>
+}
 
-                <p id="temperatureSource">
-                    Waiting for data...
-                </p>
 
-            </div>
+function firebaseError() {
 
+    if (!firebaseStatus) return;
 
-            <!-- HUMIDITY -->
+    firebaseStatus.innerHTML =
+        "● Connection Error";
 
-            <div class="card">
+    firebaseStatus.classList.remove(
+        "firebase-connected"
+    );
 
-                <h3>💧 Humidity</h3>
+    firebaseStatus.classList.add(
+        "firebase-error"
+    );
 
-                <h1 id="humidity">
-                    -- %
-                </h1>
+}
 
-                <p id="humiditySource">
-                    Waiting for data...
-                </p>
 
-            </div>
+// ==========================================================
+// HELPER
+// ==========================================================
 
+function setText(
+    id,
+    value
+) {
 
-            <!-- MOTION -->
+    const element =
+        document.getElementById(id);
 
-            <div class="card">
 
-                <h3>🚶 Motion</h3>
+    if (element) {
 
-                <h1 id="motion">
-                    Waiting...
-                </h1>
+        element.innerHTML =
+            value;
 
-                <p>
-                    PIR Sensor / Manual
-                </p>
+    }
 
-            </div>
+}
 
-        </div>
 
+// ==========================================================
+// CHART DATA
+// ==========================================================
 
-        <!-- =========================
-             STORAGE STATUS
-        ========================== -->
+const labels = [];
 
-        <div class="status-card">
+const temperatureData = [];
 
-            <h2>Storage Status</h2>
+const humidityData = [];
 
-            <h1 id="storageStatus">
-                Waiting for data...
-            </h1>
+let environmentChart = null;
 
-            <p id="lastUpdate">
-                No data received yet.
-            </p>
 
-        </div>
+const chartCanvas =
+    document.getElementById(
+        "environmentChart"
+    );
 
 
-        <!-- =========================
-             MANUAL DATA ENTRY
-        ========================== -->
+if (chartCanvas) {
 
-        <div class="chart-card">
+    const ctx =
+        chartCanvas.getContext("2d");
 
-            <h2>📝 Manual Data Entry</h2>
 
-            <p>
-                Enter storage environmental data manually.
-                The information will be saved directly to Firebase.
-            </p>
+    environmentChart =
+        new Chart(
+            ctx,
+            {
 
-            <div class="manual-form">
+                type: "line",
 
-                <!-- TEMPERATURE -->
+                data: {
 
-                <div class="input-group">
+                    labels: labels,
 
-                    <label for="manualTemperature">
-                        Temperature (°C)
-                    </label>
+                    datasets: [
 
-                    <input
-                        type="number"
-                        id="manualTemperature"
-                        placeholder="Example: 28.5"
-                        step="0.1">
+                        {
 
-                </div>
+                            label:
+                                "Temperature (°C)",
 
+                            data:
+                                temperatureData,
 
-                <!-- HUMIDITY -->
+                            borderWidth: 2,
 
-                <div class="input-group">
+                            tension: 0.3,
 
-                    <label for="manualHumidity">
-                        Humidity (%)
-                    </label>
+                            fill: false
 
-                    <input
-                        type="number"
-                        id="manualHumidity"
-                        placeholder="Example: 65"
-                        min="0"
-                        max="100"
-                        step="0.1">
+                        },
 
-                </div>
+                        {
 
+                            label:
+                                "Humidity (%)",
 
-                <!-- MOTION -->
+                            data:
+                                humidityData,
 
-                <div class="input-group">
+                            borderWidth: 2,
 
-                    <label for="manualMotion">
-                        Motion
-                    </label>
+                            tension: 0.3,
 
-                    <select id="manualMotion">
+                            fill: false
 
-                        <option value="false">
-                            No Motion
-                        </option>
+                        }
 
-                        <option value="true">
-                            Motion Detected
-                        </option>
+                    ]
 
-                    </select>
+                },
 
-                </div>
 
+                options: {
 
-                <button
-                    class="login-btn"
-                    type="button"
-                    onclick="saveManualData()">
+                    responsive: true,
 
-                    💾 SAVE DATA
+                    maintainAspectRatio: true,
 
-                </button>
+                    interaction: {
 
-                <p id="manualMessage"></p>
+                        mode: "index",
 
-            </div>
+                        intersect: false
 
-        </div>
+                    },
 
+                    scales: {
 
-        <!-- =========================
-             DEVICE CONTROLS
-        ========================== -->
+                        y: {
 
-        <div class="chart-card">
+                            beginAtZero: false
 
-            <h2>🎛 Device Controls</h2>
+                        }
 
-            <p>
-                Changes made to these switches are automatically
-                saved to Firebase Realtime Database.
-            </p>
+                    }
 
+                }
 
-            <!-- LIGHT -->
+            }
+        );
 
-            <div class="control-row">
+}
 
-                <div class="control-info">
 
-                    <span class="control-icon">
-                        💡
-                    </span>
+// ==========================================================
+// UPDATE DASHBOARD
+// ==========================================================
 
-                    <div>
+function updateDashboard(data) {
 
-                        <strong>Light</strong>
+    if (!data) {
 
-                        <small id="lightStatus">
-                            OFF
-                        </small>
+        setText(
+            "temperature",
+            "-- °C"
+        );
 
-                    </div>
+        setText(
+            "humidity",
+            "-- %"
+        );
 
-                </div>
+        setText(
+            "motion",
+            "Waiting..."
+        );
 
-                <label class="switch">
+        setText(
+            "storageStatus",
+            "Waiting for data..."
+        );
 
-                    <input
-                        type="checkbox"
-                        id="lightSwitch"
-                        onchange="updateDeviceSwitch('light', this.checked)">
+        setText(
+            "lastUpdate",
+            "No data received yet."
+        );
 
-                    <span class="slider"></span>
+        return;
 
-                </label>
+    }
 
-            </div>
 
+    // ------------------------------------------------------
+    // TEMPERATURE
+    // ------------------------------------------------------
 
-            <!-- FAN -->
+    const temperature =
+        data.temperature !== undefined &&
+        data.temperature !== null
+            ? Number(data.temperature)
+            : null;
 
-            <div class="control-row">
 
-                <div class="control-info">
+    // ------------------------------------------------------
+    // HUMIDITY
+    // ------------------------------------------------------
 
-                    <span class="control-icon">
-                        🌀
-                    </span>
+    const humidity =
+        data.humidity !== undefined &&
+        data.humidity !== null
+            ? Number(data.humidity)
+            : null;
 
-                    <div>
 
-                        <strong>Fan</strong>
+    // ------------------------------------------------------
+    // MOTION
+    // ------------------------------------------------------
 
-                        <small id="fanStatus">
-                            OFF
-                        </small>
+    let motion =
+        data.motion;
 
-                    </div>
 
-                </div>
+    if (motion === true) {
 
-                <label class="switch">
+        motion =
+            "Detected";
 
-                    <input
-                        type="checkbox"
-                        id="fanSwitch"
-                        onchange="updateDeviceSwitch('fan', this.checked)">
+    }
 
-                    <span class="slider"></span>
+    else if (motion === false) {
 
-                </label>
+        motion =
+            "No Motion";
 
-            </div>
+    }
 
+    else if (
+        motion === undefined ||
+        motion === null
+    ) {
 
-            <!-- STORAGE DOOR -->
+        motion =
+            "Waiting...";
 
-            <div class="control-row">
+    }
 
-                <div class="control-info">
 
-                    <span class="control-icon">
-                        🚪
-                    </span>
+    // ------------------------------------------------------
+    // STATUS
+    // ------------------------------------------------------
 
-                    <div>
+    const status =
+        data.status ??
+        "NORMAL";
 
-                        <strong>Storage Door</strong>
 
-                        <small id="doorStatus">
-                            CLOSED
-                        </small>
+    // ------------------------------------------------------
+    // LAST UPDATE
+    // ------------------------------------------------------
 
-                    </div>
+    const lastUpdate =
+        data.lastUpdate ??
+        data.updatedAt ??
+        "Unknown";
 
-                </div>
 
-                <label class="switch">
+    // ------------------------------------------------------
+    // DISPLAY
+    // ------------------------------------------------------
 
-                    <input
-                        type="checkbox"
-                        id="doorSwitch"
-                        onchange="updateDeviceSwitch('door', this.checked)">
+    setText(
+        "temperature",
 
-                    <span class="slider"></span>
+        temperature !== null &&
+        !isNaN(temperature)
 
-                </label>
+            ? temperature + " °C"
 
-            </div>
+            : "-- °C"
+    );
 
 
-            <!-- ALARM -->
+    setText(
+        "humidity",
 
-            <div class="control-row">
+        humidity !== null &&
+        !isNaN(humidity)
 
-                <div class="control-info">
+            ? humidity + " %"
 
-                    <span class="control-icon">
-                        🚨
-                    </span>
+            : "-- %"
+    );
 
-                    <div>
 
-                        <strong>Alarm</strong>
+    setText(
+        "motion",
+        motion
+    );
 
-                        <small id="alarmStatus">
-                            OFF
-                        </small>
 
-                    </div>
+    setText(
+        "storageStatus",
+        status
+    );
 
-                </div>
 
-                <label class="switch">
+    setText(
+        "lastUpdate",
 
-                    <input
-                        type="checkbox"
-                        id="alarmSwitch"
-                        onchange="updateDeviceSwitch('alarm', this.checked)">
+        "Last Update: " +
+        lastUpdate
+    );
 
-                    <span class="slider"></span>
 
-                </label>
+    // ------------------------------------------------------
+    // DATA SOURCE
+    // ------------------------------------------------------
 
-            </div>
+    setText(
+        "temperatureSource",
 
+        data.source
+            ? "Source: " + data.source
+            : "Environmental Data"
+    );
 
-            <!-- MANUAL MOTION -->
 
-            <div class="control-row">
+    setText(
+        "humiditySource",
 
-                <div class="control-info">
+        data.source
+            ? "Source: " + data.source
+            : "Environmental Data"
+    );
 
-                    <span class="control-icon">
-                        🚶
-                    </span>
 
-                    <div>
+    // ------------------------------------------------------
+    // SWITCHES
+    // ------------------------------------------------------
 
-                        <strong>Motion Sensor</strong>
+    loadSwitches(data);
 
-                        <small id="motionSwitchStatus">
-                            OFF
-                        </small>
 
-                    </div>
+    // ------------------------------------------------------
+    // CHART
+    // ------------------------------------------------------
 
-                </div>
+    if (
 
-                <label class="switch">
+        environmentChart &&
 
-                    <input
-                        type="checkbox"
-                        id="motionSwitch"
-                        onchange="updateDeviceSwitch('motion', this.checked)">
+        temperature !== null &&
 
-                    <span class="slider"></span>
+        humidity !== null &&
 
-                </label>
+        !isNaN(temperature) &&
 
-            </div>
+        !isNaN(humidity)
 
-        </div>
+    ) {
 
+        labels.push(
+            new Date()
+                .toLocaleTimeString()
+        );
 
-        <!-- =========================
-             LIVE CHART
-        ========================== -->
 
-        <div class="chart-card">
+        temperatureData.push(
+            temperature
+        );
 
-            <h2>📈 Live Environment</h2>
 
-            <canvas id="environmentChart"></canvas>
+        humidityData.push(
+            humidity
+        );
 
-        </div>
 
+        // Keep last 15 records
 
-        <!-- =========================
-             DATABASE CONNECTION STATUS
-        ========================== -->
+        if (labels.length > 15) {
 
-        <div class="status-card">
+            labels.shift();
 
-            <h2>🔥 Firebase Connection</h2>
+            temperatureData.shift();
 
-            <h3 id="firebaseStatus">
-                Connecting...
-            </h3>
+            humidityData.shift();
 
-            <p>
-                Real-time database synchronization
-            </p>
+        }
 
-        </div>
 
-    </div>
+        environmentChart.update();
 
+    }
 
-    <!-- =========================
-         FIREBASE
-    ========================== -->
+}
 
-    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 
-    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+// ==========================================================
+// FIREBASE MAIN DATA LISTENER
+// ==========================================================
 
-    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
+database
+    .ref("SmartStorage")
+    .on(
 
+        "value",
 
-    <!-- YOUR FIREBASE CONFIG -->
+        (snapshot) => {
 
-    <script src="firebase-config.js"></script>
+            firebaseConnected();
 
 
-    <!-- DASHBOARD SCRIPT -->
+            if (!snapshot.exists()) {
 
-    <script src="dashboard.js"></script>
+                updateDashboard(
+                    null
+                );
 
-</body>
+                return;
 
-</html>
+            }
+
+
+            const data =
+                snapshot.val();
+
+
+            // ------------------------------------------------
+            // SUPPORT CURRENT STRUCTURE
+            // ------------------------------------------------
+
+            let dashboardData =
+                data;
+
+
+            if (
+
+                data.current &&
+
+                typeof data.current ===
+                    "object"
+
+            ) {
+
+                dashboardData = {
+
+                    ...data,
+
+                    ...data.current
+
+                };
+
+            }
+
+
+            updateDashboard(
+                dashboardData
+            );
+
+        },
+
+
+        (error) => {
+
+            console.error(
+                "Firebase listener error:",
+                error
+            );
+
+            firebaseError();
+
+        }
+
+    );
+
+
+// ==========================================================
+// MANUAL DATA ENTRY
+// ==========================================================
+
+function saveManualData() {
+
+    const temperatureInput =
+        document.getElementById(
+            "manualTemperature"
+        );
+
+
+    const humidityInput =
+        document.getElementById(
+            "manualHumidity"
+        );
+
+
+    const motionInput =
+        document.getElementById(
+            "manualMotion"
+        );
+
+
+    const message =
+        document.getElementById(
+            "manualMessage"
+        );
+
+
+    // ------------------------------------------------------
+    // CHECK FORM
+    // ------------------------------------------------------
+
+    if (
+
+        !temperatureInput ||
+
+        !humidityInput ||
+
+        !motionInput
+
+    ) {
+
+        console.error(
+            "Manual form elements not found."
+        );
+
+        return;
+
+    }
+
+
+    // ------------------------------------------------------
+    // GET VALUES
+    // ------------------------------------------------------
+
+    const temperature =
+        parseFloat(
+            temperatureInput.value
+        );
+
+
+    const humidity =
+        parseFloat(
+            humidityInput.value
+        );
+
+
+    const motion =
+        motionInput.value ===
+        "true";
+
+
+    // ------------------------------------------------------
+    // VALIDATION
+    // ------------------------------------------------------
+
+    if (isNaN(temperature)) {
+
+        showManualMessage(
+            "❌ Please enter a temperature.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (
+
+        isNaN(humidity) ||
+
+        humidity < 0 ||
+
+        humidity > 100
+
+    ) {
+
+        showManualMessage(
+            "❌ Humidity must be between 0 and 100.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    // ------------------------------------------------------
+    // TIME
+    // ------------------------------------------------------
+
+    const now =
+        new Date();
+
+
+    const timestamp =
+        now.toLocaleString();
+
+
+    // ------------------------------------------------------
+    // AUTOMATIC STATUS
+    // ------------------------------------------------------
+
+    let status =
+        "NORMAL";
+
+
+    if (
+
+        temperature >= 35 ||
+
+        humidity >= 80
+
+    ) {
+
+        status =
+            "WARNING";
+
+    }
+
+
+    if (
+
+        temperature >= 40 ||
+
+        humidity >= 90
+
+    ) {
+
+        status =
+            "DANGER";
+
+    }
+
+
+    // ------------------------------------------------------
+    // DATA
+    // ------------------------------------------------------
+
+    const manualData = {
+
+        temperature:
+            temperature,
+
+        humidity:
+            humidity,
+
+        motion:
+            motion,
+
+        status:
+            status,
+
+        lastUpdate:
+            timestamp,
+
+        source:
+            "Manual Entry",
+
+        updatedAt:
+            firebase.database
+                .ServerValue
+                .TIMESTAMP
+
+    };
+
+
+    console.log(
+        "Saving manual data:",
+        manualData
+    );
+
+
+    // ------------------------------------------------------
+    // SAVE CURRENT DATA
+    // ------------------------------------------------------
+
+    database
+        .ref("SmartStorage")
+        .update(manualData)
+
+        .then(() => {
+
+            console.log(
+                "Main SmartStorage updated."
+            );
+
+
+            // ----------------------------------------------
+            // SAVE CURRENT COPY
+            // ----------------------------------------------
+
+            return database
+                .ref(
+                    "SmartStorage/current"
+                )
+                .set(manualData);
+
+        })
+
+
+        .then(() => {
+
+            console.log(
+                "Current data updated."
+            );
+
+
+            // ----------------------------------------------
+            // SAVE HISTORY
+            // ----------------------------------------------
+
+            return database
+                .ref(
+                    "SmartStorage/history"
+                )
+                .push({
+
+                    temperature:
+                        temperature,
+
+                    humidity:
+                        humidity,
+
+                    motion:
+                        motion,
+
+                    status:
+                        status,
+
+                    source:
+                        "Manual Entry",
+
+                    timestamp:
+                        timestamp,
+
+                    createdAt:
+                        firebase.database
+                            .ServerValue
+                            .TIMESTAMP
+
+                });
+
+        })
+
+
+        .then(() => {
+
+            console.log(
+                "History successfully saved."
+            );
+
+
+            // ----------------------------------------------
+            // UPDATE DASHBOARD
+            // ----------------------------------------------
+
+            updateDashboard(
+                manualData
+            );
+
+
+            // ----------------------------------------------
+            // SUCCESS MESSAGE
+            // ----------------------------------------------
+
+            showManualMessage(
+                "✓ Data successfully saved to Firebase!",
+                "success"
+            );
+
+
+            // ----------------------------------------------
+            // CLEAR FORM
+            // ----------------------------------------------
+
+            temperatureInput.value =
+                "";
+
+            humidityInput.value =
+                "";
+
+            motionInput.value =
+                "false";
+
+
+        })
+
+
+        .catch((error) => {
+
+            console.error(
+                "Firebase save error:",
+                error
+            );
+
+
+            showManualMessage(
+
+                "❌ Firebase Error: " +
+                error.message,
+
+                "error"
+
+            );
+
+        });
+
+}
+
+
+// ==========================================================
+// MANUAL MESSAGE
+// ==========================================================
+
+function showManualMessage(
+    text,
+    type
+) {
+
+    const message =
+        document.getElementById(
+            "manualMessage"
+        );
+
+
+    if (!message) return;
+
+
+    message.innerHTML =
+        text;
+
+
+    if (type === "success") {
+
+        message.style.color =
+            "#28a745";
+
+    }
+
+    else {
+
+        message.style.color =
+            "#dc3545";
+
+    }
+
+
+    setTimeout(() => {
+
+        message.innerHTML =
+            "";
+
+    }, 5000);
+
+}
+
+
+// ==========================================================
+// DEVICE SWITCH CONTROL
+// ==========================================================
+
+function updateDeviceSwitch(
+    device,
+    state
+) {
+
+    if (!device) {
+
+        return;
+
+    }
+
+
+    const switchState =
+        Boolean(state);
+
+
+    const timestamp =
+        new Date()
+            .toLocaleString();
+
+
+    // ------------------------------------------------------
+    // DATA
+    // ------------------------------------------------------
+
+    const switchData = {};
+
+
+    switchData[device] =
+        switchState;
+
+
+    switchData.lastUpdate =
+        timestamp;
+
+
+    switchData.source =
+        "Manual Control";
+
+
+    switchData.updatedAt =
+        firebase.database
+            .ServerValue
+            .TIMESTAMP;
+
+
+    console.log(
+        "Updating switch:",
+        device,
+        switchState
+    );
+
+
+    // ------------------------------------------------------
+    // SAVE TO SMART STORAGE
+    // ------------------------------------------------------
+
+    database
+        .ref("SmartStorage")
+        .update(switchData)
+
+        .then(() => {
+
+            console.log(
+                device +
+                " saved to SmartStorage."
+            );
+
+
+            // ----------------------------------------------
+            // SAVE CURRENT COPY
+            // ----------------------------------------------
+
+            return database
+                .ref(
+                    "SmartStorage/current"
+                )
+                .update(switchData);
+
+        })
+
+
+        .then(() => {
+
+            // ----------------------------------------------
+            // SAVE HISTORY
+            // ----------------------------------------------
+
+            return database
+                .ref(
+                    "SmartStorage/history"
+                )
+                .push({
+
+                    device:
+                        device,
+
+                    state:
+                        switchState,
+
+                    source:
+                        "Manual Control",
+
+                    timestamp:
+                        timestamp,
+
+                    createdAt:
+                        firebase.database
+                            .ServerValue
+                            .TIMESTAMP
+
+                });
+
+        })
+
+
+        .then(() => {
+
+            console.log(
+                "Switch saved successfully:",
+                device,
+                switchState
+            );
+
+
+            // ----------------------------------------------
+            // UPDATE STATUS TEXT
+            // ----------------------------------------------
+
+            updateSwitchStatusText(
+                device,
+                switchState
+            );
+
+        })
+
+
+        .catch((error) => {
+
+            console.error(
+                "Switch Firebase error:",
+                error
+            );
+
+
+            alert(
+                "Unable to save " +
+                device +
+                " switch.\n\n" +
+                error.message
+            );
+
+
+            // ----------------------------------------------
+            // REVERT SWITCH
+            // ----------------------------------------------
+
+            const switchElement =
+                document.getElementById(
+                    device +
+                    "Switch"
+                );
+
+
+            if (switchElement) {
+
+                switchElement.checked =
+                    !switchState;
+
+            }
+
+        });
+
+}
+
+
+// ==========================================================
+// UPDATE SWITCH TEXT
+// ==========================================================
+
+function updateSwitchStatusText(
+    device,
+    state
+) {
+
+    let elementId;
+
+
+    switch (device) {
+
+        case "light":
+
+            elementId =
+                "lightStatus";
+
+            break;
+
+
+        case "fan":
+
+            elementId =
+                "fanStatus";
+
+            break;
+
+
+        case "door":
+
+            elementId =
+                "doorStatus";
+
+            break;
+
+
+        case "alarm":
+
+            elementId =
+                "alarmStatus";
+
+            break;
+
+
+        default:
+
+            return;
+
+    }
+
+
+    const element =
+        document.getElementById(
+            elementId
+        );
+
+
+    if (!element) {
+
+        return;
+
+    }
+
+
+    if (device === "door") {
+
+        element.innerHTML =
+            state
+                ? "OPEN"
+                : "CLOSED";
+
+    }
+
+    else {
+
+        element.innerHTML =
+            state
+                ? "ON"
+                : "OFF";
+
+    }
+
+
+    element.style.color =
+        state
+            ? "#28a745"
+            : "#777";
+
+}
+
+
+// ==========================================================
+// LOAD SWITCH STATES
+// ==========================================================
+
+function loadSwitches(
+    data
+) {
+
+    if (!data) {
+
+        return;
+
+    }
+
+
+    setSwitchState(
+        "light",
+        data.light
+    );
+
+
+    setSwitchState(
+        "fan",
+        data.fan
+    );
+
+
+    setSwitchState(
+        "door",
+        data.door
+    );
+
+
+    setSwitchState(
+        "alarm",
+        data.alarm
+    );
+
+}
+
+
+// ==========================================================
+// SET SWITCH STATE
+// ==========================================================
+
+function setSwitchState(
+    device,
+    state
+) {
+
+    if (
+
+        state === undefined ||
+
+        state === null
+
+    ) {
+
+        return;
+
+    }
+
+
+    const switchElement =
+        document.getElementById(
+            device +
+            "Switch"
+        );
+
+
+    if (!switchElement) {
+
+        return;
+
+    }
+
+
+    switchElement.checked =
+        Boolean(state);
+
+
+    updateSwitchStatusText(
+        device,
+        Boolean(state)
+    );
+
+}
+
+
+// ==========================================================
+// MAKE FUNCTIONS AVAILABLE TO HTML
+// ==========================================================
+
+window.logout =
+    logout;
+
+
+window.saveManualData =
+    saveManualData;
+
+
+window.updateDeviceSwitch =
+    updateDeviceSwitch;
