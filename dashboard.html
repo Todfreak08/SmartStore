@@ -250,56 +250,172 @@
         </div>
 
 
-        <!-- =========================
-             DEVICE CONTROLS
-        ========================== -->
+       <!-- ==========================================
+     DEVICE CONTROLS
+========================================== -->
 
-        <div class="chart-card">
+<div class="chart-card">
 
-            <h2>🎛 Device Controls</h2>
+    <h2>🎛️ Device Controls</h2>
 
-            <p>
-                Changes made to these switches are automatically
-                saved to Firebase Realtime Database.
-            </p>
+    <p style="color:#666; margin-bottom:20px;">
+        Manually control storage devices and save
+        their status directly to Firebase.
+    </p>
 
 
-            <!-- LIGHT -->
+    <!-- LIGHT -->
 
-            <div class="control-row">
+    <div class="control-row">
 
-                <div class="control-info">
+        <div class="control-info">
 
-                    <span class="control-icon">
-                        💡
-                    </span>
+            <div class="control-icon">
+                💡
+            </div>
 
-                    <div>
+            <div>
 
-                        <strong>Light</strong>
+                <strong>Storage Light</strong>
 
-                        <small id="lightStatus">
-                            OFF
-                        </small>
-
-                    </div>
-
-                </div>
-
-                <label class="switch">
-
-                    <input
-                        type="checkbox"
-                        id="lightSwitch"
-                        onchange="updateDeviceSwitch('light', this.checked)">
-
-                    <span class="slider"></span>
-
-                </label>
+                <small id="lightStatus">
+                    OFF
+                </small>
 
             </div>
 
+        </div>
 
+
+        <label class="switch">
+
+            <input
+                type="checkbox"
+                id="lightSwitch"
+                onchange="updateDeviceSwitch('light', this.checked)"
+            >
+
+            <span class="slider"></span>
+
+        </label>
+
+    </div>
+
+
+    <!-- FAN -->
+
+    <div class="control-row">
+
+        <div class="control-info">
+
+            <div class="control-icon">
+                🌀
+            </div>
+
+            <div>
+
+                <strong>Ventilation Fan</strong>
+
+                <small id="fanStatus">
+                    OFF
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <label class="switch">
+
+            <input
+                type="checkbox"
+                id="fanSwitch"
+                onchange="updateDeviceSwitch('fan', this.checked)"
+            >
+
+            <span class="slider"></span>
+
+        </label>
+
+    </div>
+
+
+    <!-- DOOR -->
+
+    <div class="control-row">
+
+        <div class="control-info">
+
+            <div class="control-icon">
+                🚪
+            </div>
+
+            <div>
+
+                <strong>Storage Door</strong>
+
+                <small id="doorStatus">
+                    CLOSED
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <label class="switch">
+
+            <input
+                type="checkbox"
+                id="doorSwitch"
+                onchange="updateDeviceSwitch('door', this.checked)"
+            >
+
+            <span class="slider"></span>
+
+        </label>
+
+    </div>
+
+
+    <!-- ALARM -->
+
+    <div class="control-row">
+
+        <div class="control-info">
+
+            <div class="control-icon">
+                🚨
+            </div>
+
+            <div>
+
+                <strong>Security Alarm</strong>
+
+                <small id="alarmStatus">
+                    OFF
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <label class="switch">
+
+            <input
+                type="checkbox"
+                id="alarmSwitch"
+                onchange="updateDeviceSwitch('alarm', this.checked)"
+            >
+
+            <span class="slider"></span>
+
+        </label>
+
+    </div>
+
+</div>
             <!-- FAN -->
 
             <div class="control-row">
