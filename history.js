@@ -1,125 +1,493 @@
-// ----------------------------
-// Authentication
-// ----------------------------
+/* ==========================================================
+SMART STORAGE MONITORING SYSTEM
+HISTORY.JS
+========================================================== */
+
+// ==========================================================
+// AUTHENTICATION
+// ==========================================================
 
 auth.onAuthStateChanged((user) => {
 
-    if (!user) {
+```
+if (!user) {
 
-        window.location.href = "index.html";
+    window.location.href = "index.html";
 
-    }
+    return;
+
+}
+
+
+const userEmail =
+    document.getElementById("userEmail");
+
+
+if (userEmail) {
+
+    userEmail.innerHTML =
+        user.email;
+
+}
+
+
+loadHistory();
+```
 
 });
 
-// ----------------------------
-// Logout
-// ----------------------------
+// ==========================================================
+// LOGOUT
+// ==========================================================
 
 function logout() {
 
-    auth.signOut().then(() => {
+```
+auth.signOut()
 
-        window.location.href = "index.html";
+    .then(() => {
+
+        window.location.href =
+            "index.html";
+
+    })
+
+    .catch((error) => {
+
+        console.error(
+            "Logout error:",
+            error
+        );
 
     });
+```
 
 }
 
-// ----------------------------
-// History Listener
-// ----------------------------
+// ==========================================================
+// LOAD FIREBASE HISTORY
+// ==========================================================
 
-const tbody = document.getElementById("historyBody");
+function loadHistory() {
 
-database.ref("History").on("value", (snapshot) => {
+```
+const historyBody =
+    document.getElementById(
+        "historyBody"
+    );
 
-    tbody.innerHTML = "";
 
-    if (!snapshot.exists()) {
+if (!historyBody) {
 
-        tbody.innerHTML = `
-        <tr>
-            <td colspan="5" class="empty-message">
-                Waiting for ESP32 to send history...
-            </td>
-        </tr>
-        `;
+    console.error(
+        "historyBody was not found."
+    );
 
-        return;
+    return;
 
-    }
+}
 
-    snapshot.forEach((child) => {
 
-        const data = child.val();
+database
+    .ref("SmartStorage/history")
+    .on(
 
-        const row = `
+        "value",
 
-        <tr>
+        (snapshot) => {
 
-        <td>${data.timestamp || "--"}</td>
+            console.log(
+                "Firebase History:",
+                snapshot.val()
+            );
 
-        <td>${data.temperature ?? "--"} °C</td>
 
-        <td>${data.humidity ?? "--"} %</td>
+            // Clear existing rows
 
-        <td>${data.motion || "--"}</td>
+            historyBody.innerHTML =
+                "";
 
-        <td>${data.status || "--"}</td>
 
-        </tr>
+            // ------------------------------------------------
+            // NO DATA
+            // ------------------------------------------------
 
-        `;
+            if (!snapshot.exists()) {
 
-        tbody.innerHTML += row;
+                historyBody.innerHTML = `
 
-    });
+                    <tr>
 
-});
+                        <td
+                            colspan="7"
+                            class="empty-message"
+                        >
 
-// ----------------------------
-// Search
-// ----------------------------
+                            No history records found.
 
-function searchTable() {
+                        </td>
 
-    let filter =
-        document.getElementById("searchInput")
-        .value
-        .toUpperCase();
+                    </tr>
 
-    let table =
-        document.getElementById("historyTable");
+                `;
 
-    let tr =
-        table.getElementsByTagName("tr");
-
-    for (let i = 1; i < tr.length; i++) {
-
-        let found = false;
-
-        let td = tr[i].getElementsByTagName("td");
-
-        for (let j = 0; j < td.length; j++) {
-
-            if (td[j]) {
-
-                let txt = td[j].textContent;
-
-                if (txt.toUpperCase().indexOf(filter) > -1) {
-
-                    found = true;
-
-                }
+                return;
 
             }
 
+
+            const history =
+                snapshot.val();
+
+
+            // Convert Firebase object
+            // into array
+
+            const records =
+                Object.entries(history);
+
+
+            // Newest first
+
+            records.reverse();
+
+
+            // ------------------------------------------------
+            // DISPLAY RECORDS
+            // ------------------------------------------------
+
+            records.forEach(
+                ([id, data]) => {
+
+
+                    const row =
+                        document.createElement(
+                            "tr"
+                        );
+
+
+                    // ----------------------------------------
+                    // DATE
+                    // ----------------------------------------
+
+                    const timestamp =
+                        data.timestamp ??
+                        data.lastUpdate ??
+                        "--";
+
+
+                    // ----------------------------------------
+                    // TEMPERATURE
+                    // ----------------------------------------
+
+                    const temperature =
+                        data.temperature !==
+                        undefined
+
+                            ? data.temperature +
+                              " °C"
+
+                            : "--";
+
+
+                    // ----------------------------------------
+                    // HUMIDITY
+                    // ----------------------------------------
+
+                    const humidity =
+                        data.humidity !==
+                        undefined
+
+                            ? data.humidity +
+                              " %"
+
+                            : "--";
+
+
+                    // ----------------------------------------
+                    // MOTION
+                    // ----------------------------------------
+
+                    let motion =
+                        data.motion;
+
+
+                    if (
+                        motion === true
+                    ) {
+
+                        motion =
+                            "Motion Detected";
+
+                    }
+
+                    else if (
+                        motion === false
+                    ) {
+
+                        motion =
+                            "No Motion";
+
+                    }
+
+                    else {
+
+                        motion =
+                            "--";
+
+                    }
+
+
+                    // ----------------------------------------
+                    // STATUS
+                    // ----------------------------------------
+
+                    const status =
+                        data.status ??
+                        "--";
+
+
+                    // ----------------------------------------
+                    // DEVICE
+                    // ----------------------------------------
+
+                    let device =
+                        "--";
+
+
+                    if (
+                        data.device
+                    ) {
+
+                        let deviceName =
+                            data.device;
+
+
+                        if (
+                            data.device ===
+                            "light"
+                        ) {
+
+                            deviceName =
+                                "💡 Light";
+
+                        }
+
+                        else if (
+                            data.device ===
+                            "fan"
+                        ) {
+
+                            deviceName =
+                                "🌀 Fan";
+
+                        }
+
+                        else if (
+                            data.device ===
+                            "door"
+                        ) {
+
+                            deviceName =
+                                "🚪 Door";
+
+                        }
+
+                        else if (
+                            data.device ===
+                            "alarm"
+                        ) {
+
+                            deviceName =
+                                "🚨 Alarm";
+
+                        }
+
+
+                        const state =
+                            Boolean(
+                                data.state
+                            );
+
+
+                        let stateText =
+                            state
+                                ? "ON"
+                                : "OFF";
+
+
+                        if (
+                            data.device ===
+                            "door"
+                        ) {
+
+                            stateText =
+                                state
+                                    ? "OPEN"
+                                    : "CLOSED";
+
+                        }
+
+
+                        device =
+                            deviceName +
+                            " - " +
+                            stateText;
+
+                    }
+
+
+                    // ----------------------------------------
+                    // SOURCE
+                    // ----------------------------------------
+
+                    const source =
+                        data.source ??
+                        "Unknown";
+
+
+                    // ----------------------------------------
+                    // CREATE ROW
+                    // ----------------------------------------
+
+                    row.innerHTML = `
+
+                        <td>
+                            ${timestamp}
+                        </td>
+
+                        <td>
+                            ${temperature}
+                        </td>
+
+                        <td>
+                            ${humidity}
+                        </td>
+
+                        <td>
+                            ${motion}
+                        </td>
+
+                        <td>
+                            ${status}
+                        </td>
+
+                        <td>
+                            ${device}
+                        </td>
+
+                        <td>
+                            ${source}
+                        </td>
+
+                    `;
+
+
+                    historyBody.appendChild(
+                        row
+                    );
+
+                }
+            );
+
+        },
+
+
+        // ==================================================
+        // FIREBASE ERROR
+        // ==================================================
+
+        (error) => {
+
+            console.error(
+                "Firebase History Error:",
+                error
+            );
+
+
+            historyBody.innerHTML = `
+
+                <tr>
+
+                    <td
+                        colspan="7"
+                        class="empty-message"
+                    >
+
+                        ❌ Unable to load Firebase
+                        history.<br><br>
+
+                        ${error.message}
+
+                    </td>
+
+                </tr>
+
+            `;
+
         }
 
-        tr[i].style.display =
-            found ? "" : "none";
+    );
+```
+
+}
+
+// ==========================================================
+// SEARCH
+// ==========================================================
+
+function searchTable() {
+
+```
+const input =
+    document.getElementById(
+        "searchInput"
+    );
+
+
+const filter =
+    input.value.toLowerCase();
+
+
+const rows =
+    document.querySelectorAll(
+        "#historyBody tr"
+    );
+
+
+rows.forEach((row) => {
+
+    const text =
+        row.innerText.toLowerCase();
+
+
+    if (
+        text.includes(filter)
+    ) {
+
+        row.style.display =
+            "";
 
     }
 
+    else {
+
+        row.style.display =
+            "none";
+
+    }
+
+});
+```
+
 }
+
+// ==========================================================
+// MAKE FUNCTIONS AVAILABLE
+// ==========================================================
+
+window.logout =
+logout;
+
+window.searchTable =
+searchTable;
