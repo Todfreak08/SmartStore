@@ -1,633 +1,154 @@
-<!DOCTYPE html>
-<html lang="en">
+// ==========================================================
+// AUTHENTICATION + LOGIN ACTIVITY
+// ==========================================================
 
-<head>
+auth.onAuthStateChanged((user) => {
 
-    <meta charset="UTF-8">
+    if (!user) {
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+        window.location.href = "index.html";
 
-    <title>Smart Storage Monitoring System</title>
+        return;
 
-    <link rel="stylesheet" href="style.css">
+    }
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    const userEmail =
+        document.getElementById("userEmail");
 
-</head>
+    if (userEmail) {
 
+        userEmail.innerHTML =
+            user.email;
 
-<body>
+    }
 
+    // Save login activity
+    recordLoginActivity(user);
 
-<!-- =====================================================
-     SIDEBAR
-===================================================== -->
+});
 
-<div class="sidebar">
 
-    <h2>📦 Smart Storage</h2>
+// ==========================================================
+// RECORD LOGIN ACTIVITY
+// ==========================================================
 
+function recordLoginActivity(user) {
 
-    <a
-        href="dashboard.html"
-        class="active"
-    >
-        🏠 Dashboard
-    </a>
+    const loginData = {
 
+        email: user.email || "Unknown",
 
-    <a href="history.html">
-        📋 History
-    </a>
+        uid: user.uid || "Unknown",
 
+        action: "LOGIN",
 
-    <a href="alerts.html">
-        🚨 Alerts
-    </a>
+        timestamp:
+            new Date().toLocaleString(),
 
+        createdAt:
+            firebase.database
+                .ServerValue
+                .TIMESTAMP,
 
-    <a href="reports.html">
-        📊 Reports
-    </a>
+        userAgent:
+            navigator.userAgent
 
+    };
 
-    <a href="settings.html">
-        ⚙️ Settings
-    </a>
 
+    database
+        .ref("SmartStorage/loginActivity")
+        .push(loginData)
 
-    <a href="profile.html">
-        👤 Profile
-    </a>
+        .then(() => {
 
+            console.log(
+                "✅ Login activity saved to Firebase."
+            );
 
-    <a href="about.html">
-        ℹ️ About
-    </a>
+        })
 
+        .catch((error) => {
 
-    <button
-        class="logout-btn"
-        onclick="logout()"
-    >
-        Logout
-    </button>
+            console.error(
+                "❌ Failed to save login activity:",
+                error
+            );
 
-</div>
+        });
 
+}
 
 
-<!-- =====================================================
-     MAIN CONTENT
-===================================================== -->
+// ==========================================================
+// LOGOUT
+// ==========================================================
 
-<div class="main-content">
+function logout() {
 
+    const user =
+        auth.currentUser;
 
-    <!-- =================================================
-         TOP BAR
-    ================================================== -->
 
-    <div class="top-bar">
+    if (user) {
 
-        <div>
+        const logoutData = {
 
-            <h1>
-                Dashboard
-            </h1>
+            email:
+                user.email || "Unknown",
 
-            <p style="color:#666; margin-top:5px;">
-                Smart Storage Monitoring System
-            </p>
+            uid:
+                user.uid || "Unknown",
 
-        </div>
+            action:
+                "LOGOUT",
 
+            timestamp:
+                new Date().toLocaleString(),
 
-        <div class="user-card">
+            createdAt:
+                firebase.database
+                    .ServerValue
+                    .TIMESTAMP
 
-            Logged in as
+        };
 
-            <b id="userEmail">
-                Loading...
-            </b>
 
-        </div>
+        database
+            .ref(
+                "SmartStorage/loginActivity"
+            )
+            .push(logoutData)
 
-    </div>
+            .then(() => {
 
+                return auth.signOut();
 
+            })
 
-    <!-- =================================================
-         FIREBASE CONNECTION
-    ================================================== -->
+            .then(() => {
 
-    <div
-        class="status-card"
-        style="padding:15px; margin-bottom:20px;"
-    >
+                window.location.href =
+                    "index.html";
 
-        <strong>
-            Firebase Database:
-        </strong>
+            })
 
-        <span id="firebaseStatus">
-            ● Connecting...
-        </span>
+            .catch((error) => {
 
-    </div>
+                console.error(
+                    "Logout error:",
+                    error
+                );
 
+            });
 
+    }
 
-    <!-- =================================================
-         SENSOR DATA
-    ================================================== -->
+    else {
 
-    <div class="card-grid">
+        window.location.href =
+            "index.html";
 
+    }
 
-        <!-- TEMPERATURE -->
-
-        <div class="card">
-
-            <h3>
-                🌡 Temperature
-            </h3>
-
-            <h1 id="temperature">
-                -- °C
-            </h1>
-
-            <p id="temperatureSource">
-                Waiting for data...
-            </p>
-
-        </div>
-
-
-
-        <!-- HUMIDITY -->
-
-        <div class="card">
-
-            <h3>
-                💧 Humidity
-            </h3>
-
-            <h1 id="humidity">
-                -- %
-            </h1>
-
-            <p id="humiditySource">
-                Waiting for data...
-            </p>
-
-        </div>
-
-
-
-        <!-- MOTION -->
-
-        <div class="card">
-
-            <h3>
-                🚶 Motion
-            </h3>
-
-            <h1 id="motion">
-                Waiting...
-            </h1>
-
-            <p>
-                PIR Sensor
-            </p>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- =================================================
-         STORAGE STATUS
-    ================================================== -->
-
-    <div class="status-card">
-
-        <h2>
-            Storage Status
-        </h2>
-
-        <h1 id="storageStatus">
-            Waiting for data...
-        </h1>
-
-        <p id="lastUpdate">
-            No data received yet.
-        </p>
-
-    </div>
-
-
-
-    <!-- =================================================
-         DEVICE CONTROLS
-    ================================================== -->
-
-    <div class="chart-card">
-
-        <h2>
-            🎛️ Device Controls
-        </h2>
-
-        <p style="color:#666; margin-bottom:20px;">
-
-            Manually control storage devices.
-            Changes are automatically saved to
-            Firebase Realtime Database.
-
-        </p>
-
-
-
-        <!-- =============================================
-             LIGHT
-        ============================================== -->
-
-        <div class="control-row">
-
-            <div class="control-info">
-
-                <div class="control-icon">
-                    💡
-                </div>
-
-                <div>
-
-                    <strong>
-                        Storage Light
-                    </strong>
-
-                    <small id="lightStatus">
-                        OFF
-                    </small>
-
-                </div>
-
-            </div>
-
-
-            <label class="switch">
-
-                <input
-                    type="checkbox"
-                    id="lightSwitch"
-                    onchange="
-                        updateDeviceSwitch(
-                            'light',
-                            this.checked
-                        )
-                    "
-                >
-
-                <span class="slider"></span>
-
-            </label>
-
-        </div>
-
-
-
-        <!-- =============================================
-             FAN
-        ============================================== -->
-
-        <div class="control-row">
-
-            <div class="control-info">
-
-                <div class="control-icon">
-                    🌀
-                </div>
-
-                <div>
-
-                    <strong>
-                        Ventilation Fan
-                    </strong>
-
-                    <small id="fanStatus">
-                        OFF
-                    </small>
-
-                </div>
-
-            </div>
-
-
-            <label class="switch">
-
-                <input
-                    type="checkbox"
-                    id="fanSwitch"
-                    onchange="
-                        updateDeviceSwitch(
-                            'fan',
-                            this.checked
-                        )
-                    "
-                >
-
-                <span class="slider"></span>
-
-            </label>
-
-        </div>
-
-
-
-        <!-- =============================================
-             DOOR
-        ============================================== -->
-
-        <div class="control-row">
-
-            <div class="control-info">
-
-                <div class="control-icon">
-                    🚪
-                </div>
-
-                <div>
-
-                    <strong>
-                        Storage Door
-                    </strong>
-
-                    <small id="doorStatus">
-                        CLOSED
-                    </small>
-
-                </div>
-
-            </div>
-
-
-            <label class="switch">
-
-                <input
-                    type="checkbox"
-                    id="doorSwitch"
-                    onchange="
-                        updateDeviceSwitch(
-                            'door',
-                            this.checked
-                        )
-                    "
-                >
-
-                <span class="slider"></span>
-
-            </label>
-
-        </div>
-
-
-
-        <!-- =============================================
-             ALARM
-        ============================================== -->
-
-        <div class="control-row">
-
-            <div class="control-info">
-
-                <div class="control-icon">
-                    🚨
-                </div>
-
-                <div>
-
-                    <strong>
-                        Security Alarm
-                    </strong>
-
-                    <small id="alarmStatus">
-                        OFF
-                    </small>
-
-                </div>
-
-            </div>
-
-
-            <label class="switch">
-
-                <input
-                    type="checkbox"
-                    id="alarmSwitch"
-                    onchange="
-                        updateDeviceSwitch(
-                            'alarm',
-                            this.checked
-                        )
-                    "
-                >
-
-                <span class="slider"></span>
-
-            </label>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- =================================================
-         MANUAL DATA ENTRY
-    ================================================== -->
-
-    <div class="chart-card">
-
-        <h2>
-            📝 Manual Data Entry
-        </h2>
-
-
-        <p style="color:#666; margin-bottom:20px;">
-
-            Enter environmental data manually while
-            the ESP32 is not yet connected.
-
-            Data will automatically be saved to
-            Firebase Realtime Database.
-
-        </p>
-
-
-
-        <div class="manual-form">
-
-
-            <!-- TEMPERATURE -->
-
-            <div class="input-group">
-
-                <label for="manualTemperature">
-
-                    🌡 Temperature (°C)
-
-                </label>
-
-
-                <input
-                    type="number"
-                    id="manualTemperature"
-                    placeholder="Example: 28.5"
-                    step="0.1"
-                >
-
-            </div>
-
-
-
-            <!-- HUMIDITY -->
-
-            <div class="input-group">
-
-                <label for="manualHumidity">
-
-                    💧 Humidity (%)
-
-                </label>
-
-
-                <input
-                    type="number"
-                    id="manualHumidity"
-                    placeholder="Example: 65"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                >
-
-            </div>
-
-
-
-            <!-- MOTION -->
-
-            <div class="input-group">
-
-                <label for="manualMotion">
-
-                    🚶 Motion
-
-                </label>
-
-
-                <select id="manualMotion">
-
-                    <option value="false">
-
-                        No Motion
-
-                    </option>
-
-
-                    <option value="true">
-
-                        Motion Detected
-
-                    </option>
-
-                </select>
-
-            </div>
-
-
-
-            <!-- SAVE BUTTON -->
-
-            <button
-                type="button"
-                class="login-btn"
-                onclick="saveManualData()"
-            >
-
-                💾 SAVE DATA
-
-            </button>
-
-
-
-            <!-- MESSAGE -->
-
-            <p id="manualMessage"></p>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- =================================================
-         LIVE ENVIRONMENT CHART
-    ================================================== -->
-
-    <div class="chart-card">
-
-        <h2>
-            📈 Live Environment
-        </h2>
-
-
-        <p style="color:#666; margin-bottom:20px;">
-
-            Temperature and humidity monitoring
-
-        </p>
-
-
-        <canvas
-            id="environmentChart"
-        ></canvas>
-
-    </div>
-
-
-</div>
-
-
-
-<!-- =====================================================
-     FIREBASE
-===================================================== -->
-
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
-
-
-<!-- =====================================================
-     FIREBASE CONFIG
-===================================================== -->
-
-<script src="firebase-config.js"></script>
-
-
-<!-- =====================================================
-     DASHBOARD JAVASCRIPT
-===================================================== -->
-
-<script src="dashboard.js"></script>
-
-
-</body>
-
-</html>
+}
