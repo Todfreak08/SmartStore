@@ -16,6 +16,7 @@ auth.onAuthStateChanged((user) => {
         window.location.href = "index.html";
 
         return;
+
     }
 
 
@@ -25,7 +26,7 @@ auth.onAuthStateChanged((user) => {
 
     if (userEmail) {
 
-        userEmail.innerHTML =
+        userEmail.textContent =
             user.email;
 
     }
@@ -34,12 +35,66 @@ auth.onAuthStateChanged((user) => {
 
 
 // ==========================================================
-// LOGOUT
+// LOGOUT + SAVE LOGOUT ACTIVITY
 // ==========================================================
 
 function logout() {
 
-    auth.signOut()
+    const user =
+        auth.currentUser;
+
+
+    if (!user) {
+
+        window.location.href =
+            "index.html";
+
+        return;
+
+    }
+
+
+    const logoutActivity = {
+
+        action: "LOGOUT",
+
+        email:
+            user.email || "Unknown",
+
+        uid:
+            user.uid || "Unknown",
+
+        timestamp:
+            new Date().toLocaleString(),
+
+        createdAt:
+            firebase.database.ServerValue.TIMESTAMP,
+
+        userAgent:
+            navigator.userAgent
+
+    };
+
+
+    console.log(
+        "Saving logout activity..."
+    );
+
+
+    database
+        .ref("SmartStorage/loginActivity")
+        .push(logoutActivity)
+
+        .then(() => {
+
+            console.log(
+                "✅ Logout activity saved."
+            );
+
+
+            return auth.signOut();
+
+        })
 
         .then(() => {
 
@@ -115,10 +170,7 @@ function firebaseError() {
 // HELPER
 // ==========================================================
 
-function setText(
-    id,
-    value
-) {
+function setText(id, value) {
 
     const element =
         document.getElementById(id);
@@ -126,7 +178,7 @@ function setText(
 
     if (element) {
 
-        element.innerHTML =
+        element.textContent =
             value;
 
     }
@@ -208,7 +260,6 @@ if (chartCanvas) {
 
                 },
 
-
                 options: {
 
                     responsive: true,
@@ -279,9 +330,9 @@ function updateDashboard(data) {
     }
 
 
-    // ------------------------------------------------------
+    // ======================================================
     // TEMPERATURE
-    // ------------------------------------------------------
+    // ======================================================
 
     const temperature =
         data.temperature !== undefined &&
@@ -290,9 +341,9 @@ function updateDashboard(data) {
             : null;
 
 
-    // ------------------------------------------------------
+    // ======================================================
     // HUMIDITY
-    // ------------------------------------------------------
+    // ======================================================
 
     const humidity =
         data.humidity !== undefined &&
@@ -301,9 +352,9 @@ function updateDashboard(data) {
             : null;
 
 
-    // ------------------------------------------------------
+    // ======================================================
     // MOTION
-    // ------------------------------------------------------
+    // ======================================================
 
     let motion =
         data.motion;
@@ -334,18 +385,18 @@ function updateDashboard(data) {
     }
 
 
-    // ------------------------------------------------------
+    // ======================================================
     // STATUS
-    // ------------------------------------------------------
+    // ======================================================
 
     const status =
         data.status ??
         "NORMAL";
 
 
-    // ------------------------------------------------------
+    // ======================================================
     // LAST UPDATE
-    // ------------------------------------------------------
+    // ======================================================
 
     const lastUpdate =
         data.lastUpdate ??
@@ -353,9 +404,9 @@ function updateDashboard(data) {
         "Unknown";
 
 
-    // ------------------------------------------------------
+    // ======================================================
     // DISPLAY
-    // ------------------------------------------------------
+    // ======================================================
 
     setText(
         "temperature",
@@ -395,15 +446,13 @@ function updateDashboard(data) {
 
     setText(
         "lastUpdate",
-
-        "Last Update: " +
-        lastUpdate
+        "Last Update: " + lastUpdate
     );
 
 
-    // ------------------------------------------------------
+    // ======================================================
     // DATA SOURCE
-    // ------------------------------------------------------
+    // ======================================================
 
     setText(
         "temperatureSource",
@@ -423,16 +472,16 @@ function updateDashboard(data) {
     );
 
 
-    // ------------------------------------------------------
+    // ======================================================
     // SWITCHES
-    // ------------------------------------------------------
+    // ======================================================
 
     loadSwitches(data);
 
 
-    // ------------------------------------------------------
+    // ======================================================
     // CHART
-    // ------------------------------------------------------
+    // ======================================================
 
     if (
 
@@ -463,8 +512,6 @@ function updateDashboard(data) {
             humidity
         );
 
-
-        // Keep last 15 records
 
         if (labels.length > 15) {
 
@@ -501,9 +548,7 @@ database
 
             if (!snapshot.exists()) {
 
-                updateDashboard(
-                    null
-                );
+                updateDashboard(null);
 
                 return;
 
@@ -514,10 +559,6 @@ database
                 snapshot.val();
 
 
-            // ------------------------------------------------
-            // SUPPORT CURRENT STRUCTURE
-            // ------------------------------------------------
-
             let dashboardData =
                 data;
 
@@ -526,8 +567,7 @@ database
 
                 data.current &&
 
-                typeof data.current ===
-                    "object"
+                typeof data.current === "object"
 
             ) {
 
@@ -547,7 +587,6 @@ database
             );
 
         },
-
 
         (error) => {
 
@@ -587,22 +626,10 @@ function saveManualData() {
         );
 
 
-    const message =
-        document.getElementById(
-            "manualMessage"
-        );
-
-
-    // ------------------------------------------------------
-    // CHECK FORM
-    // ------------------------------------------------------
-
     if (
 
         !temperatureInput ||
-
         !humidityInput ||
-
         !motionInput
 
     ) {
@@ -615,10 +642,6 @@ function saveManualData() {
 
     }
 
-
-    // ------------------------------------------------------
-    // GET VALUES
-    // ------------------------------------------------------
 
     const temperature =
         parseFloat(
@@ -633,13 +656,12 @@ function saveManualData() {
 
 
     const motion =
-        motionInput.value ===
-        "true";
+        motionInput.value === "true";
 
 
-    // ------------------------------------------------------
+    // ======================================================
     // VALIDATION
-    // ------------------------------------------------------
+    // ======================================================
 
     if (isNaN(temperature)) {
 
@@ -654,13 +676,9 @@ function saveManualData() {
 
 
     if (
-
         isNaN(humidity) ||
-
         humidity < 0 ||
-
         humidity > 100
-
     ) {
 
         showManualMessage(
@@ -673,32 +691,25 @@ function saveManualData() {
     }
 
 
-    // ------------------------------------------------------
+    // ======================================================
     // TIME
-    // ------------------------------------------------------
-
-    const now =
-        new Date();
-
+    // ======================================================
 
     const timestamp =
-        now.toLocaleString();
+        new Date().toLocaleString();
 
 
-    // ------------------------------------------------------
+    // ======================================================
     // AUTOMATIC STATUS
-    // ------------------------------------------------------
+    // ======================================================
 
     let status =
         "NORMAL";
 
 
     if (
-
         temperature >= 35 ||
-
         humidity >= 80
-
     ) {
 
         status =
@@ -708,11 +719,8 @@ function saveManualData() {
 
 
     if (
-
         temperature >= 40 ||
-
         humidity >= 90
-
     ) {
 
         status =
@@ -721,9 +729,9 @@ function saveManualData() {
     }
 
 
-    // ------------------------------------------------------
+    // ======================================================
     // DATA
-    // ------------------------------------------------------
+    // ======================================================
 
     const manualData = {
 
@@ -753,50 +761,28 @@ function saveManualData() {
     };
 
 
-    console.log(
-        "Saving manual data:",
-        manualData
-    );
-
-
-    // ------------------------------------------------------
+    // ======================================================
     // SAVE CURRENT DATA
-    // ------------------------------------------------------
+    // ======================================================
 
     database
-        .ref("SmartStorage")
-        .update(manualData)
+        .ref("SmartStorage/current")
+        .set(manualData)
 
         .then(() => {
 
-            console.log(
-                "Main SmartStorage updated."
-            );
-
-
-            // ----------------------------------------------
-            // SAVE CURRENT COPY
-            // ----------------------------------------------
-
             return database
-                .ref(
-                    "SmartStorage/current"
-                )
-                .set(manualData);
+                .ref("SmartStorage")
+                .update(manualData);
 
         })
 
 
         .then(() => {
 
-            console.log(
-                "Current data updated."
-            );
-
-
-            // ----------------------------------------------
+            // ==================================================
             // SAVE HISTORY
-            // ----------------------------------------------
+            // ==================================================
 
             return database
                 .ref(
@@ -835,32 +821,20 @@ function saveManualData() {
         .then(() => {
 
             console.log(
-                "History successfully saved."
+                "✅ Manual data saved."
             );
 
-
-            // ----------------------------------------------
-            // UPDATE DASHBOARD
-            // ----------------------------------------------
 
             updateDashboard(
                 manualData
             );
 
 
-            // ----------------------------------------------
-            // SUCCESS MESSAGE
-            // ----------------------------------------------
-
             showManualMessage(
                 "✓ Data successfully saved to Firebase!",
                 "success"
             );
 
-
-            // ----------------------------------------------
-            // CLEAR FORM
-            // ----------------------------------------------
 
             temperatureInput.value =
                 "";
@@ -870,7 +844,6 @@ function saveManualData() {
 
             motionInput.value =
                 "false";
-
 
         })
 
@@ -884,12 +857,9 @@ function saveManualData() {
 
 
             showManualMessage(
-
                 "❌ Firebase Error: " +
                 error.message,
-
                 "error"
-
             );
 
         });
@@ -919,19 +889,10 @@ function showManualMessage(
         text;
 
 
-    if (type === "success") {
-
-        message.style.color =
-            "#28a745";
-
-    }
-
-    else {
-
-        message.style.color =
-            "#dc3545";
-
-    }
+    message.style.color =
+        type === "success"
+            ? "#28a745"
+            : "#dc3545";
 
 
     setTimeout(() => {
@@ -953,11 +914,7 @@ function updateDeviceSwitch(
     state
 ) {
 
-    if (!device) {
-
-        return;
-
-    }
+    if (!device) return;
 
 
     const switchState =
@@ -965,13 +922,8 @@ function updateDeviceSwitch(
 
 
     const timestamp =
-        new Date()
-            .toLocaleString();
+        new Date().toLocaleString();
 
-
-    // ------------------------------------------------------
-    // DATA
-    // ------------------------------------------------------
 
     const switchData = {};
 
@@ -1001,25 +953,15 @@ function updateDeviceSwitch(
     );
 
 
-    // ------------------------------------------------------
-    // SAVE TO SMART STORAGE
-    // ------------------------------------------------------
+    // ======================================================
+    // SAVE CURRENT STATE
+    // ======================================================
 
     database
         .ref("SmartStorage")
         .update(switchData)
 
         .then(() => {
-
-            console.log(
-                device +
-                " saved to SmartStorage."
-            );
-
-
-            // ----------------------------------------------
-            // SAVE CURRENT COPY
-            // ----------------------------------------------
 
             return database
                 .ref(
@@ -1032,9 +974,9 @@ function updateDeviceSwitch(
 
         .then(() => {
 
-            // ----------------------------------------------
-            // SAVE HISTORY
-            // ----------------------------------------------
+            // ==================================================
+            // SAVE SWITCH HISTORY
+            // ==================================================
 
             return database
                 .ref(
@@ -1067,15 +1009,11 @@ function updateDeviceSwitch(
         .then(() => {
 
             console.log(
-                "Switch saved successfully:",
+                "✅ Switch saved:",
                 device,
                 switchState
             );
 
-
-            // ----------------------------------------------
-            // UPDATE STATUS TEXT
-            // ----------------------------------------------
 
             updateSwitchStatusText(
                 device,
@@ -1101,14 +1039,9 @@ function updateDeviceSwitch(
             );
 
 
-            // ----------------------------------------------
-            // REVERT SWITCH
-            // ----------------------------------------------
-
             const switchElement =
                 document.getElementById(
-                    device +
-                    "Switch"
+                    device + "Switch"
                 );
 
 
@@ -1125,7 +1058,7 @@ function updateDeviceSwitch(
 
 
 // ==========================================================
-// UPDATE SWITCH TEXT
+// UPDATE SWITCH STATUS TEXT
 // ==========================================================
 
 function updateSwitchStatusText(
@@ -1145,14 +1078,12 @@ function updateSwitchStatusText(
 
             break;
 
-
         case "fan":
 
             elementId =
                 "fanStatus";
 
             break;
-
 
         case "door":
 
@@ -1161,14 +1092,12 @@ function updateSwitchStatusText(
 
             break;
 
-
         case "alarm":
 
             elementId =
                 "alarmStatus";
 
             break;
-
 
         default:
 
@@ -1183,16 +1112,12 @@ function updateSwitchStatusText(
         );
 
 
-    if (!element) {
-
-        return;
-
-    }
+    if (!element) return;
 
 
     if (device === "door") {
 
-        element.innerHTML =
+        element.textContent =
             state
                 ? "OPEN"
                 : "CLOSED";
@@ -1201,7 +1126,7 @@ function updateSwitchStatusText(
 
     else {
 
-        element.innerHTML =
+        element.textContent =
             state
                 ? "ON"
                 : "OFF";
@@ -1221,15 +1146,9 @@ function updateSwitchStatusText(
 // LOAD SWITCH STATES
 // ==========================================================
 
-function loadSwitches(
-    data
-) {
+function loadSwitches(data) {
 
-    if (!data) {
-
-        return;
-
-    }
+    if (!data) return;
 
 
     setSwitchState(
@@ -1268,11 +1187,8 @@ function setSwitchState(
 ) {
 
     if (
-
         state === undefined ||
-
         state === null
-
     ) {
 
         return;
@@ -1281,42 +1197,4 @@ function setSwitchState(
 
 
     const switchElement =
-        document.getElementById(
-            device +
-            "Switch"
-        );
-
-
-    if (!switchElement) {
-
-        return;
-
-    }
-
-
-    switchElement.checked =
-        Boolean(state);
-
-
-    updateSwitchStatusText(
-        device,
-        Boolean(state)
-    );
-
-}
-
-
-// ==========================================================
-// MAKE FUNCTIONS AVAILABLE TO HTML
-// ==========================================================
-
-window.logout =
-    logout;
-
-
-window.saveManualData =
-    saveManualData;
-
-
-window.updateDeviceSwitch =
-    updateDeviceSwitch;
+       
