@@ -1,808 +1,469 @@
 // ==========================================================
 // SMART STORAGE MONITORING SYSTEM
-// LOGIN.JS
-// Firebase Authentication + Realtime Database Login Activity
+// COMPLETE LOGIN.JS
 // ==========================================================
-
-function login() {
-
-    const email =
-        document.getElementById("email").value.trim();
-
-    const password =
-        document.getElementById("password").value;
-
-    const message =
-        document.getElementById("message");
-
-    const button =
-        document.getElementById("loginButton");
-
-
-    // ------------------------------------------------------
-    // VALIDATION
-    // ------------------------------------------------------
-
-    if (!email || !password) {
-
-        message.style.color = "#dc3545";
-
-        message.textContent =
-            "Please enter your email and password.";
-
-        return;
-    }
-
-
-    button.disabled = true;
-
-    button.textContent =
-        "LOGGING IN...";
-
-    message.style.color =
-        "#0b2447";
-
-    message.textContent =
-        "Please wait...";
-
-
-    // ------------------------------------------------------
-    // FIREBASE AUTHENTICATION
-    // ------------------------------------------------------
-
-    auth.signInWithEmailAndPassword(
-        email,
-        password
-    )
-
-    .then(function(result) {
-
-        const user = result.user;
-
-        console.log(
-            "LOGIN SUCCESS:",
-            user.email
-        );
-
-
-        // --------------------------------------------------
-        // CREATE LOGIN RECORD
-        // --------------------------------------------------
-
-        const loginRecord = {
-
-            action: "LOGIN",
-
-            email: user.email,
-
-            uid: user.uid,
-
-            source: "Web Login",
-
-            timestamp:
-                new Date().toLocaleString(),
-
-            createdAt:
-                firebase.database.ServerValue.TIMESTAMP,
-
-            userAgent:
-                navigator.userAgent
-
-        };
-
-
-        console.log(
-            "Saving login activity:",
-            loginRecord
-        );
-
-
-        // --------------------------------------------------
-        // SAVE TO REALTIME DATABASE
-        // --------------------------------------------------
-
-        return database
-            .ref("SmartStorage/loginActivity")
-            .push(loginRecord)
-
-            .then(function() {
-
-                console.log(
-                    "LOGIN ACTIVITY SAVED TO FIREBASE"
-                );
-
-            })
-
-            .catch(function(error) {
-
-                console.error(
-                    "LOGIN LOG ERROR:",
-                    error
-                );
-
-                /*
-                 * Do NOT stop the login.
-                 * The user can still access dashboard.
-                 */
-
-            });
-
-    })
-
-
-    .then(function() {
-
-        // --------------------------------------------------
-        // LOGIN COMPLETED
-        // --------------------------------------------------
-
-        message.style.color =
-            "#28a745";
-
-        message.textContent =
-            "Login successful!";
-
-
-        // --------------------------------------------------
-        // GO TO DASHBOARD
-        // --------------------------------------------------
-
-        setTimeout(function() {
-
-            window.location.href =
-                "dashboard.html";
-
-        }, 300);
-
-    })
-
-
-    .catch(function(error) {
-
-        console.error(
-            "FIREBASE LOGIN ERROR:",
-            error
-        );
-
-
-        button.disabled =
-            false;
-
-        button.textContent =
-            "LOGIN";
-
-
-        let errorMessage =
-            error.message;
-
-
-        if (
-            error.code ===
-            "auth/invalid-credential"
-        ) {
-
-            errorMessage =
-                "Incorrect email or password.";
-
-        }
-
-
-        if (
-            error.code ===
-            "auth/invalid-email"
-        ) {
-
-            errorMessage =
-                "Invalid email address.";
-
-        }
-
-
-        if (
-            error.code ===
-            "auth/user-not-found"
-        ) {
-
-            errorMessage =
-                "Account not found.";
-
-        }
-
-
-        if (
-            error.code ===
-            "auth/wrong-password"
-        ) {
-
-            errorMessage =
-                "Incorrect password.";
-
-        }
-
-
-        message.style.color =
-            "#dc3545";
-
-        message.textContent =
-            errorMessage;
-
-    });
-
-}
 
 
 // ==========================================================
-// MAKE LOGIN AVAILABLE
-// ==========================================================
-
-window.login = login;
-
-
-// ==========================================================
-// FORM SUBMIT
+// PAGE READY
 // ==========================================================
 
 document.addEventListener(
     "DOMContentLoaded",
-    function() {
+    function () {
 
-        const form =
+        console.log(
+            "Login page loaded."
+        );
+
+
+        const loginForm =
             document.getElementById(
                 "loginForm"
             );
 
 
-        if (form) {
-
-            form.addEventListener(
-                "submit",
-                function(event) {
-
-                    event.preventDefault();
-
-                    login();
-
-                }
-            );
-
-        }
-
-    }
-);        // ==================================================
-        // CREATE LOGIN ACTIVITY
-        // ==================================================
-
-        const loginRecord = {
-
-            action: "LOGIN",
-
-            email: user.email,
-
-            uid: user.uid,
-
-            source: "Web Login",
-
-            timestamp:
-                new Date().toLocaleString(),
-
-            createdAt:
-                firebase.database.ServerValue.TIMESTAMP,
-
-            userAgent:
-                navigator.userAgent
-
-        };
-
-
-        // ==================================================
-        // SAVE LOGIN ACTIVITY
-        // ==================================================
-
-        return database
-            .ref("SmartStorage/loginActivity")
-            .push(loginRecord)
-
-            .then(function() {
-
-                console.log(
-                    "LOGIN ACTIVITY SAVED"
-                );
-
-            })
-
-            .catch(function(error) {
-
-                // IMPORTANT:
-                // If the login log fails,
-                // DO NOT prevent the user
-                // from entering the dashboard.
-
-                console.error(
-                    "Could not save login activity:",
-                    error
-                );
-
-            });
-
-    })
-
-    .then(function() {
-
-        console.log(
-            "GOING TO DASHBOARD..."
-        );
-
-
-        if (message) {
-
-            message.style.color =
-                "#28a745";
-
-            message.textContent =
-                "Login successful!";
-
-        }
-
-
-        // ==================================================
-        // REDIRECT
-        // ==================================================
-
-        window.location.replace(
-            "dashboard.html"
-        );
-
-    })
-
-    .catch(function(error) {
-
-        console.error(
-            "LOGIN ERROR:",
-            error
-        );
-
-
-        if (loginButton) {
-
-            loginButton.disabled =
-                false;
-
-            loginButton.textContent =
-                "LOGIN";
-
-        }
-
-
-        let errorMessage =
-            error.message;
-
-
-        switch (error.code) {
-
-            case "auth/invalid-email":
-
-                errorMessage =
-                    "Invalid email address.";
-
-                break;
-
-
-            case "auth/user-not-found":
-
-                errorMessage =
-                    "Account not found.";
-
-                break;
-
-
-            case "auth/wrong-password":
-
-                errorMessage =
-                    "Incorrect password.";
-
-                break;
-
-
-            case "auth/invalid-credential":
-
-                errorMessage =
-                    "Incorrect email or password.";
-
-                break;
-
-
-            case "auth/too-many-requests":
-
-                errorMessage =
-                    "Too many attempts. Please try again later.";
-
-                break;
-
-        }
-
-
-        if (message) {
-
-            message.style.color =
-                "#dc3545";
-
-            message.textContent =
-                errorMessage;
-
-        }
-
-    });
-
-}
-
-
-// ==========================================================
-// MAKE FUNCTION AVAILABLE
-// ==========================================================
-
-window.login = login;
-
-
-// ==========================================================
-// FORM SUPPORT
-// ==========================================================
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function() {
-
-        const form =
+        const loginButton =
             document.getElementById(
-                "loginForm"
+                "loginButton"
             );
 
 
-        if (form) {
-
-            form.addEventListener(
-                "submit",
-                function(event) {
-
-                    event.preventDefault();
-
-                    login();
-
-                }
+        const message =
+            document.getElementById(
+                "message"
             );
+
+
+        // ==================================================
+        // CHECK FIREBASE
+        // ==================================================
+
+        if (
+            typeof firebase ===
+            "undefined"
+        ) {
+
+            console.error(
+                "Firebase SDK not loaded."
+            );
+
+
+            message.textContent =
+                "Firebase SDK failed to load.";
+
+            return;
 
         }
 
-    }
-);        console.error(
-            "AUTH is undefined."
+
+        if (
+            typeof auth ===
+            "undefined"
+        ) {
+
+            console.error(
+                "Firebase Auth unavailable."
+            );
+
+
+            message.textContent =
+                "Firebase Authentication is unavailable.";
+
+            return;
+
+        }
+
+
+        if (
+            typeof database ===
+            "undefined"
+        ) {
+
+            console.error(
+                "Firebase Database unavailable."
+            );
+
+
+            message.textContent =
+                "Firebase Database is unavailable.";
+
+            return;
+
+        }
+
+
+        // ==================================================
+        // LOGIN FORM
+        // ==================================================
+
+        loginForm.addEventListener(
+            "submit",
+            function (event) {
+
+                event.preventDefault();
+
+
+                performLogin();
+
+            }
         );
 
 
-        if (message) {
+        // ==================================================
+        // LOGIN FUNCTION
+        // ==================================================
 
-            message.textContent =
-                "Firebase Authentication is not initialized.";
-
-        }
-
-        return;
-
-    }
+        function performLogin() {
 
 
-    // ------------------------------------------------------
-    // BUTTON
-    // ------------------------------------------------------
-
-    if (loginButton) {
-
-        loginButton.disabled =
-            true;
-
-        loginButton.textContent =
-            "LOGGING IN...";
-
-    }
+            const email =
+                document
+                    .getElementById("email")
+                    .value
+                    .trim();
 
 
-    if (message) {
-
-        message.style.color =
-            "#0b2447";
-
-        message.textContent =
-            "Checking account...";
-
-    }
+            const password =
+                document
+                    .getElementById("password")
+                    .value;
 
 
-    // ======================================================
-    // FIREBASE LOGIN
-    // ======================================================
+            // ----------------------------------------------
+            // VALIDATION
+            // ----------------------------------------------
 
-    auth
-        .signInWithEmailAndPassword(
-            email,
-            password
-        )
+            if (!email) {
 
-        .then(function(result) {
-
-            console.log(
-                "Firebase Authentication SUCCESS"
-            );
-
-
-            const user =
-                result.user;
-
-
-            console.log(
-                "Logged in user:",
-                user.email
-            );
-
-
-            // ==================================================
-            // LOGIN ACTIVITY
-            // ==================================================
-
-            const loginRecord = {
-
-                action:
-                    "LOGIN",
-
-                email:
-                    user.email,
-
-                uid:
-                    user.uid,
-
-                source:
-                    "Web Login",
-
-                timestamp:
-                    new Date().toLocaleString(),
-
-                createdAt:
-                    firebase.database.ServerValue.TIMESTAMP,
-
-                userAgent:
-                    navigator.userAgent
-
-            };
-
-
-            // ==================================================
-            // SAVE LOGIN ACTIVITY
-            // ==================================================
-
-            if (
-                typeof database ===
-                "undefined"
-            ) {
-
-                console.error(
-                    "DATABASE is undefined."
+                showMessage(
+                    "Please enter your email.",
+                    "error"
                 );
 
-
-                // Still allow login
-                // even if database logging fails
-
-                window.location.href =
-                    "dashboard.html";
-
-                return null;
+                return;
 
             }
 
 
-            console.log(
-                "Saving login activity..."
-            );
+            if (!password) {
 
-
-            return database
-                .ref(
-                    "SmartStorage/loginActivity"
-                )
-                .push(
-                    loginRecord
+                showMessage(
+                    "Please enter your password.",
+                    "error"
                 );
 
-        })
+                return;
 
-        .then(function() {
+            }
 
-            console.log(
-                "Login activity saved successfully."
+
+            // ----------------------------------------------
+            // DISABLE BUTTON
+            // ----------------------------------------------
+
+            loginButton.disabled =
+                true;
+
+
+            loginButton.textContent =
+                "LOGGING IN...";
+
+
+            showMessage(
+                "Checking account...",
+                "normal"
             );
 
 
-            if (message) {
+            console.log(
+                "Attempting Firebase login..."
+            );
+
+
+            // ==================================================
+            // FIREBASE AUTHENTICATION
+            // ==================================================
+
+            auth
+                .signInWithEmailAndPassword(
+                    email,
+                    password
+                )
+
+
+                // ==============================================
+                // AUTHENTICATION SUCCESS
+                // ==============================================
+
+                .then(
+                    function (result) {
+
+                        const user =
+                            result.user;
+
+
+                        console.log(
+                            "Authentication successful."
+                        );
+
+
+                        console.log(
+                            "User:",
+                            user.email
+                        );
+
+
+                        // ==========================================
+                        // LOGIN ACTIVITY
+                        // ==========================================
+
+                        const loginActivity = {
+
+                            action:
+                                "LOGIN",
+
+                            email:
+                                user.email,
+
+                            uid:
+                                user.uid,
+
+                            source:
+                                "Web Login",
+
+                            timestamp:
+                                new Date()
+                                    .toLocaleString(),
+
+                            createdAt:
+                                firebase
+                                    .database
+                                    .ServerValue
+                                    .TIMESTAMP,
+
+                            userAgent:
+                                navigator.userAgent
+
+                        };
+
+
+                        console.log(
+                            "Saving login activity...",
+                            loginActivity
+                        );
+
+
+                        // ==========================================
+                        // SAVE TO REALTIME DATABASE
+                        // ==========================================
+
+                        return database
+                            .ref(
+                                "SmartStorage/loginActivity"
+                            )
+                            .push(
+                                loginActivity
+                            );
+
+                    }
+                )
+
+
+                // ==============================================
+                // DATABASE SAVE SUCCESS
+                // ==============================================
+
+                .then(
+                    function (result) {
+
+                        console.log(
+                            "Login activity saved."
+                        );
+
+
+                        if (result) {
+
+                            console.log(
+                                "Firebase key:",
+                                result.key
+                            );
+
+                        }
+
+
+                        showMessage(
+                            "Login successful!",
+                            "success"
+                        );
+
+
+                        // ==========================================
+                        // REDIRECT
+                        // ==========================================
+
+                        setTimeout(
+                            function () {
+
+                                window.location.replace(
+                                    "dashboard.html"
+                                );
+
+                            },
+                            500
+                        );
+
+                    }
+                )
+
+
+                // ==============================================
+                // ERROR
+                // ==============================================
+
+                .catch(
+                    function (error) {
+
+                        console.error(
+                            "LOGIN ERROR:",
+                            error
+                        );
+
+
+                        loginButton.disabled =
+                            false;
+
+
+                        loginButton.textContent =
+                            "LOGIN";
+
+
+                        let errorMessage =
+                            error.message;
+
+
+                        // ------------------------------------------
+                        // FRIENDLY FIREBASE ERRORS
+                        // ------------------------------------------
+
+                        if (
+                            error.code ===
+                            "auth/invalid-credential"
+                        ) {
+
+                            errorMessage =
+                                "Incorrect email or password.";
+
+                        }
+
+
+                        else if (
+                            error.code ===
+                            "auth/invalid-email"
+                        ) {
+
+                            errorMessage =
+                                "Invalid email address.";
+
+                        }
+
+
+                        else if (
+                            error.code ===
+                            "auth/user-not-found"
+                        ) {
+
+                            errorMessage =
+                                "Account not found.";
+
+                        }
+
+
+                        else if (
+                            error.code ===
+                            "auth/wrong-password"
+                        ) {
+
+                            errorMessage =
+                                "Incorrect password.";
+
+                        }
+
+
+                        else if (
+                            error.code ===
+                            "auth/too-many-requests"
+                        ) {
+
+                            errorMessage =
+                                "Too many login attempts. Try again later.";
+
+                        }
+
+
+                        else if (
+                            error.code ===
+                            "PERMISSION_DENIED"
+                        ) {
+
+                            errorMessage =
+                                "Firebase Database permission denied.";
+
+                        }
+
+
+                        showMessage(
+                            errorMessage,
+                            "error"
+                        );
+
+                    }
+                );
+
+        }
+
+
+        // ==================================================
+        // MESSAGE
+        // ==================================================
+
+        function showMessage(
+            text,
+            type
+        ) {
+
+            message.textContent =
+                text;
+
+
+            if (
+                type ===
+                "success"
+            ) {
 
                 message.style.color =
                     "#28a745";
 
-                message.textContent =
-                    "Login successful!";
-
             }
 
-
-            // ==================================================
-            // REDIRECT TO DASHBOARD
-            // ==================================================
-
-            setTimeout(function() {
-
-                window.location.href =
-                    "dashboard.html";
-
-            }, 300);
-
-        })
-
-        .catch(function(error) {
-
-            console.error(
-                "LOGIN ERROR:",
-                error
-            );
-
-
-            // --------------------------------------------------
-            // ENABLE BUTTON AGAIN
-            // --------------------------------------------------
-
-            if (loginButton) {
-
-                loginButton.disabled =
-                    false;
-
-                loginButton.textContent =
-                    "LOGIN";
-
-            }
-
-
-            // --------------------------------------------------
-            // DISPLAY ERROR
-            // --------------------------------------------------
-
-            let errorMessage =
-                error.message;
-
-
-            switch (error.code) {
-
-                case "auth/invalid-email":
-
-                    errorMessage =
-                        "Invalid email address.";
-
-                    break;
-
-
-                case "auth/user-not-found":
-
-                    errorMessage =
-                        "Account does not exist.";
-
-                    break;
-
-
-                case "auth/wrong-password":
-
-                    errorMessage =
-                        "Incorrect password.";
-
-                    break;
-
-
-                case "auth/invalid-credential":
-
-                    errorMessage =
-                        "Incorrect email or password.";
-
-                    break;
-
-
-                case "auth/too-many-requests":
-
-                    errorMessage =
-                        "Too many login attempts. Please try again later.";
-
-                    break;
-
-            }
-
-
-            if (message) {
+            else if (
+                type ===
+                "error"
+            ) {
 
                 message.style.color =
                     "#dc3545";
 
-                message.textContent =
-                    errorMessage;
-
             }
 
-        });
+            else {
 
-}
+                message.style.color =
+                    "#0b2447";
 
-
-// ==========================================================
-// MAKE FUNCTION AVAILABLE TO HTML
-// ==========================================================
-
-window.login =
-    login;
-
-
-// ==========================================================
-// FORM SUPPORT
-// ==========================================================
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function() {
-
-        console.log(
-            "Login page ready."
-        );
-
-
-        const form =
-            document.getElementById(
-                "loginForm"
-            );
-
-
-        if (form) {
-
-            form.addEventListener(
-                "submit",
-                function(event) {
-
-                    event.preventDefault();
-
-                    login();
-
-                }
-            );
+            }
 
         }
 
     }
 );
-
-</div>
-
-
-<!-- =====================================================
-     FIREBASE
-====================================================== -->
-
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
-
-
-<!-- YOUR FIREBASE CONFIG -->
-
-<script src="firebase-config.js"></script>
-
-
-<!-- LOGIN SCRIPT -->
-
-<script src="login.js"></script>
-
-
-</body>
-
-</html>
