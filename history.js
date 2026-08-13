@@ -1,38 +1,204 @@
-/* ==========================================================
-SMART STORAGE MONITORING SYSTEM
-HISTORY.JS
-========================================================== */
-
 // ==========================================================
+// SMART STORAGE - HISTORY.JS
+// ==========================================================
+
 // AUTHENTICATION
-// ==========================================================
-
 auth.onAuthStateChanged((user) => {
 
-if (!user) {
+    if (!user) {
+        window.location.href = "index.html";
+        return;
+    }
 
-    window.location.href = "index.html";
+    const email = document.getElementById("userEmail");
 
-    return;
+    if (email) {
+        email.textContent = user.email;
+    }
 
-}
-
-
-const userEmail =
-    document.getElementById("userEmail");
-
-
-if (userEmail) {
-
-    userEmail.innerHTML =
-        user.email;
-
-}
-
-
-loadHistory();
-
+    loadHistory();
 });
+
+
+// ==========================================================
+// LOAD HISTORY FROM FIREBASE
+// ==========================================================
+
+function loadHistory() {
+
+    const historyBody =
+        document.getElementById("historyBody");
+
+    if (!historyBody) {
+        console.error("historyBody not found.");
+        return;
+    }
+
+    database
+        .ref("SmartStorage/history")
+        .on("value", (snapshot) => {
+
+            historyBody.innerHTML = "";
+
+            if (!snapshot.exists()) {
+
+                historyBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-message">
+                            No history records found.
+                        </td>
+                    </tr>
+                `;
+
+                return;
+            }
+
+            const records = [];
+
+            snapshot.forEach((child) => {
+
+                records.push({
+                    id: child.key,
+                    data: child.val()
+                });
+
+            });
+
+
+            // Newest first
+            records.reverse();
+
+
+            records.forEach((record) => {
+
+                const data = record.data;
+
+                let motion = data.motion ?? "--";
+
+                if (motion === true) {
+                    motion = "Motion Detected";
+                }
+
+                if (motion === false) {
+                    motion = "No Motion";
+                }
+
+
+                let device = "--";
+
+                if (data.device) {
+
+                    device =
+                        data.device +
+                        " - " +
+                        (
+                            data.state
+                                ? "ON"
+                                : "OFF"
+                        );
+
+                }
+
+
+                const row =
+                    document.createElement("tr");
+
+
+                row.innerHTML = `
+
+                    <td>
+                        ${data.timestamp ?? "--"}
+                    </td>
+
+                    <td>
+                        ${
+                            data.temperature !== undefined
+                                ? data.temperature + " °C"
+                                : "--"
+                        }
+                    </td>
+
+                    <td>
+                        ${
+                            data.humidity !== undefined
+                                ? data.humidity + " %"
+                                : "--"
+                        }
+                    </td>
+
+                    <td>
+                        ${motion}
+                    </td>
+
+                    <td>
+                        ${data.status ?? "--"}
+                    </td>
+
+                    <td>
+                        ${device}
+                    </td>
+
+                    <td>
+                        ${data.source ?? "--"}
+                    </td>
+
+                `;
+
+
+                historyBody.appendChild(row);
+
+            });
+
+        }, (error) => {
+
+            console.error(
+                "Firebase history error:",
+                error
+            );
+
+            historyBody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="empty-message">
+                        ❌ ${error.message}
+                    </td>
+                </tr>
+            `;
+
+        });
+
+}
+
+
+// ==========================================================
+// SEARCH
+// ==========================================================
+
+function searchTable() {
+
+    const input =
+        document.getElementById("searchInput");
+
+    const filter =
+        input.value.toLowerCase();
+
+    const rows =
+        document.querySelectorAll(
+            "#historyBody tr"
+        );
+
+    rows.forEach((row) => {
+
+        row.style.display =
+            row.innerText
+                .toLowerCase()
+                .includes(filter)
+                ? ""
+                : "none";
+
+    });
+
+}
+
 
 // ==========================================================
 // LOGOUT
@@ -40,75 +206,32 @@ loadHistory();
 
 function logout() {
 
-auth.signOut()
+    auth.signOut()
+        .then(() => {
 
-    .then(() => {
+            window.location.href =
+                "index.html";
 
-        window.location.href =
-            "index.html";
+        })
+        .catch((error) => {
 
-    })
-
-    .catch((error) => {
-
-        console.error(
-            "Logout error:",
-            error
-        );
-
-    });
-
-}
-
-// ==========================================================
-// LOAD FIREBASE HISTORY
-// ==========================================================
-
-function loadHistory() {
-
-const historyBody =
-    document.getElementById(
-        "historyBody"
-    );
-
-
-if (!historyBody) {
-
-    console.error(
-        "historyBody was not found."
-    );
-
-    return;
-
-}
-
-
-database
-    .ref("SmartStorage/history")
-    .on(
-
-        "value",
-
-        (snapshot) => {
-
-            console.log(
-                "Firebase History:",
-                snapshot.val()
+            console.error(
+                "Logout failed:",
+                error
             );
 
+            alert(
+                "Logout failed: " +
+                error.message
+            );
 
-            // Clear existing rows
+        });
 
-            historyBody.innerHTML =
-                "";
+}
 
 
-            // ------------------------------------------------
-            // NO DATA
-            // ------------------------------------------------
-
-            if (!snapshot.exists()) {
-
+window.logout = logout;
+window.searchTable = searchTable;
                 historyBody.innerHTML = `
 
                     <tr>
