@@ -1,7 +1,8 @@
-/* ==========================================================
-SMART STORAGE MONITORING SYSTEM
-HISTORY.JS
-========================================================== */
+// ==========================================================
+// SMART STORAGE MONITORING SYSTEM
+// HISTORY.JS
+// ==========================================================
+
 
 // ==========================================================
 // AUTHENTICATION
@@ -9,30 +10,30 @@ HISTORY.JS
 
 auth.onAuthStateChanged((user) => {
 
-if (!user) {
+    if (!user) {
 
-    window.location.href = "index.html";
+        window.location.href = "index.html";
 
-    return;
-
-}
-
-
-const userEmail =
-    document.getElementById("userEmail");
+        return;
+    }
 
 
-if (userEmail) {
-
-    userEmail.innerHTML =
-        user.email;
-
-}
+    const userEmail =
+        document.getElementById("userEmail");
 
 
-loadHistory();
+    if (userEmail) {
+
+        userEmail.innerHTML =
+            user.email;
+
+    }
+
+
+    loadHistory();
 
 });
+
 
 // ==========================================================
 // LOGOUT
@@ -40,828 +41,347 @@ loadHistory();
 
 function logout() {
 
-auth.signOut()
+    auth.signOut()
+        .then(() => {
 
-    .then(() => {
+            window.location.href =
+                "index.html";
 
-        window.location.href =
-            "index.html";
+        })
+        .catch((error) => {
 
-    })
+            console.error(
+                "Logout error:",
+                error
+            );
 
-    .catch((error) => {
-
-        console.error(
-            "Logout error:",
-            error
-        );
-
-    });
+        });
 
 }
 
+
 // ==========================================================
-// LOAD FIREBASE HISTORY
+// LOAD HISTORY
 // ==========================================================
 
 function loadHistory() {
 
-const historyBody =
-    document.getElementById(
-        "historyBody"
-    );
+    const historyTable =
+        document.getElementById(
+            "historyTable"
+        );
 
 
-if (!historyBody) {
-
-    console.error(
-        "historyBody was not found."
-    );
-
-    return;
-
-}
+    const emptyMessage =
+        document.getElementById(
+            "emptyMessage"
+        );
 
 
-database
-    .ref("SmartStorage/history")
-    .on(
+    if (!historyTable) {
 
-        "value",
+        console.error(
+            "historyTable was not found."
+        );
 
-        (snapshot) => {
+        return;
 
-            console.log(
-                "Firebase History:",
-                snapshot.val()
-            );
+    }
 
 
-            // Clear existing rows
+    database
+        .ref("SmartStorage/history")
+        .on(
 
-            historyBody.innerHTML =
-                "";
+            "value",
 
+            (snapshot) => {
 
-            // ------------------------------------------------
-            // NO DATA
-            // ------------------------------------------------
-
-            if (!snapshot.exists()) {
-
-                historyBody.innerHTML = `
-
-                    <tr>
-
-                        <td
-                            colspan="7"
-                            class="empty-message"
-                        >
-
-                            No history records found.
-
-                        </td>
-
-                    </tr>
-
-                `;
-
-                return;
-
-            }
+                console.log(
+                    "Firebase history:",
+                    snapshot.val()
+                );
 
 
-            const history =
-                snapshot.val();
+                historyTable.innerHTML =
+                    "";
 
 
-            // Convert Firebase object
-            // into array
+                if (!snapshot.exists()) {
 
-            const records =
-                Object.entries(history);
+                    if (emptyMessage) {
 
-
-            // Newest first
-
-            records.reverse();
-
-
-            // ------------------------------------------------
-            // DISPLAY RECORDS
-            // ------------------------------------------------
-
-            records.forEach(
-                ([id, data]) => {
-
-
-                    const row =
-                        document.createElement(
-                            "tr"
-                        );
-
-
-                    // ----------------------------------------
-                    // DATE
-                    // ----------------------------------------
-
-                    const timestamp =
-                        data.timestamp ??
-                        data.lastUpdate ??
-                        "--";
-
-
-                    // ----------------------------------------
-                    // TEMPERATURE
-                    // ----------------------------------------
-
-                    const temperature =
-                        data.temperature !==
-                        undefined
-
-                            ? data.temperature +
-                              " °C"
-
-                            : "--";
-
-
-                    // ----------------------------------------
-                    // HUMIDITY
-                    // ----------------------------------------
-
-                    const humidity =
-                        data.humidity !==
-                        undefined
-
-                            ? data.humidity +
-                              " %"
-
-                            : "--";
-
-
-                    // ----------------------------------------
-                    // MOTION
-                    // ----------------------------------------
-
-                    let motion =
-                        data.motion;
-
-
-                    if (
-                        motion === true
-                    ) {
-
-                        motion =
-                            "Motion Detected";
+                        emptyMessage.style.display =
+                            "block";
 
                     }
 
-                    else if (
-                        motion === false
-                    ) {
+                    return;
 
-                        motion =
-                            "No Motion";
-
-                    }
-
-                    else {
-
-                        motion =
-                            "--";
-
-                    }
+                }
 
 
-                    // ----------------------------------------
-                    // STATUS
-                    // ----------------------------------------
+                if (emptyMessage) {
 
-                    const status =
-                        data.status ??
-                        "--";
+                    emptyMessage.style.display =
+                        "none";
 
-
-                    // ----------------------------------------
-                    // DEVICE
-                    // ----------------------------------------
-
-                    let device =
-                        "--";
+                }
 
 
-                    if (
-                        data.device
-                    ) {
-
-                        let deviceName =
-                            data.device;
+                const history =
+                    snapshot.val();
 
 
-                        if (
-                            data.device ===
-                            "light"
-                        ) {
-
-                            deviceName =
-                                "💡 Light";
-
-                        }
-
-                        else if (
-                            data.device ===
-                            "fan"
-                        ) {
-
-                            deviceName =
-                                "🌀 Fan";
-
-                        }
-
-                        else if (
-                            data.device ===
-                            "door"
-                        ) {
-
-                            deviceName =
-                                "🚪 Door";
-
-                        }
-
-                        else if (
-                            data.device ===
-                            "alarm"
-                        ) {
-
-                            deviceName =
-                                "🚨 Alarm";
-
-                        }
+                const records =
+                    Object.entries(history);
 
 
-                        const state =
-                            Boolean(
-                                data.state
+                // Newest first
+
+                records.reverse();
+
+
+                records.forEach(
+                    ([id, data]) => {
+
+                        const row =
+                            document.createElement(
+                                "tr"
                             );
 
 
-                        let stateText =
-                            state
-                                ? "ON"
-                                : "OFF";
+                        // ----------------------------------
+                        // DATA
+                        // ----------------------------------
+
+                        const temperature =
+                            data.temperature ??
+                            "--";
+
+
+                        const humidity =
+                            data.humidity ??
+                            "--";
+
+
+                        let motion =
+                            data.motion;
 
 
                         if (
-                            data.device ===
-                            "door"
+                            motion === true
                         ) {
 
-                            stateText =
-                                state
-                                    ? "OPEN"
-                                    : "CLOSED";
+                            motion =
+                                "Motion Detected";
+
+                        }
+
+                        else if (
+                            motion === false
+                        ) {
+
+                            motion =
+                                "No Motion";
+
+                        }
+
+                        else {
+
+                            motion =
+                                "--";
 
                         }
 
 
-                        device =
-                            deviceName +
-                            " - " +
-                            stateText;
+                        const status =
+                            data.status ??
+                            "--";
+
+
+                        const source =
+                            data.source ??
+                            "--";
+
+
+                        const timestamp =
+                            data.timestamp ??
+                            "--";
+
+
+                        // ----------------------------------
+                        // DEVICE ACTION
+                        // ----------------------------------
+
+                        let deviceInfo =
+                            "--";
+
+
+                        if (
+                            data.device
+                        ) {
+
+                            const device =
+                                data.device;
+
+
+                            const state =
+                                Boolean(
+                                    data.state
+                                );
+
+
+                            let deviceName =
+                                device;
+
+
+                            if (
+                                device ===
+                                "light"
+                            ) {
+
+                                deviceName =
+                                    "💡 Light";
+
+                            }
+
+                            else if (
+                                device ===
+                                "fan"
+                            ) {
+
+                                deviceName =
+                                    "🌀 Fan";
+
+                            }
+
+                            else if (
+                                device ===
+                                "door"
+                            ) {
+
+                                deviceName =
+                                    "🚪 Door";
+
+                            }
+
+                            else if (
+                                device ===
+                                "alarm"
+                            ) {
+
+                                deviceName =
+                                    "🚨 Alarm";
+
+                            }
+
+
+                            let stateText =
+                                state
+                                    ? "ON"
+                                    : "OFF";
+
+
+                            if (
+                                device ===
+                                "door"
+                            ) {
+
+                                stateText =
+                                    state
+                                        ? "OPEN"
+                                        : "CLOSED";
+
+                            }
+
+
+                            deviceInfo =
+                                deviceName +
+                                " - " +
+                                stateText;
+
+                        }
+
+
+                        // ----------------------------------
+                        // BUILD ROW
+                        // ----------------------------------
+
+                        row.innerHTML = `
+
+                            <td>
+                                ${timestamp}
+                            </td>
+
+                            <td>
+                                ${temperature}
+                                °C
+                            </td>
+
+                            <td>
+                                ${humidity}
+                                %
+                            </td>
+
+                            <td>
+                                ${motion}
+                            </td>
+
+                            <td>
+                                ${status}
+                            </td>
+
+                            <td>
+                                ${deviceInfo}
+                            </td>
+
+                            <td>
+                                ${source}
+                            </td>
+
+                        `;
+
+
+                        historyTable
+                            .appendChild(
+                                row
+                            );
 
                     }
+                );
+
+            },
+
+            (error) => {
+
+                console.error(
+                    "History Firebase error:",
+                    error
+                );
 
 
-                    // ----------------------------------------
-                    // SOURCE
-                    // ----------------------------------------
+                if (emptyMessage) {
 
-                    const source =
-                        data.source ??
-                        "Unknown";
+                    emptyMessage.innerHTML =
+                        "❌ Unable to load Firebase history: " +
+                        error.message;
 
-
-                    // ----------------------------------------
-                    // CREATE ROW
-                    // ----------------------------------------
-
-                    row.innerHTML = `
-
-                        <td>
-                            ${timestamp}
-                        </td>
-
-                        <td>
-                            ${temperature}
-                        </td>
-
-                        <td>
-                            ${humidity}
-                        </td>
-
-                        <td>
-                            ${motion}
-                        </td>
-
-                        <td>
-                            ${status}
-                        </td>
-
-                        <td>
-                            ${device}
-                        </td>
-
-                        <td>
-                            ${source}
-                        </td>
-
-                    `;
-
-
-                    historyBody.appendChild(
-                        row
-                    );
+                    emptyMessage.style.display =
+                        "block";
 
                 }
-            );
-
-        },
-
-
-        // ==================================================
-        // FIREBASE ERROR
-        // ==================================================
-
-        (error) => {
-
-            console.error(
-                "Firebase History Error:",
-                error
-            );
-
-
-            historyBody.innerHTML = `
-
-                <tr>
-
-                    <td
-                        colspan="7"
-                        class="empty-message"
-                    >
-
-                        ❌ Unable to load Firebase
-                        history.<br><br>
-
-                        ${error.message}
-
-                    </td>
-
-                </tr>
-
-            `;
-
-        }
-
-    );
-
-}
-
-// ==========================================================
-// SEARCH
-// ==========================================================
-
-function searchTable() {
-
-const input =
-    document.getElementById(
-        "searchInput"
-    );
-
-
-const filter =
-    input.value.toLowerCase();
-
-
-const rows =
-    document.querySelectorAll(
-        "#historyBody tr"
-    );
-
-
-rows.forEach((row) => {
-
-    const text =
-        row.innerText.toLowerCase();
-
-
-    if (
-        text.includes(filter)
-    ) {
-
-        row.style.display =
-            "";
-
-    }
-
-    else {
-
-        row.style.display =
-            "none";
-
-    }
-
-});
-
-}
-
-// ==========================================================
-// MAKE FUNCTIONS AVAILABLE
-// ==========================================================
-
-window.logout =
-logout;
-
-window.searchTable =
-searchTable;            // ------------------------------------------------
-            // NO DATA
-            // ------------------------------------------------
-
-            if (!snapshot.exists()) {
-
-                historyBody.innerHTML = `
-
-                    <tr>
-
-                        <td
-                            colspan="7"
-                            class="empty-message"
-                        >
-
-                            No history records found.
-
-                        </td>
-
-                    </tr>
-
-                `;
-
-                return;
 
             }
 
-
-            const history =
-                snapshot.val();
-
-
-            // Convert Firebase object
-            // into array
-
-            const records =
-                Object.entries(history);
-
-
-            // Newest first
-
-            records.reverse();
-
-
-            // ------------------------------------------------
-            // DISPLAY RECORDS
-            // ------------------------------------------------
-
-            records.forEach(
-                ([id, data]) => {
-
-
-                    const row =
-                        document.createElement(
-                            "tr"
-                        );
-
-
-                    // ----------------------------------------
-                    // DATE
-                    // ----------------------------------------
-
-                    const timestamp =
-                        data.timestamp ??
-                        data.lastUpdate ??
-                        "--";
-
-
-                    // ----------------------------------------
-                    // TEMPERATURE
-                    // ----------------------------------------
-
-                    const temperature =
-                        data.temperature !==
-                        undefined
-
-                            ? data.temperature +
-                              " °C"
-
-                            : "--";
-
-
-                    // ----------------------------------------
-                    // HUMIDITY
-                    // ----------------------------------------
-
-                    const humidity =
-                        data.humidity !==
-                        undefined
-
-                            ? data.humidity +
-                              " %"
-
-                            : "--";
-
-
-                    // ----------------------------------------
-                    // MOTION
-                    // ----------------------------------------
-
-                    let motion =
-                        data.motion;
-
-
-                    if (
-                        motion === true
-                    ) {
-
-                        motion =
-                            "Motion Detected";
-
-                    }
-
-                    else if (
-                        motion === false
-                    ) {
-
-                        motion =
-                            "No Motion";
-
-                    }
-
-                    else {
-
-                        motion =
-                            "--";
-
-                    }
-
-
-                    // ----------------------------------------
-                    // STATUS
-                    // ----------------------------------------
-
-                    const status =
-                        data.status ??
-                        "--";
-
-
-                    // ----------------------------------------
-                    // DEVICE
-                    // ----------------------------------------
-
-                    let device =
-                        "--";
-
-
-                    if (
-                        data.device
-                    ) {
-
-                        let deviceName =
-                            data.device;
-
-
-                        if (
-                            data.device ===
-                            "light"
-                        ) {
-
-                            deviceName =
-                                "💡 Light";
-
-                        }
-
-                        else if (
-                            data.device ===
-                            "fan"
-                        ) {
-
-                            deviceName =
-                                "🌀 Fan";
-
-                        }
-
-                        else if (
-                            data.device ===
-                            "door"
-                        ) {
-
-                            deviceName =
-                                "🚪 Door";
-
-                        }
-
-                        else if (
-                            data.device ===
-                            "alarm"
-                        ) {
-
-                            deviceName =
-                                "🚨 Alarm";
-
-                        }
-
-
-                        const state =
-                            Boolean(
-                                data.state
-                            );
-
-
-                        let stateText =
-                            state
-                                ? "ON"
-                                : "OFF";
-
-
-                        if (
-                            data.device ===
-                            "door"
-                        ) {
-
-                            stateText =
-                                state
-                                    ? "OPEN"
-                                    : "CLOSED";
-
-                        }
-
-
-                        device =
-                            deviceName +
-                            " - " +
-                            stateText;
-
-                    }
-
-
-                    // ----------------------------------------
-                    // SOURCE
-                    // ----------------------------------------
-
-                    const source =
-                        data.source ??
-                        "Unknown";
-
-
-                    // ----------------------------------------
-                    // CREATE ROW
-                    // ----------------------------------------
-
-                    row.innerHTML = `
-
-                        <td>
-                            ${timestamp}
-                        </td>
-
-                        <td>
-                            ${temperature}
-                        </td>
-
-                        <td>
-                            ${humidity}
-                        </td>
-
-                        <td>
-                            ${motion}
-                        </td>
-
-                        <td>
-                            ${status}
-                        </td>
-
-                        <td>
-                            ${device}
-                        </td>
-
-                        <td>
-                            ${source}
-                        </td>
-
-                    `;
-
-
-                    historyBody.appendChild(
-                        row
-                    );
-
-                }
-            );
-
-        },
-
-
-        // ==================================================
-        // FIREBASE ERROR
-        // ==================================================
-
-        (error) => {
-
-            console.error(
-                "Firebase History Error:",
-                error
-            );
-
-
-            historyBody.innerHTML = `
-
-                <tr>
-
-                    <td
-                        colspan="7"
-                        class="empty-message"
-                    >
-
-                        ❌ Unable to load Firebase
-                        history.<br><br>
-
-                        ${error.message}
-
-                    </td>
-
-                </tr>
-
-            `;
-
-        }
-
-    );
-```
+        );
 
 }
 
-// ==========================================================
-// SEARCH
-// ==========================================================
-
-function searchTable() {
-
-```
-const input =
-    document.getElementById(
-        "searchInput"
-    );
-
-
-const filter =
-    input.value.toLowerCase();
-
-
-const rows =
-    document.querySelectorAll(
-        "#historyBody tr"
-    );
-
-
-rows.forEach((row) => {
-
-    const text =
-        row.innerText.toLowerCase();
-
-
-    if (
-        text.includes(filter)
-    ) {
-
-        row.style.display =
-            "";
-
-    }
-
-    else {
-
-        row.style.display =
-            "none";
-
-    }
-
-});
-```
-
-}
 
 // ==========================================================
-// MAKE FUNCTIONS AVAILABLE
+// MAKE LOGOUT AVAILABLE
 // ==========================================================
 
 window.logout =
-logout;
-
-window.searchTable =
-searchTable;
+    logout;
