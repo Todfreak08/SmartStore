@@ -1,97 +1,54 @@
 // ==========================================================
 // SMART STORAGE MONITORING SYSTEM
 // LOGIN.JS
-// ==========================================================
-
-console.log("LOGIN.JS LOADED");
-
-
-// ==========================================================
-// LOGIN FUNCTION
+// Firebase Authentication + Realtime Database Login Activity
 // ==========================================================
 
 function login() {
 
-    console.log("LOGIN BUTTON CLICKED");
+    const email =
+        document.getElementById("email").value.trim();
 
-    const emailElement =
-        document.getElementById("email");
-
-    const passwordElement =
-        document.getElementById("password");
+    const password =
+        document.getElementById("password").value;
 
     const message =
         document.getElementById("message");
 
-    const loginButton =
+    const button =
         document.getElementById("loginButton");
 
 
-    if (!emailElement || !passwordElement) {
-
-        console.error(
-            "Email or password field not found."
-        );
-
-        return;
-
-    }
-
-
-    const email =
-        emailElement.value.trim();
-
-    const password =
-        passwordElement.value;
-
-
-    // ======================================================
+    // ------------------------------------------------------
     // VALIDATION
-    // ======================================================
+    // ------------------------------------------------------
 
     if (!email || !password) {
 
-        if (message) {
-
-            message.style.color = "#dc3545";
-
-            message.textContent =
-                "Please enter your email and password.";
-
-        }
-
-        return;
-
-    }
-
-
-    // ======================================================
-    // BUTTON
-    // ======================================================
-
-    if (loginButton) {
-
-        loginButton.disabled = true;
-
-        loginButton.textContent =
-            "LOGGING IN...";
-
-    }
-
-
-    if (message) {
-
-        message.style.color = "#0b2447";
+        message.style.color = "#dc3545";
 
         message.textContent =
-            "Logging in...";
+            "Please enter your email and password.";
 
+        return;
     }
 
 
-    // ======================================================
+    button.disabled = true;
+
+    button.textContent =
+        "LOGGING IN...";
+
+    message.style.color =
+        "#0b2447";
+
+    message.textContent =
+        "Please wait...";
+
+
+    // ------------------------------------------------------
     // FIREBASE AUTHENTICATION
-    // ======================================================
+    // ------------------------------------------------------
 
     auth.signInWithEmailAndPassword(
         email,
@@ -108,7 +65,210 @@ function login() {
         );
 
 
-        // ==================================================
+        // --------------------------------------------------
+        // CREATE LOGIN RECORD
+        // --------------------------------------------------
+
+        const loginRecord = {
+
+            action: "LOGIN",
+
+            email: user.email,
+
+            uid: user.uid,
+
+            source: "Web Login",
+
+            timestamp:
+                new Date().toLocaleString(),
+
+            createdAt:
+                firebase.database.ServerValue.TIMESTAMP,
+
+            userAgent:
+                navigator.userAgent
+
+        };
+
+
+        console.log(
+            "Saving login activity:",
+            loginRecord
+        );
+
+
+        // --------------------------------------------------
+        // SAVE TO REALTIME DATABASE
+        // --------------------------------------------------
+
+        return database
+            .ref("SmartStorage/loginActivity")
+            .push(loginRecord)
+
+            .then(function() {
+
+                console.log(
+                    "LOGIN ACTIVITY SAVED TO FIREBASE"
+                );
+
+            })
+
+            .catch(function(error) {
+
+                console.error(
+                    "LOGIN LOG ERROR:",
+                    error
+                );
+
+                /*
+                 * Do NOT stop the login.
+                 * The user can still access dashboard.
+                 */
+
+            });
+
+    })
+
+
+    .then(function() {
+
+        // --------------------------------------------------
+        // LOGIN COMPLETED
+        // --------------------------------------------------
+
+        message.style.color =
+            "#28a745";
+
+        message.textContent =
+            "Login successful!";
+
+
+        // --------------------------------------------------
+        // GO TO DASHBOARD
+        // --------------------------------------------------
+
+        setTimeout(function() {
+
+            window.location.href =
+                "dashboard.html";
+
+        }, 300);
+
+    })
+
+
+    .catch(function(error) {
+
+        console.error(
+            "FIREBASE LOGIN ERROR:",
+            error
+        );
+
+
+        button.disabled =
+            false;
+
+        button.textContent =
+            "LOGIN";
+
+
+        let errorMessage =
+            error.message;
+
+
+        if (
+            error.code ===
+            "auth/invalid-credential"
+        ) {
+
+            errorMessage =
+                "Incorrect email or password.";
+
+        }
+
+
+        if (
+            error.code ===
+            "auth/invalid-email"
+        ) {
+
+            errorMessage =
+                "Invalid email address.";
+
+        }
+
+
+        if (
+            error.code ===
+            "auth/user-not-found"
+        ) {
+
+            errorMessage =
+                "Account not found.";
+
+        }
+
+
+        if (
+            error.code ===
+            "auth/wrong-password"
+        ) {
+
+            errorMessage =
+                "Incorrect password.";
+
+        }
+
+
+        message.style.color =
+            "#dc3545";
+
+        message.textContent =
+            errorMessage;
+
+    });
+
+}
+
+
+// ==========================================================
+// MAKE LOGIN AVAILABLE
+// ==========================================================
+
+window.login = login;
+
+
+// ==========================================================
+// FORM SUBMIT
+// ==========================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        const form =
+            document.getElementById(
+                "loginForm"
+            );
+
+
+        if (form) {
+
+            form.addEventListener(
+                "submit",
+                function(event) {
+
+                    event.preventDefault();
+
+                    login();
+
+                }
+            );
+
+        }
+
+    }
+);        // ==================================================
         // CREATE LOGIN ACTIVITY
         // ==================================================
 
