@@ -7,63 +7,64 @@
 
     "use strict";
 
+    function performLogout() {
 
-    // ======================================================
-    // LOGOUT FUNCTION
-    // ======================================================
+        console.log("Logout button clicked.");
 
-    function smartStorageLogout() {
+        // --------------------------------------------------
+        // CHECK FIREBASE AUTH
+        // --------------------------------------------------
 
-        // Make sure Firebase Authentication is available
-        if (
-            typeof auth === "undefined"
-        ) {
+        if (typeof firebase === "undefined") {
 
-            console.error(
-                "Firebase Auth is not loaded."
-            );
+            console.error("Firebase is not loaded.");
 
-            window.location.replace(
-                "index.html"
-            );
+            window.location.replace("index.html");
 
             return;
-
         }
 
 
-        const user =
-            auth.currentUser;
+        if (typeof auth === "undefined") {
+
+            console.error("Firebase Auth is not loaded.");
+
+            window.location.replace("index.html");
+
+            return;
+        }
 
 
-        // ==================================================
-        // NO CURRENT USER
-        // ==================================================
+        const user = auth.currentUser;
+
+
+        // --------------------------------------------------
+        // IF NO USER
+        // --------------------------------------------------
 
         if (!user) {
 
-            window.location.replace(
-                "index.html"
+            console.log(
+                "No logged-in user. Redirecting..."
             );
 
-            return;
+            window.location.replace("index.html");
 
+            return;
         }
 
 
-        // ==================================================
-        // LOGOUT ACTIVITY
-        // ==================================================
+        // --------------------------------------------------
+        // SAVE LOGOUT ACTIVITY
+        // --------------------------------------------------
 
-        const logoutActivity = {
+        const logoutData = {
 
             action: "LOGOUT",
 
-            email:
-                user.email || "",
+            email: user.email || "",
 
-            uid:
-                user.uid || "",
+            uid: user.uid || "",
 
             timestamp:
                 new Date().toLocaleString(),
@@ -77,110 +78,134 @@
         };
 
 
-        // ==================================================
-        // SAVE LOGOUT ACTIVITY
-        // ==================================================
-
-        let saveActivity =
+        let activityPromise =
             Promise.resolve();
 
 
-        if (
-            typeof database !== "undefined"
-        ) {
+        // --------------------------------------------------
+        // SAVE TO FIREBASE
+        // --------------------------------------------------
 
-            saveActivity =
+        if (typeof database !== "undefined") {
+
+            activityPromise =
                 database
                     .ref(
                         "SmartStorage/loginActivity"
                     )
-                    .push(
-                        logoutActivity
-                    );
+                    .push(logoutData);
 
         }
 
 
-        // ==================================================
+        // --------------------------------------------------
         // SIGN OUT
-        // ==================================================
+        // --------------------------------------------------
 
-        saveActivity
-
+        activityPromise
             .catch((error) => {
 
-                // Do not prevent logout if
-                // Firebase activity logging fails.
-
                 console.warn(
-                    "Could not save logout activity:",
+                    "Logout activity could not be saved:",
                     error
                 );
 
             })
-
             .then(() => {
+
+                console.log(
+                    "Signing out..."
+                );
 
                 return auth.signOut();
 
             })
-
             .then(() => {
 
                 console.log(
-                    "Logout successful."
+                    "Firebase logout successful."
                 );
 
-
-                // Replace prevents the user from
-                // returning to the protected page
-                // using browser history.
+                // --------------------------------------------------
+                // REDIRECT
+                // --------------------------------------------------
 
                 window.location.replace(
                     "index.html"
                 );
 
             })
-
             .catch((error) => {
 
                 console.error(
-                    "Logout error:",
+                    "Logout failed:",
                     error
                 );
 
+                // Force sign out
 
-                // Force logout even if something
-                // unexpected happens.
+                auth.signOut()
+                    .finally(() => {
 
-                try {
+                        window.location.replace(
+                            "index.html"
+                        );
 
-                    auth.signOut();
-
-                }
-
-                catch (e) {
-
-                    console.error(e);
-
-                }
-
-
-                window.location.replace(
-                    "index.html"
-                );
+                    });
 
             });
 
     }
 
 
-    // ======================================================
-    // MAKE FUNCTION AVAILABLE TO HTML
-    // ======================================================
+    // ------------------------------------------------------
+    // MAKE AVAILABLE TO HTML
+    // ------------------------------------------------------
 
-    window.smartStorageLogout =
-        smartStorageLogout;
+    window.performLogout =
+        performLogout;
 
+
+    // ------------------------------------------------------
+    // ALSO SUPPORT OLD logout() BUTTONS
+    // ------------------------------------------------------
+
+    window.logout =
+        performLogout;
+
+
+    // ------------------------------------------------------
+    // AUTOMATICALLY CONNECT BUTTONS
+    // ------------------------------------------------------
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            const buttons =
+                document.querySelectorAll(
+                    ".logout-btn"
+                );
+
+
+            buttons.forEach(
+                function (button) {
+
+                    button.addEventListener(
+                        "click",
+                        function (event) {
+
+                            event.preventDefault();
+
+                            performLogout();
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
 
 })();
