@@ -1,7 +1,6 @@
 // ==========================================================
 // SMART STORAGE MONITORING SYSTEM
 // COMPLETE HISTORY.JS
-// Firebase Realtime Database
 // ==========================================================
 
 
@@ -9,25 +8,23 @@
 // AUTHENTICATION
 // ==========================================================
 
-auth.onAuthStateChanged((user) => {
+auth.onAuthStateChanged(function (user) {
 
     if (!user) {
 
-        window.location.replace("index.html");
+        window.location.replace(
+            "index.html"
+        );
 
         return;
 
     }
 
 
-    console.log(
-        "History user:",
-        user.email
-    );
-
-
     const userEmail =
-        document.getElementById("userEmail");
+        document.getElementById(
+            "userEmail"
+        );
 
 
     if (userEmail) {
@@ -37,11 +34,14 @@ auth.onAuthStateChanged((user) => {
 
     }
 
+
+    loadHistory();
+
 });
 
 
 // ==========================================================
-// VARIABLES
+// HISTORY ARRAY
 // ==========================================================
 
 let historyData = [];
@@ -62,7 +62,7 @@ function loadHistory() {
     if (!historyBody) {
 
         console.error(
-            "historyBody was not found."
+            "historyBody not found."
         );
 
         return;
@@ -78,7 +78,7 @@ function loadHistory() {
                 colspan="5"
                 class="empty-message">
 
-                Loading history...
+                Loading Firebase history...
 
             </td>
 
@@ -87,64 +87,48 @@ function loadHistory() {
     `;
 
 
-    // ======================================================
-    // FIREBASE LISTENER
-    // ======================================================
-
     database
-        .ref("SmartStorage/history")
+        .ref(
+            "SmartStorage/history"
+        )
         .on(
 
             "value",
 
-            (snapshot) => {
+            function (snapshot) {
 
                 historyData = [];
 
 
-                // ------------------------------------------------
+                // ==========================================
                 // NO DATA
-                // ------------------------------------------------
+                // ==========================================
 
                 if (!snapshot.exists()) {
 
-                    historyBody.innerHTML = `
-
-                        <tr>
-
-                            <td
-                                colspan="5"
-                                class="empty-message">
-
-                                No history data available.
-
-                            </td>
-
-                        </tr>
-
-                    `;
+                    displayHistory([]);
 
                     return;
 
                 }
 
 
-                // ------------------------------------------------
-                // GET FIREBASE DATA
-                // ------------------------------------------------
-
                 const data =
                     snapshot.val();
 
 
-                Object.keys(data).forEach(
-                    (key) => {
+                // ==========================================
+                // CONVERT FIREBASE OBJECT TO ARRAY
+                // ==========================================
 
-                        const item =
+                Object.keys(data).forEach(
+                    function (key) {
+
+                        const record =
                             data[key];
 
 
-                        if (!item) return;
+                        if (!record) return;
 
 
                         historyData.push({
@@ -152,7 +136,7 @@ function loadHistory() {
                             id:
                                 key,
 
-                            ...item
+                            ...record
 
                         });
 
@@ -160,30 +144,25 @@ function loadHistory() {
                 );
 
 
-                // ------------------------------------------------
+                // ==========================================
                 // SORT NEWEST FIRST
-                // ------------------------------------------------
+                // ==========================================
 
                 historyData.sort(
-                    (a, b) => {
+                    function (a, b) {
 
-                        const timeA =
-                            getTime(a);
-
-
-                        const timeB =
-                            getTime(b);
-
-
-                        return timeB - timeA;
+                        return (
+                            getTimestamp(b) -
+                            getTimestamp(a)
+                        );
 
                     }
                 );
 
 
-                // ------------------------------------------------
+                // ==========================================
                 // DISPLAY
-                // ------------------------------------------------
+                // ==========================================
 
                 displayHistory(
                     historyData
@@ -191,10 +170,10 @@ function loadHistory() {
 
             },
 
-            (error) => {
+            function (error) {
 
                 console.error(
-                    "Firebase history error:",
+                    "History Firebase error:",
                     error
                 );
 
@@ -204,140 +183,13 @@ function loadHistory() {
                     <tr>
 
                         <td
-                            colspan="5                    </td>
+                            colspan="5"
+                            class="empty-message">
 
-                    <td>
-                        ${
-                            data.temperature !== undefined
-                                ? data.temperature + " °C"
-                                : "--"
-                        }
-                    </td>
-
-                    <td>
-                        ${
-                            data.humidity !== undefined
-                                ? data.humidity + " %"
-                                : "--"
-                        }
-                    </td>
-
-                    <td>
-                        ${motion}
-                    </td>
-
-                    <td>
-                        ${data.status ?? "--"}
-                    </td>
-
-                    <td>
-                        ${device}
-                    </td>
-
-                    <td>
-                        ${data.source ?? "--"}
-                    </td>
-
-                `;
-
-
-                historyBody.appendChild(row);
-
-            });
-
-        }, (error) => {
-
-            console.error(
-                "Firebase history error:",
-                error
-            );
-
-            historyBody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="empty-message">
-                        ❌ ${error.message}
-                    </td>
-                </tr>
-            `;
-
-        });
-
-}
-
-
-// ==========================================================
-// SEARCH
-// ==========================================================
-
-function searchTable() {
-
-    const input =
-        document.getElementById("searchInput");
-
-    const filter =
-        input.value.toLowerCase();
-
-    const rows =
-        document.querySelectorAll(
-            "#historyBody tr"
-        );
-
-    rows.forEach((row) => {
-
-        row.style.display =
-            row.innerText
-                .toLowerCase()
-                .includes(filter)
-                ? ""
-                : "none";
-
-    });
-
-}
-
-
-// ==========================================================
-// LOGOUT
-// ==========================================================
-
-function logout() {
-
-    auth.signOut()
-        .then(() => {
-
-            window.location.href =
-                "index.html";
-
-        })
-        .catch((error) => {
-
-            console.error(
-                "Logout failed:",
-                error
-            );
-
-            alert(
-                "Logout failed: " +
-                error.message
-            );
-
-        });
-
-}
-
-
-window.logout = logout;
-window.searchTable = searchTable;
-                historyBody.innerHTML = `
-
-                    <tr>
-
-                        <td
-                            colspan="7"
-                            class="empty-message"
-                        >
-
-                            No history records found.
+                            ❌ Firebase Error:
+                            ${escapeHTML(
+                                error.message
+                            )}
 
                         </td>
 
@@ -345,305 +197,468 @@ window.searchTable = searchTable;
 
                 `;
 
-                return;
+            }
+
+        );
+
+}
+
+
+// ==========================================================
+// GET TIMESTAMP
+// ==========================================================
+
+function getTimestamp(
+    record
+) {
+
+    if (
+        typeof record.createdAt ===
+        "number"
+    ) {
+
+        return record.createdAt;
+
+    }
+
+
+    if (
+        record.timestamp
+    ) {
+
+        const parsed =
+            Date.parse(
+                record.timestamp
+            );
+
+
+        if (!isNaN(parsed)) {
+
+            return parsed;
+
+        }
+
+    }
+
+
+    return 0;
+
+}
+
+
+// ==========================================================
+// DISPLAY HISTORY
+// ==========================================================
+
+function displayHistory(
+    records
+) {
+
+    const historyBody =
+        document.getElementById(
+            "historyBody"
+        );
+
+
+    if (!historyBody) return;
+
+
+    historyBody.innerHTML = "";
+
+
+    if (
+        !records ||
+        records.length === 0
+    ) {
+
+        historyBody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="5"
+                    class="empty-message">
+
+                    📭 No history records found.
+
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    records.forEach(
+        function (record) {
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            // ==============================================
+            // DATE
+            // ==============================================
+
+            const date =
+                document.createElement(
+                    "td"
+                );
+
+
+            date.textContent =
+                getDateText(record);
+
+
+            // ==============================================
+            // TEMPERATURE
+            // ==============================================
+
+            const temperature =
+                document.createElement(
+                    "td"
+                );
+
+
+            if (
+                record.temperature !==
+                undefined
+            ) {
+
+                temperature.textContent =
+                    record.temperature +
+                    " °C";
+
+            }
+
+            else {
+
+                temperature.textContent =
+                    "—";
 
             }
 
 
-            const history =
-                snapshot.val();
+            // ==============================================
+            // HUMIDITY
+            // ==============================================
 
+            const humidity =
+                document.createElement(
+                    "td"
+                );
 
-            // Convert Firebase object
-            // into array
 
-            const records =
-                Object.entries(history);
+            if (
+                record.humidity !==
+                undefined
+            ) {
 
+                humidity.textContent =
+                    record.humidity +
+                    " %";
 
-            // Newest first
+            }
 
-            records.reverse();
+            else {
 
+                humidity.textContent =
+                    "—";
 
-            // ------------------------------------------------
-            // DISPLAY RECORDS
-            // ------------------------------------------------
+            }
 
-            records.forEach(
-                ([id, data]) => {
 
+            // ==============================================
+            // MOTION / DEVICE
+            // ==============================================
 
-                    const row =
-                        document.createElement(
-                            "tr"
-                        );
+            const motion =
+                document.createElement(
+                    "td"
+                );
 
 
-                    // ----------------------------------------
-                    // DATE
-                    // ----------------------------------------
+            if (
+                record.motion !==
+                undefined
+            ) {
 
-                    const timestamp =
-                        data.timestamp ??
-                        data.lastUpdate ??
-                        "--";
+                if (
+                    record.motion === true
+                ) {
 
-
-                    // ----------------------------------------
-                    // TEMPERATURE
-                    // ----------------------------------------
-
-                    const temperature =
-                        data.temperature !==
-                        undefined
-
-                            ? data.temperature +
-                              " °C"
-
-                            : "--";
-
-
-                    // ----------------------------------------
-                    // HUMIDITY
-                    // ----------------------------------------
-
-                    const humidity =
-                        data.humidity !==
-                        undefined
-
-                            ? data.humidity +
-                              " %"
-
-                            : "--";
-
-
-                    // ----------------------------------------
-                    // MOTION
-                    // ----------------------------------------
-
-                    let motion =
-                        data.motion;
-
-
-                    if (
-                        motion === true
-                    ) {
-
-                        motion =
-                            "Motion Detected";
-
-                    }
-
-                    else if (
-                        motion === false
-                    ) {
-
-                        motion =
-                            "No Motion";
-
-                    }
-
-                    else {
-
-                        motion =
-                            "--";
-
-                    }
-
-
-                    // ----------------------------------------
-                    // STATUS
-                    // ----------------------------------------
-
-                    const status =
-                        data.status ??
-                        "--";
-
-
-                    // ----------------------------------------
-                    // DEVICE
-                    // ----------------------------------------
-
-                    let device =
-                        "--";
-
-
-                    if (
-                        data.device
-                    ) {
-
-                        let deviceName =
-                            data.device;
-
-
-                        if (
-                            data.device ===
-                            "light"
-                        ) {
-
-                            deviceName =
-                                "💡 Light";
-
-                        }
-
-                        else if (
-                            data.device ===
-                            "fan"
-                        ) {
-
-                            deviceName =
-                                "🌀 Fan";
-
-                        }
-
-                        else if (
-                            data.device ===
-                            "door"
-                        ) {
-
-                            deviceName =
-                                "🚪 Door";
-
-                        }
-
-                        else if (
-                            data.device ===
-                            "alarm"
-                        ) {
-
-                            deviceName =
-                                "🚨 Alarm";
-
-                        }
-
-
-                        const state =
-                            Boolean(
-                                data.state
-                            );
-
-
-                        let stateText =
-                            state
-                                ? "ON"
-                                : "OFF";
-
-
-                        if (
-                            data.device ===
-                            "door"
-                        ) {
-
-                            stateText =
-                                state
-                                    ? "OPEN"
-                                    : "CLOSED";
-
-                        }
-
-
-                        device =
-                            deviceName +
-                            " - " +
-                            stateText;
-
-                    }
-
-
-                    // ----------------------------------------
-                    // SOURCE
-                    // ----------------------------------------
-
-                    const source =
-                        data.source ??
-                        "Unknown";
-
-
-                    // ----------------------------------------
-                    // CREATE ROW
-                    // ----------------------------------------
-
-                    row.innerHTML = `
-
-                        <td>
-                            ${timestamp}
-                        </td>
-
-                        <td>
-                            ${temperature}
-                        </td>
-
-                        <td>
-                            ${humidity}
-                        </td>
-
-                        <td>
-                            ${motion}
-                        </td>
-
-                        <td>
-                            ${status}
-                        </td>
-
-                        <td>
-                            ${device}
-                        </td>
-
-                        <td>
-                            ${source}
-                        </td>
-
-                    `;
-
-
-                    historyBody.appendChild(
-                        row
-                    );
+                    motion.textContent =
+                        "🚶 Detected";
 
                 }
+
+                else if (
+                    record.motion === false
+                ) {
+
+                    motion.textContent =
+                        "No Motion";
+
+                }
+
+                else {
+
+                    motion.textContent =
+                        record.motion;
+
+                }
+
+            }
+
+            else if (
+                record.device
+            ) {
+
+                const state =
+                    Boolean(
+                        record.state
+                    );
+
+
+                motion.textContent =
+                    getDeviceName(
+                        record.device
+                    ) +
+                    " " +
+                    (
+                        state
+                            ? "ON"
+                            : "OFF"
+                    );
+
+            }
+
+            else {
+
+                motion.textContent =
+                    "—";
+
+            }
+
+
+            // ==============================================
+            // STATUS
+            // ==============================================
+
+            const status =
+                document.createElement(
+                    "td"
+                );
+
+
+            if (
+                record.status
+            ) {
+
+                status.textContent =
+                    record.status;
+
+
+                applyStatus(
+                    status,
+                    record.status
+                );
+
+            }
+
+            else if (
+                record.device
+            ) {
+
+                const state =
+                    Boolean(
+                        record.state
+                    );
+
+
+                status.textContent =
+                    state
+                        ? "ON"
+                        : "OFF";
+
+            }
+
+            else {
+
+                status.textContent =
+                    "—";
+
+            }
+
+
+            // ==============================================
+            // ADD ROW
+            // ==============================================
+
+            row.appendChild(
+                date
             );
 
-        },
+            row.appendChild(
+                temperature
+            );
 
+            row.appendChild(
+                humidity
+            );
 
-        // ==================================================
-        // FIREBASE ERROR
-        // ==================================================
+            row.appendChild(
+                motion
+            );
 
-        (error) => {
-
-            console.error(
-                "Firebase History Error:",
-                error
+            row.appendChild(
+                status
             );
 
 
-            historyBody.innerHTML = `
-
-                <tr>
-
-                    <td
-                        colspan="7"
-                        class="empty-message"
-                    >
-
-                        ❌ Unable to load Firebase
-                        history.<br><br>
-
-                        ${error.message}
-
-                    </td>
-
-                </tr>
-
-            `;
+            historyBody.appendChild(
+                row
+            );
 
         }
-
     );
 
 }
+
+
+// ==========================================================
+// DATE
+// ==========================================================
+
+function getDateText(
+    record
+) {
+
+    if (
+        record.timestamp
+    ) {
+
+        return record.timestamp;
+
+    }
+
+
+    if (
+        typeof record.createdAt ===
+        "number"
+    ) {
+
+        return new Date(
+            record.createdAt
+        ).toLocaleString();
+
+    }
+
+
+    return "Unknown";
+
+}
+
+
+// ==========================================================
+// DEVICE NAME
+// ==========================================================
+
+function getDeviceName(
+    device
+) {
+
+    switch (device) {
+
+        case "light":
+
+            return "💡 Light:";
+
+
+        case "fan":
+
+            return "🌀 Fan:";
+
+
+        case "door":
+
+            return "🚪 Door:";
+
+
+        case "alarm":
+
+            return "🚨 Alarm:";
+
+
+        default:
+
+            return device + ":";
+
+    }
+
+}
+
+
+// ==========================================================
+// STATUS
+// ==========================================================
+
+function applyStatus(
+    element,
+    status
+) {
+
+    const value =
+        String(status)
+            .toUpperCase();
+
+
+    element.classList.remove(
+        "status-normal",
+        "status-warning",
+        "status-danger"
+    );
+
+
+    if (
+        value === "NORMAL"
+    ) {
+
+        element.classList.add(
+            "status-normal"
+        );
+
+    }
+
+
+    else if (
+        value === "WARNING"
+    ) {
+
+        element.classList.add(
+            "status-warning"
+        );
+
+    }
+
+
+    else if (
+        value === "DANGER"
+    ) {
+
+        element.classList.add(
+            "status-danger"
+        );
+
+    }
+
+}
+
 
 // ==========================================================
 // SEARCH
@@ -651,54 +666,95 @@ window.searchTable = searchTable;
 
 function searchTable() {
 
-const input =
-    document.getElementById(
-        "searchInput"
-    );
+    const searchInput =
+        document.getElementById(
+            "searchInput"
+        );
 
 
-const filter =
-    input.value.toLowerCase();
+    if (!searchInput) return;
 
 
-const rows =
-    document.querySelectorAll(
-        "#historyBody tr"
-    );
+    const query =
+        searchInput.value
+            .toLowerCase()
+            .trim();
 
 
-rows.forEach((row) => {
+    if (!query) {
 
-    const text =
-        row.innerText.toLowerCase();
+        displayHistory(
+            historyData
+        );
 
-
-    if (
-        text.includes(filter)
-    ) {
-
-        row.style.display =
-            "";
+        return;
 
     }
 
-    else {
 
-        row.style.display =
-            "none";
+    const filtered =
+        historyData.filter(
+            function (record) {
 
-    }
+                const searchableText = [
 
-});
+                    record.timestamp,
+
+                    record.temperature,
+
+                    record.humidity,
+
+                    record.motion,
+
+                    record.status,
+
+                    record.source,
+
+                    record.device,
+
+                    record.state
+
+                ]
+                    .join(" ")
+                    .toLowerCase();
+
+
+                return searchableText
+                    .includes(query);
+
+            }
+        );
+
+
+    displayHistory(
+        filtered
+    );
 
 }
 
-// ==========================================================
-// MAKE FUNCTIONS AVAILABLE
-// ==========================================================
-
-window.logout =
-logout;
 
 window.searchTable =
-searchTable;
+    searchTable;
+
+
+// ==========================================================
+// ESCAPE HTML
+// ==========================================================
+
+function escapeHTML(
+    value
+) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.textContent =
+        value;
+
+
+    return div.innerHTML;
+
+        }
