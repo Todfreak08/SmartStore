@@ -1,114 +1,210 @@
 // ==========================================================
-// SMART STORAGE - HISTORY.JS
+// SMART STORAGE MONITORING SYSTEM
+// COMPLETE HISTORY.JS
+// Firebase Realtime Database
 // ==========================================================
 
+
+// ==========================================================
 // AUTHENTICATION
+// ==========================================================
+
 auth.onAuthStateChanged((user) => {
 
     if (!user) {
-        window.location.href = "index.html";
+
+        window.location.replace("index.html");
+
         return;
+
     }
 
-    const email = document.getElementById("userEmail");
 
-    if (email) {
-        email.textContent = user.email;
+    console.log(
+        "History user:",
+        user.email
+    );
+
+
+    const userEmail =
+        document.getElementById("userEmail");
+
+
+    if (userEmail) {
+
+        userEmail.textContent =
+            user.email;
+
     }
 
-    loadHistory();
 });
 
 
 // ==========================================================
-// LOAD HISTORY FROM FIREBASE
+// VARIABLES
+// ==========================================================
+
+let historyData = [];
+
+
+// ==========================================================
+// LOAD HISTORY
 // ==========================================================
 
 function loadHistory() {
 
     const historyBody =
-        document.getElementById("historyBody");
+        document.getElementById(
+            "historyBody"
+        );
+
 
     if (!historyBody) {
-        console.error("historyBody not found.");
+
+        console.error(
+            "historyBody was not found."
+        );
+
         return;
+
     }
+
+
+    historyBody.innerHTML = `
+
+        <tr>
+
+            <td
+                colspan="5"
+                class="empty-message">
+
+                Loading history...
+
+            </td>
+
+        </tr>
+
+    `;
+
+
+    // ======================================================
+    // FIREBASE LISTENER
+    // ======================================================
 
     database
         .ref("SmartStorage/history")
-        .on("value", (snapshot) => {
+        .on(
 
-            historyBody.innerHTML = "";
+            "value",
 
-            if (!snapshot.exists()) {
+            (snapshot) => {
+
+                historyData = [];
+
+
+                // ------------------------------------------------
+                // NO DATA
+                // ------------------------------------------------
+
+                if (!snapshot.exists()) {
+
+                    historyBody.innerHTML = `
+
+                        <tr>
+
+                            <td
+                                colspan="5"
+                                class="empty-message">
+
+                                No history data available.
+
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                    return;
+
+                }
+
+
+                // ------------------------------------------------
+                // GET FIREBASE DATA
+                // ------------------------------------------------
+
+                const data =
+                    snapshot.val();
+
+
+                Object.keys(data).forEach(
+                    (key) => {
+
+                        const item =
+                            data[key];
+
+
+                        if (!item) return;
+
+
+                        historyData.push({
+
+                            id:
+                                key,
+
+                            ...item
+
+                        });
+
+                    }
+                );
+
+
+                // ------------------------------------------------
+                // SORT NEWEST FIRST
+                // ------------------------------------------------
+
+                historyData.sort(
+                    (a, b) => {
+
+                        const timeA =
+                            getTime(a);
+
+
+                        const timeB =
+                            getTime(b);
+
+
+                        return timeB - timeA;
+
+                    }
+                );
+
+
+                // ------------------------------------------------
+                // DISPLAY
+                // ------------------------------------------------
+
+                displayHistory(
+                    historyData
+                );
+
+            },
+
+            (error) => {
+
+                console.error(
+                    "Firebase history error:",
+                    error
+                );
+
 
                 historyBody.innerHTML = `
+
                     <tr>
-                        <td colspan="7" class="empty-message">
-                            No history records found.
-                        </td>
-                    </tr>
-                `;
 
-                return;
-            }
-
-            const records = [];
-
-            snapshot.forEach((child) => {
-
-                records.push({
-                    id: child.key,
-                    data: child.val()
-                });
-
-            });
-
-
-            // Newest first
-            records.reverse();
-
-
-            records.forEach((record) => {
-
-                const data = record.data;
-
-                let motion = data.motion ?? "--";
-
-                if (motion === true) {
-                    motion = "Motion Detected";
-                }
-
-                if (motion === false) {
-                    motion = "No Motion";
-                }
-
-
-                let device = "--";
-
-                if (data.device) {
-
-                    device =
-                        data.device +
-                        " - " +
-                        (
-                            data.state
-                                ? "ON"
-                                : "OFF"
-                        );
-
-                }
-
-
-                const row =
-                    document.createElement("tr");
-
-
-                row.innerHTML = `
-
-                    <td>
-                        ${data.timestamp ?? "--"}
-                    </td>
+                        <td
+                            colspan="5                    </td>
 
                     <td>
                         ${
