@@ -1,154 +1,223 @@
-// ==========================================================
-// AUTHENTICATION + LOGIN ACTIVITY
-// ==========================================================
+<!DOCTYPE html>
 
-auth.onAuthStateChanged((user) => {
+<html lang="en">
 
-    if (!user) {
+<head>
 
-        window.location.href = "index.html";
+```
+<meta charset="UTF-8">
 
-        return;
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-    }
+<title>Sensor History</title>
 
-    const userEmail =
-        document.getElementById("userEmail");
+<link rel="stylesheet" href="style.css">
+```
 
-    if (userEmail) {
+</head>
 
-        userEmail.innerHTML =
-            user.email;
+<body>
 
-    }
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
 
-    // Save login activity
-    recordLoginActivity(user);
+<div class="sidebar">
 
-});
-
-
-// ==========================================================
-// RECORD LOGIN ACTIVITY
-// ==========================================================
-
-function recordLoginActivity(user) {
-
-    const loginData = {
-
-        email: user.email || "Unknown",
-
-        uid: user.uid || "Unknown",
-
-        action: "LOGIN",
-
-        timestamp:
-            new Date().toLocaleString(),
-
-        createdAt:
-            firebase.database
-                .ServerValue
-                .TIMESTAMP,
-
-        userAgent:
-            navigator.userAgent
-
-    };
+```
+<h2>📦 Smart Storage</h2>
 
 
-    database
-        .ref("SmartStorage/loginActivity")
-        .push(loginData)
-
-        .then(() => {
-
-            console.log(
-                "✅ Login activity saved to Firebase."
-            );
-
-        })
-
-        .catch((error) => {
-
-            console.error(
-                "❌ Failed to save login activity:",
-                error
-            );
-
-        });
-
-}
+<a href="dashboard.html">
+    🏠 Dashboard
+</a>
 
 
-// ==========================================================
-// LOGOUT
-// ==========================================================
-
-function logout() {
-
-    const user =
-        auth.currentUser;
+<a
+    href="history.html"
+    class="active"
+>
+    📋 History
+</a>
 
 
-    if (user) {
-
-        const logoutData = {
-
-            email:
-                user.email || "Unknown",
-
-            uid:
-                user.uid || "Unknown",
-
-            action:
-                "LOGOUT",
-
-            timestamp:
-                new Date().toLocaleString(),
-
-            createdAt:
-                firebase.database
-                    .ServerValue
-                    .TIMESTAMP
-
-        };
+<a href="alerts.html">
+    🚨 Alerts
+</a>
 
 
-        database
-            .ref(
-                "SmartStorage/loginActivity"
-            )
-            .push(logoutData)
+<a href="reports.html">
+    📊 Reports
+</a>
 
-            .then(() => {
 
-                return auth.signOut();
+<a href="settings.html">
+    ⚙️ Settings
+</a>
 
-            })
 
-            .then(() => {
+<a href="profile.html">
+    👤 Profile
+</a>
 
-                window.location.href =
-                    "index.html";
 
-            })
+<a href="about.html">
+    ℹ️ About
+</a>
 
-            .catch((error) => {
 
-                console.error(
-                    "Logout error:",
-                    error
-                );
+<button
+    class="logout-btn"
+    onclick="logout()"
+>
+    Logout
+</button>
+```
 
-            });
+</div>
 
-    }
+<!-- =====================================================
+     MAIN CONTENT
+===================================================== -->
 
-    else {
+<div class="main-content">
 
-        window.location.href =
-            "index.html";
+```
+<div class="top-bar">
 
-    }
+    <div>
 
-}
+        <h1>
+            Sensor History
+        </h1>
+
+        <p style="color:#666; margin-top:5px;">
+            Environmental data and device activity
+        </p>
+
+    </div>
+
+
+    <div class="user-card">
+
+        Logged in as
+
+        <b id="userEmail">
+            Loading...
+        </b>
+
+    </div>
+
+</div>
+
+
+
+<!-- =================================================
+     HISTORY TABLE
+================================================== -->
+
+<div class="table-card">
+
+
+    <input
+        type="text"
+        id="searchInput"
+        placeholder="Search by date, status, source, or device..."
+        onkeyup="searchTable()"
+    >
+
+
+    <div style="overflow-x:auto;">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Date & Time
+                    </th>
+
+                    <th>
+                        Temperature
+                    </th>
+
+                    <th>
+                        Humidity
+                    </th>
+
+                    <th>
+                        Motion
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                        Device
+                    </th>
+
+                    <th>
+                        Source
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="historyBody">
+
+                <tr>
+
+                    <td
+hhhhhhhhhhhhhhhhhh                        class="empty-message"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+                    >
+
+                        Loading Firebase history...
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+<!-- =====================================================
+     FIREBASE
+===================================================== -->
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
+
+<!-- =====================================================
+     FIREBASE CONFIG
+===================================================== -->
+
+<script src="firebase-config.js"></script>
+
+<!-- =====================================================
+     HISTORY JAVASCRIPT
+===================================================== -->
+
+<script src="history.js"></script>
+
+</body>
+
+</html>
