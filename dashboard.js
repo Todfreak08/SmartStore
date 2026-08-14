@@ -1,114 +1,360 @@
 // ==========================================================
-// SMART STORAGE MONITORING SYSTEM
-// DASHBOARD.JS - STABLE VERSION
-// Firebase Realtime Database
+// SAVE MANUAL DATA
+// Saves to:
+// SmartStorage
+// SmartStorage/current
+// SmartStorage/history
 // ==========================================================
 
+function saveManualData() {
 
-// ==========================================================
-// GLOBAL VARIABLES
-// ==========================================================
+    const temperatureInput =
+        document.getElementById("manualTemperature");
 
-let currentUser = null;
+    const humidityInput =
+        document.getElementById("manualHumidity");
 
-let environmentChart = null;
+    const motionInput =
+        document.getElementById("manualMotion");
 
-const labels = [];
-const temperatureData = [];
-const humidityData = [];
-
-
-// ==========================================================
-// HELPER
-// ==========================================================
-
-function getElement(id) {
-
-    return document.getElementById(id);
-
-}
+    const message =
+        document.getElementById("manualMessage");
 
 
-function setText(id, value) {
+    // ------------------------------------------------------
+    // CHECK INPUTS
+    // ------------------------------------------------------
 
-    const element = getElement(id);
+    if (
+        !temperatureInput ||
+        !humidityInput ||
+        !motionInput
+    ) {
 
-    if (element) {
-
-        element.textContent = value;
-
-    }
-
-}
-
-
-// ==========================================================
-// AUTHENTICATION
-// ==========================================================
-
-auth.onAuthStateChanged((user) => {
-
-    if (!user) {
-
-        window.location.href = "index.html";
+        console.error("Manual input fields not found.");
 
         return;
 
     }
 
 
-    currentUser = user;
+    // ------------------------------------------------------
+    // GET VALUES
+    // ------------------------------------------------------
+
+    const temperature =
+        parseFloat(temperatureInput.value);
+
+    const humidity =
+        parseFloat(humidityInput.value);
+
+    const motion =
+        motionInput.value === "true";
 
 
-    setText(
-        "userEmail",
-        user.email
-    );
+    // ------------------------------------------------------
+    // VALIDATION
+    // ------------------------------------------------------
+
+    if (isNaN(temperature)) {
+
+        showManualMessage(
+            "❌ Please enter the temperature.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (
+        isNaN(humidity) ||
+        humidity < 0 ||
+        humidity > 100
+    ) {
+
+        showManualMessage(
+            "❌ Humidity must be between 0 and 100.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    // ------------------------------------------------------
+    // AUTOMATIC STATUS
+    // ------------------------------------------------------
+
+    let status = "NORMAL";
+
+
+    if (
+        temperature >= 35 ||
+        humidity >= 80
+    ) {
+
+        status = "WARNING";
+
+    }
+
+
+    if (
+        temperature >= 40 ||
+        humidity >= 90
+    ) {
+
+        status = "DANGER";
+
+    }
+
+
+    // ------------------------------------------------------
+    // CREATE DATA
+    // ------------------------------------------------------
+
+    const manualData = {
+
+        temperature: temperature,
+
+        humidity: humidity,
+
+        motion: motion,
+
+        status: status,
+
+        source: "Manual Entry",
+
+        lastUpdate:
+            new Date().toLocaleString(),
+
+        updatedAt:
+            firebase.database.ServerValue.TIMESTAMP
+
+    };
 
 
     console.log(
-        "Authenticated:",
-        user.email
+        "Saving data:",
+        manualData
     );
 
-});
+
+    // ------------------------------------------------------
+    // DISABLE BUTTON WHILE SAVING
+    // ------------------------------------------------------
+
+    const saveButton =
+        document.getElementById("saveDataButton");
 
 
-// ==========================================================
-// LOGOUT
-// ==========================================================
+    if (saveButton) {
 
-function logout() {
+        saveButton.disabled = true;
 
-    if (!currentUser) {
-
-        window.location.href = "index.html";
-
-        return;
+        saveButton.innerHTML =
+            "⏳ SAVING...";
 
     }
 
 
-    const activity = {
+    showManualMessage(
+        "Saving data to Firebase...",
+        "success"
+    );
 
-        action: "LOGOUT",
 
-        email:
-            currentUser.email,
+    // ======================================================
+    // SAVE EVERYTHING USING ONE MULTI-PATH UPDATE
+    // ======================================================
 
-        uid:
-            currentUser.uid,
+    const updates = {};
 
-        timestamp:
-            new Date().toLocaleString(),
 
-        createdAt:
-            firebase.database.ServerValue.TIMESTAMP,
+    // Current/main data
 
-        userAgent:
-            navigator.userAgent
+    updates["SmartStorage/temperature"] =
+        temperature;
 
-    };
+    updates["SmartStorage/humidity"] =
+        humidity;
+
+    updates["SmartStorage/motion"] =
+        motion;
+
+    updates["SmartStorage/status"] =
+        status;
+
+    updates["SmartStorage/source"] =
+        "Manual Entry";
+
+    updates["SmartStorage/lastUpdate"] =
+        manualData.lastUpdate;
+
+    updates["SmartStorage/updatedAt"] =
+        firebase.database.ServerValue.TIMESTAMP;
+
+
+    // Current copy
+
+    updates["SmartStorage/current/temperature"] =
+        temperature;
+
+    updates["SmartStorage/current/humidity"] =
+        humidity;
+
+    updates["SmartStorage/current/motion"] =
+        motion;
+
+    updates["SmartStorage/current/status"] =
+        status;
+
+    updates["SmartStorage/current/source"] =
+        "Manual Entry";
+
+    updates["SmartStorage/current/lastUpdate"] =
+        manualData.lastUpdate;
+
+    updates["SmartStorage/current/updatedAt"] =
+        firebase.database.ServerValue.TIMESTAMP;
+
+
+    // History
+
+    const historyKey =
+        database
+            .ref("SmartStorage/history")
+            .push()
+            .key;
+
+
+    updates[
+        "SmartStorage/history/" +
+        historyKey +
+        "/temperature"
+    ] = temperature;
+
+
+    updates[
+        "SmartStorage/history/" +
+        historyKey +
+        "/humidity"
+    ] = humidity;
+
+
+    updates[
+        "SmartStorage/history/" +
+        historyKey +
+        "/motion"
+    ] = motion;
+
+
+    updates[
+        "SmartStorage/history/" +
+        historyKey +
+        "/status"
+    ] = status;
+
+
+    updates[
+        "SmartStorage/history/" +
+        historyKey +
+        "/source"
+    ] = "Manual Entry";
+
+
+    updates[
+        "SmartStorage/history/" +
+        historyKey +
+        "/timestamp"
+    ] = manualData.lastUpdate;
+
+
+    updates[
+        "SmartStorage/history/" +
+        historyKey +
+        "/createdAt"
+    ] =
+        firebase.database.ServerValue.TIMESTAMP;
+
+
+    // ======================================================
+    // SEND TO FIREBASE
+    // ======================================================
+
+    database
+        .ref()
+        .update(updates)
+
+        .then(function () {
+
+            console.log(
+                "✅ DATA SUCCESSFULLY SAVED"
+            );
+
+
+            showManualMessage(
+                "✅ Data saved successfully to Firebase!",
+                "success"
+            );
+
+
+            // ------------------------------------------------
+            // UPDATE DASHBOARD IMMEDIATELY
+            // ------------------------------------------------
+
+            updateDashboard(manualData);
+
+
+            // ------------------------------------------------
+            // CLEAR INPUTS
+            // ------------------------------------------------
+
+            temperatureInput.value = "";
+
+            humidityInput.value = "";
+
+            motionInput.value = "false";
+
+
+        })
+
+        .catch(function (error) {
+
+            console.error(
+                "❌ Firebase Save Error:",
+                error
+            );
+
+
+            showManualMessage(
+                "❌ Failed to save: " +
+                error.message,
+                "error"
+            );
+
+        })
+
+        .finally(function () {
+
+            // ------------------------------------------------
+            // RESTORE BUTTON
+            // ------------------------------------------------
+
+            if (saveButton) {
+
+                saveButton.disabled = false;
+
+                saveButton.innerHTML =
+                    "💾 SAVE DATA";
+
+            }
+
+        });
+
+}    };
 
 
     database
