@@ -14,7 +14,8 @@
 
 <body>
 
-<!-- SIDEBAR -->
+<!-- ================= SIDEBAR ================= -->
+
 <div class="sidebar">
 
     <h2>📦 Smart Storage</h2>
@@ -27,20 +28,19 @@
     <a href="profile.html">👤 Profile</a>
     <a href="about.html">ℹ️ About</a>
 
-    <button
-        type="button"
-        class="logout-btn"
-        id="logoutButton">
+    <button type="button" class="logout-btn" id="logoutBtn">
         🚪 Logout
     </button>
 
 </div>
 
 
-<!-- MAIN CONTENT -->
+<!-- ================= MAIN ================= -->
+
 <div class="main-content">
 
     <!-- TOP BAR -->
+
     <div class="top-bar">
 
         <div>
@@ -65,21 +65,23 @@
 
 
     <!-- FIREBASE STATUS -->
-    <div
-        id="firebaseStatus"
-        class="status-card"
-        style="padding:15px; margin-bottom:20px;">
 
-        <strong>Firebase Database:</strong>
+    <div class="status-card"
+         style="padding:15px;margin-bottom:20px;">
 
-        <span id="firebaseConnection">
+        <strong>
+            Firebase Database:
+        </strong>
+
+        <span id="firebaseStatus">
             ● Connecting...
         </span>
 
     </div>
 
 
-    <!-- SENSOR CARDS -->
+    <!-- ================= SENSOR CARDS ================= -->
+
     <div class="card-grid">
 
         <div class="card">
@@ -129,7 +131,8 @@
     </div>
 
 
-    <!-- STORAGE STATUS -->
+    <!-- ================= STORAGE STATUS ================= -->
+
     <div class="status-card">
 
         <h2>📦 Storage Status</h2>
@@ -145,161 +148,24 @@
     </div>
 
 
-    <!-- DEVICE CONTROLS -->
-    <div class="chart-card">
+    <!-- ================= MANUAL DATA ================= -->
 
-        <h2>🎛️ Device Controls</h2>
-
-        <p style="color:#666; margin-bottom:20px;">
-            Device states are saved automatically to Firebase.
-        </p>
-
-
-        <!-- LIGHT -->
-        <div class="control-row">
-
-            <div class="control-info">
-
-                <div class="control-icon">
-                    💡
-                </div>
-
-                <div>
-                    <strong>Storage Light</strong>
-
-                    <small id="lightStatus">
-                        OFF
-                    </small>
-                </div>
-
-            </div>
-
-            <label class="switch">
-
-                <input
-                    type="checkbox"
-                    id="lightSwitch">
-
-                <span class="slider"></span>
-
-            </label>
-
-        </div>
-
-
-        <!-- FAN -->
-        <div class="control-row">
-
-            <div class="control-info">
-
-                <div class="control-icon">
-                    🌀
-                </div>
-
-                <div>
-                    <strong>Ventilation Fan</strong>
-
-                    <small id="fanStatus">
-                        OFF
-                    </small>
-                </div>
-
-            </div>
-
-            <label class="switch">
-
-                <input
-                    type="checkbox"
-                    id="fanSwitch">
-
-                <span class="slider"></span>
-
-            </label>
-
-        </div>
-
-
-        <!-- DOOR -->
-        <div class="control-row">
-
-            <div class="control-info">
-
-                <div class="control-icon">
-                    🚪
-                </div>
-
-                <div>
-                    <strong>Storage Door</strong>
-
-                    <small id="doorStatus">
-                        CLOSED
-                    </small>
-                </div>
-
-            </div>
-
-            <label class="switch">
-
-                <input
-                    type="checkbox"
-                    id="doorSwitch">
-
-                <span class="slider"></span>
-
-            </label>
-
-        </div>
-
-
-        <!-- ALARM -->
-        <div class="control-row">
-
-            <div class="control-info">
-
-                <div class="control-icon">
-                    🚨
-                </div>
-
-                <div>
-                    <strong>Security Alarm</strong>
-
-                    <small id="alarmStatus">
-                        OFF
-                    </small>
-                </div>
-
-            </div>
-
-            <label class="switch">
-
-                <input
-                    type="checkbox"
-                    id="alarmSwitch">
-
-                <span class="slider"></span>
-
-            </label>
-
-        </div>
-
-    </div>
-
-
-    <!-- MANUAL DATA -->
     <div class="chart-card">
 
         <h2>📝 Manual Data Entry</h2>
 
-        <p style="color:#666; margin-bottom:20px;">
+        <p style="color:#666;margin-bottom:20px;">
 
-            You can manually enter sensor data while the ESP32
-            is not connected.
+            Enter environmental data manually while
+            the ESP32 is not connected.
 
         </p>
 
 
         <div class="manual-form">
 
+
+            <!-- TEMPERATURE -->
 
             <div class="input-group">
 
@@ -311,10 +177,13 @@
                     type="number"
                     id="manualTemperature"
                     placeholder="Example: 28.5"
-                    step="0.1">
+                    step="0.1"
+                >
 
             </div>
 
+
+            <!-- HUMIDITY -->
 
             <div class="input-group">
 
@@ -328,10 +197,13 @@
                     placeholder="Example: 65"
                     min="0"
                     max="100"
-                    step="0.1">
+                    step="0.1"
+                >
 
             </div>
 
+
+            <!-- MOTION -->
 
             <div class="input-group">
 
@@ -354,9 +226,11 @@
             </div>
 
 
+            <!-- SAVE BUTTON -->
+
             <button
                 type="button"
-                id="saveDataButton"
+                id="saveDataBtn"
                 class="save-btn">
 
                 💾 SAVE DATA
@@ -364,9 +238,11 @@
             </button>
 
 
+            <!-- MESSAGE -->
+
             <p
                 id="manualMessage"
-                style="margin-top:15px;">
+                style="margin-top:15px;font-weight:bold;">
             </p>
 
         </div>
@@ -374,12 +250,182 @@
     </div>
 
 
-    <!-- CHART -->
+    <!-- ================= DEVICE SWITCHES ================= -->
+
+    <div class="chart-card">
+
+        <h2>🎛 Device Controls</h2>
+
+        <p style="color:#666;margin-bottom:20px;">
+            Switch states are automatically saved to Firebase.
+        </p>
+
+
+        <!-- LIGHT -->
+
+        <div class="control-row">
+
+            <div class="control-info">
+
+                <div class="control-icon">
+                    💡
+                </div>
+
+                <div>
+
+                    <strong>
+                        Storage Light
+                    </strong>
+
+                    <small id="lightStatus">
+                        OFF
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <label class="switch">
+
+                <input
+                    type="checkbox"
+                    id="lightSwitch"
+                >
+
+                <span class="slider"></span>
+
+            </label>
+
+        </div>
+
+
+        <!-- FAN -->
+
+        <div class="control-row">
+
+            <div class="control-info">
+
+                <div class="control-icon">
+                    🌀
+                </div>
+
+                <div>
+
+                    <strong>
+                        Ventilation Fan
+                    </strong>
+
+                    <small id="fanStatus">
+                        OFF
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <label class="switch">
+
+                <input
+                    type="checkbox"
+                    id="fanSwitch"
+                >
+
+                <span class="slider"></span>
+
+            </label>
+
+        </div>
+
+
+        <!-- DOOR -->
+
+        <div class="control-row">
+
+            <div class="control-info">
+
+                <div class="control-icon">
+                    🚪
+                </div>
+
+                <div>
+
+                    <strong>
+                        Storage Door
+                    </strong>
+
+                    <small id="doorStatus">
+                        CLOSED
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <label class="switch">
+
+                <input
+                    type="checkbox"
+                    id="doorSwitch"
+                >
+
+                <span class="slider"></span>
+
+            </label>
+
+        </div>
+
+
+        <!-- ALARM -->
+
+        <div class="control-row">
+
+            <div class="control-info">
+
+                <div class="control-icon">
+                    🚨
+                </div>
+
+                <div>
+
+                    <strong>
+                        Security Alarm
+                    </strong>
+
+                    <small id="alarmStatus">
+                        OFF
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <label class="switch">
+
+                <input
+                    type="checkbox"
+                    id="alarmSwitch"
+                >
+
+                <span class="slider"></span>
+
+            </label>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= CHART ================= -->
+
     <div class="chart-card">
 
         <h2>📈 Live Environment</h2>
 
-        <p style="color:#666; margin-bottom:20px;">
+        <p style="color:#666;margin-bottom:20px;">
             Temperature and humidity monitoring
         </p>
 
@@ -390,7 +436,8 @@
 </div>
 
 
-<!-- FIREBASE -->
+<!-- ================= FIREBASE ================= -->
+
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
@@ -398,12 +445,15 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
 
 
-<!-- YOUR FIREBASE CONFIG -->
+<!-- FIREBASE CONFIG -->
+
 <script src="firebase-config.js"></script>
 
 
 <!-- DASHBOARD JAVASCRIPT -->
+
 <script src="dashboard.js"></script>
+
 
 </body>
 </html>
