@@ -1,1053 +1,409 @@
-// ==========================================================
-// SMART STORAGE MONITORING SYSTEM
-// DASHBOARD.JS
-// ==========================================================
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-// ==========================================================
-// CHECK FIREBASE
-// ==========================================================
+    <title>Smart Storage Monitoring System</title>
 
-if (
-    typeof firebase === "undefined" ||
-    typeof auth === "undefined" ||
-    typeof database === "undefined"
-) {
+    <link rel="stylesheet" href="style.css">
 
-    alert(
-        "Firebase is not loaded correctly.\n\n" +
-        "Please check firebase-config.js."
-    );
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
 
-    throw new Error("Firebase not initialized.");
+<body>
 
-}
+<!-- SIDEBAR -->
+<div class="sidebar">
 
+    <h2>📦 Smart Storage</h2>
 
-// ==========================================================
-// AUTHENTICATION
-// ==========================================================
+    <a href="dashboard.html" class="active">🏠 Dashboard</a>
+    <a href="history.html">📋 History</a>
+    <a href="alerts.html">🚨 Alerts</a>
+    <a href="reports.html">📊 Reports</a>
+    <a href="settings.html">⚙️ Settings</a>
+    <a href="profile.html">👤 Profile</a>
+    <a href="about.html">ℹ️ About</a>
 
-auth.onAuthStateChanged(function(user) {
+    <button
+        type="button"
+        class="logout-btn"
+        id="logoutButton">
+        🚪 Logout
+    </button>
 
-    if (!user) {
+</div>
 
-        window.location.href = "index.html";
 
-        return;
+<!-- MAIN CONTENT -->
+<div class="main-content">
 
-    }
+    <!-- TOP BAR -->
+    <div class="top-bar">
 
+        <div>
+            <h1>Dashboard</h1>
 
-    const emailElement =
-        document.getElementById("userEmail");
+            <p>
+                Smart Storage Environmental Monitoring
+            </p>
+        </div>
 
+        <div class="user-card">
 
-    if (emailElement) {
+            Logged in as:
 
-        emailElement.textContent =
-            user.email;
+            <b id="userEmail">
+                Loading...
+            </b>
 
-    }
+        </div>
 
-});
+    </div>
 
 
-// ==========================================================
-// LOGOUT
-// ==========================================================
+    <!-- FIREBASE STATUS -->
+    <div
+        id="firebaseStatus"
+        class="status-card"
+        style="padding:15px; margin-bottom:20px;">
 
-const logoutButton =
-    document.getElementById("logoutButton");
+        <strong>Firebase Database:</strong>
 
+        <span id="firebaseConnection">
+            ● Connecting...
+        </span>
 
-if (logoutButton) {
+    </div>
 
-    logoutButton.addEventListener(
-        "click",
-        function() {
 
-            auth.signOut()
-                .then(function() {
+    <!-- SENSOR CARDS -->
+    <div class="card-grid">
 
-                    window.location.href =
-                        "index.html";
+        <div class="card">
 
-                })
-                .catch(function(error) {
+            <h3>🌡 Temperature</h3>
 
-                    console.error(
-                        "Logout error:",
-                        error
-                    );
+            <h1 id="temperature">
+                -- °C
+            </h1>
 
-                    alert(
-                        "Logout failed:\n" +
-                        error.message
-                    );
+            <p id="temperatureSource">
+                Waiting for data...
+            </p>
 
-                });
+        </div>
 
-        }
-    );
 
-}
+        <div class="card">
 
+            <h3>💧 Humidity</h3>
 
-// ==========================================================
-// FIREBASE CONNECTION
-// ==========================================================
+            <h1 id="humidity">
+                -- %
+            </h1>
 
-const connectionElement =
-    document.getElementById(
-        "firebaseConnection"
-    );
+            <p id="humiditySource">
+                Waiting for data...
+            </p>
 
+        </div>
 
-database
-    .ref(".info/connected")
-    .on("value", function(snapshot) {
 
-        if (snapshot.val() === true) {
+        <div class="card">
 
-            if (connectionElement) {
+            <h3>🚶 Motion</h3>
 
-                connectionElement.textContent =
-                    "● Connected";
+            <h1 id="motion">
+                Waiting...
+            </h1>
 
-                connectionElement.style.color =
-                    "#28a745";
+            <p>
+                PIR Sensor
+            </p>
 
-            }
+        </div>
 
-        }
+    </div>
 
-        else {
 
-            if (connectionElement) {
+    <!-- STORAGE STATUS -->
+    <div class="status-card">
 
-                connectionElement.textContent =
-                    "● Disconnected";
+        <h2>📦 Storage Status</h2>
 
-                connectionElement.style.color =
-                    "#dc3545";
+        <h1 id="storageStatus">
+            Waiting for data...
+        </h1>
 
-            }
+        <p id="lastUpdate">
+            No data received yet.
+        </p>
 
-        }
+    </div>
 
-    });
 
+    <!-- DEVICE CONTROLS -->
+    <div class="chart-card">
 
-// ==========================================================
-// HELPER
-// ==========================================================
+        <h2>🎛️ Device Controls</h2>
 
-function setText(id, value) {
+        <p style="color:#666; margin-bottom:20px;">
+            Device states are saved automatically to Firebase.
+        </p>
 
-    const element =
-        document.getElementById(id);
 
-    if (element) {
+        <!-- LIGHT -->
+        <div class="control-row">
 
-        element.textContent = value;
+            <div class="control-info">
 
-    }
+                <div class="control-icon">
+                    💡
+                </div>
 
-}
+                <div>
+                    <strong>Storage Light</strong>
 
+                    <small id="lightStatus">
+                        OFF
+                    </small>
+                </div>
 
-// ==========================================================
-// DASHBOARD LISTENER
-// ==========================================================
+            </div>
 
-database
-    .ref("SmartStorage")
-    .on(
-        "value",
-        function(snapshot) {
+            <label class="switch">
 
-            if (!snapshot.exists()) {
+                <input
+                    type="checkbox"
+                    id="lightSwitch">
 
-                setText(
-                    "temperature",
-                    "-- °C"
-                );
+                <span class="slider"></span>
 
-                setText(
-                    "humidity",
-                    "-- %"
-                );
+            </label>
 
-                setText(
-                    "motion",
-                    "Waiting..."
-                );
+        </div>
 
-                setText(
-                    "storageStatus",
-                    "Waiting for data..."
-                );
 
-                setText(
-                    "lastUpdate",
-                    "No data received yet."
-                );
+        <!-- FAN -->
+        <div class="control-row">
 
-                return;
+            <div class="control-info">
 
-            }
+                <div class="control-icon">
+                    🌀
+                </div>
 
+                <div>
+                    <strong>Ventilation Fan</strong>
 
-            const data =
-                snapshot.val();
+                    <small id="fanStatus">
+                        OFF
+                    </small>
+                </div>
 
+            </div>
 
-            setText(
-                "temperature",
-                data.temperature !== undefined
-                    ? data.temperature + " °C"
-                    : "-- °C"
-            );
+            <label class="switch">
 
+                <input
+                    type="checkbox"
+                    id="fanSwitch">
 
-            setText(
-                "humidity",
-                data.humidity !== undefined
-                    ? data.humidity + " %"
-                    : "-- %"
-            );
+                <span class="slider"></span>
 
+            </label>
 
-            let motion =
-                data.motion;
+        </div>
 
 
-            if (motion === true) {
+        <!-- DOOR -->
+        <div class="control-row">
 
-                motion = "Detected";
+            <div class="control-info">
 
-            }
+                <div class="control-icon">
+                    🚪
+                </div>
 
-            else if (motion === false) {
+                <div>
+                    <strong>Storage Door</strong>
 
-                motion = "No Motion";
+                    <small id="doorStatus">
+                        CLOSED
+                    </small>
+                </div>
 
-            }
+            </div>
 
-            else {
+            <label class="switch">
 
-                motion = "Waiting...";
+                <input
+                    type="checkbox"
+                    id="doorSwitch">
 
-            }
+                <span class="slider"></span>
 
+            </label>
 
-            setText(
-                "motion",
-                motion
-            );
+        </div>
 
 
-            setText(
-                "storageStatus",
-                data.status || "NORMAL"
-            );
+        <!-- ALARM -->
+        <div class="control-row">
 
+            <div class="control-info">
 
-            setText(
-                "lastUpdate",
-                data.lastUpdate
-                    ? "Last Update: " +
-                      data.lastUpdate
-                    : "No data received yet."
-            );
+                <div class="control-icon">
+                    🚨
+                </div>
 
+                <div>
+                    <strong>Security Alarm</strong>
 
-            setText(
-                "temperatureSource",
-                data.source
-                    ? "Source: " + data.source
-                    : "Environmental Data"
-            );
+                    <small id="alarmStatus">
+                        OFF
+                    </small>
+                </div>
 
+            </div>
 
-            setText(
-                "humiditySource",
-                data.source
-                    ? "Source: " + data.source
-                    : "Environmental Data"
-            );
+            <label class="switch">
 
+                <input
+                    type="checkbox"
+                    id="alarmSwitch">
 
-            loadSwitch(
-                "light",
-                data.light
-            );
+                <span class="slider"></span>
 
+            </label>
 
-            loadSwitch(
-                "fan",
-                data.fan
-            );
+        </div>
 
+    </div>
 
-            loadSwitch(
-                "door",
-                data.door
-            );
 
+    <!-- MANUAL DATA -->
+    <div class="chart-card">
 
-            loadSwitch(
-                "alarm",
-                data.alarm
-            );
+        <h2>📝 Manual Data Entry</h2>
 
-        },
+        <p style="color:#666; margin-bottom:20px;">
 
-        function(error) {
+            You can manually enter sensor data while the ESP32
+            is not connected.
 
-            console.error(
-                "Dashboard Firebase error:",
-                error
-            );
+        </p>
 
-        }
-    );
 
+        <div class="manual-form">
 
-// ==========================================================
-// SAVE MANUAL DATA
-// ==========================================================
 
-function saveManualData() {
+            <div class="input-group">
 
-    const temperatureElement =
-        document.getElementById(
-            "manualTemperature"
-        );
+                <label for="manualTemperature">
+                    🌡 Temperature (°C)
+                </label>
 
+                <input
+                    type="number"
+                    id="manualTemperature"
+                    placeholder="Example: 28.5"
+                    step="0.1">
 
-    const humidityElement =
-        document.getElementById(
-            "manualHumidity"
-        );
+            </div>
 
 
-    const motionElement =
-        document.getElementById(
-            "manualMotion"
-        );
+            <div class="input-group">
 
+                <label for="manualHumidity">
+                    💧 Humidity (%)
+                </label>
 
-    const messageElement =
-        document.getElementById(
-            "manualMessage"
-        );
+                <input
+                    type="number"
+                    id="manualHumidity"
+                    placeholder="Example: 65"
+                    min="0"
+                    max="100"
+                    step="0.1">
 
+            </div>
 
-    // ------------------------------------------------------
-    // CHECK ELEMENTS
-    // ------------------------------------------------------
 
-    if (
-        !temperatureElement ||
-        !humidityElement ||
-        !motionElement
-    ) {
+            <div class="input-group">
 
-        console.error(
-            "Manual input elements are missing."
-        );
+                <label for="manualMotion">
+                    🚶 Motion
+                </label>
 
-        return;
+                <select id="manualMotion">
 
-    }
+                    <option value="false">
+                        No Motion
+                    </option>
 
+                    <option value="true">
+                        Motion Detected
+                    </option>
 
-    // ------------------------------------------------------
-    // GET VALUES
-    // ------------------------------------------------------
+                </select>
 
-    const temperature =
-        parseFloat(
-            temperatureElement.value
-        );
+            </div>
 
 
-    const humidity =
-        parseFloat(
-            humidityElement.value
-        );
+            <button
+                type="button"
+                id="saveDataButton"
+                class="save-btn">
 
+                💾 SAVE DATA
 
-    const motion =
-        motionElement.value === "true";
+            </button>
 
 
-    // ------------------------------------------------------
-    // VALIDATION
-    // ------------------------------------------------------
+            <p
+                id="manualMessage"
+                style="margin-top:15px;">
+            </p>
 
-    if (isNaN(temperature)) {
+        </div>
 
-        showMessage(
-            "❌ Please enter temperature.",
-            "error"
-        );
+    </div>
 
-        return;
 
-    }
+    <!-- CHART -->
+    <div class="chart-card">
 
+        <h2>📈 Live Environment</h2>
 
-    if (
-        isNaN(humidity) ||
-        humidity < 0 ||
-        humidity > 100
-    ) {
+        <p style="color:#666; margin-bottom:20px;">
+            Temperature and humidity monitoring
+        </p>
 
-        showMessage(
-            "❌ Humidity must be between 0 and 100.",
-            "error"
-        );
+        <canvas id="environmentChart"></canvas>
 
-        return;
+    </div>
 
-    }
+</div>
 
 
-    // ------------------------------------------------------
-    // BUTTON
-    // ------------------------------------------------------
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 
-    const button =
-        document.getElementById(
-            "saveDataButton"
-        );
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
 
-    if (button) {
 
-        button.disabled = true;
+<!-- YOUR FIREBASE CONFIG -->
+<script src="firebase-config.js"></script>
 
-        button.textContent =
-            "💾 SAVING...";
 
-    }
+<!-- DASHBOARD JAVASCRIPT -->
+<script src="dashboard.js"></script>
 
-
-    // ------------------------------------------------------
-    // STATUS
-    // ------------------------------------------------------
-
-    let status =
-        "NORMAL";
-
-
-    if (
-        temperature >= 35 ||
-        humidity >= 80
-    ) {
-
-        status =
-            "WARNING";
-
-    }
-
-
-    if (
-        temperature >= 40 ||
-        humidity >= 90
-    ) {
-
-        status =
-            "DANGER";
-
-    }
-
-
-    // ------------------------------------------------------
-    // CURRENT TIME
-    // ------------------------------------------------------
-
-    const now =
-        new Date();
-
-
-    const readableTime =
-        now.toLocaleString();
-
-
-    // ------------------------------------------------------
-    // CURRENT DATA
-    // ------------------------------------------------------
-
-    const currentData = {
-
-        temperature:
-            temperature,
-
-        humidity:
-            humidity,
-
-        motion:
-            motion,
-
-        status:
-            status,
-
-        lastUpdate:
-            readableTime,
-
-        source:
-            "Manual Entry",
-
-        updatedAt:
-            firebase.database.ServerValue.TIMESTAMP
-
-    };
-
-
-    console.log(
-        "Saving:",
-        currentData
-    );
-
-
-    // ======================================================
-    // SAVE CURRENT DATA
-    // ======================================================
-
-    database
-        .ref("SmartStorage/current")
-        .set(currentData)
-
-        .then(function() {
-
-            console.log(
-                "Current data saved."
-            );
-
-
-            // ==================================================
-            // ALSO UPDATE MAIN SMARTSTORAGE
-            // ==================================================
-
-            return database
-                .ref("SmartStorage")
-                .update(currentData);
-
-        })
-
-
-        .then(function() {
-
-            console.log(
-                "Main SmartStorage updated."
-            );
-
-
-            // ==================================================
-            // SAVE HISTORY
-            // ==================================================
-
-            return database
-                .ref("SmartStorage/history")
-                .push({
-
-                    temperature:
-                        temperature,
-
-                    humidity:
-                        humidity,
-
-                    motion:
-                        motion,
-
-                    status:
-                        status,
-
-                    source:
-                        "Manual Entry",
-
-                    timestamp:
-                        readableTime,
-
-                    createdAt:
-                        firebase.database
-                            .ServerValue
-                            .TIMESTAMP
-
-                });
-
-        })
-
-
-        .then(function() {
-
-            console.log(
-                "History record saved."
-            );
-
-
-            showMessage(
-                "✅ DATA SAVED SUCCESSFULLY!",
-                "success"
-            );
-
-
-            // CLEAR FORM
-
-            temperatureElement.value =
-                "";
-
-            humidityElement.value =
-                "";
-
-            motionElement.value =
-                "false";
-
-
-            if (button) {
-
-                button.disabled = false;
-
-                button.textContent =
-                    "💾 SAVE DATA";
-
-            }
-
-        })
-
-
-        .catch(function(error) {
-
-            console.error(
-                "SAVE ERROR:",
-                error
-            );
-
-
-            showMessage(
-                "❌ Firebase Error: " +
-                error.message,
-                "error"
-            );
-
-
-            if (button) {
-
-                button.disabled = false;
-
-                button.textContent =
-                    "💾 SAVE DATA";
-
-            }
-
-        });
-
-}
-
-
-// ==========================================================
-// MESSAGE
-// ==========================================================
-
-function showMessage(
-    message,
-    type
-) {
-
-    const element =
-        document.getElementById(
-            "manualMessage"
-        );
-
-
-    if (!element) return;
-
-
-    element.textContent =
-        message;
-
-
-    if (type === "success") {
-
-        element.style.color =
-            "#28a745";
-
-    }
-
-    else {
-
-        element.style.color =
-            "#dc3545";
-
-    }
-
-}
-
-
-// ==========================================================
-// SWITCH CONTROL
-// ==========================================================
-
-function updateDeviceSwitch(
-    device,
-    state
-) {
-
-    const value =
-        Boolean(state);
-
-
-    const time =
-        new Date()
-            .toLocaleString();
-
-
-    const updateData = {};
-
-    updateData[device] =
-        value;
-
-    updateData.lastUpdate =
-        time;
-
-    updateData.source =
-        "Manual Control";
-
-    updateData.updatedAt =
-        firebase.database.ServerValue.TIMESTAMP;
-
-
-    database
-        .ref("SmartStorage")
-        .update(updateData)
-
-        .then(function() {
-
-            return database
-                .ref(
-                    "SmartStorage/current"
-                )
-                .update(updateData);
-
-        })
-
-        .then(function() {
-
-            return database
-                .ref(
-                    "SmartStorage/history"
-                )
-                .push({
-
-                    device:
-                        device,
-
-                    state:
-                        value,
-
-                    source:
-                        "Manual Control",
-
-                    timestamp:
-                        time,
-
-                    createdAt:
-                        firebase.database
-                            .ServerValue
-                            .TIMESTAMP
-
-                });
-
-        })
-
-        .then(function() {
-
-            updateSwitchText(
-                device,
-                value
-            );
-
-        })
-
-        .catch(function(error) {
-
-            console.error(
-                "Switch error:",
-                error
-            );
-
-            alert(
-                "Unable to save switch:\n" +
-                error.message
-            );
-
-        });
-
-}
-
-
-// ==========================================================
-// SWITCH TEXT
-// ==========================================================
-
-function updateSwitchText(
-    device,
-    state
-) {
-
-    const element =
-        document.getElementById(
-            device + "Status"
-        );
-
-
-    if (!element) return;
-
-
-    if (device === "door") {
-
-        element.textContent =
-            state
-                ? "OPEN"
-                : "CLOSED";
-
-    }
-
-    else {
-
-        element.textContent =
-            state
-                ? "ON"
-                : "OFF";
-
-    }
-
-}
-
-
-// ==========================================================
-// LOAD SWITCH
-// ==========================================================
-
-function loadSwitch(
-    device,
-    state
-) {
-
-    if (
-        state === undefined ||
-        state === null
-    ) {
-
-        return;
-
-    }
-
-
-    const switchElement =
-        document.getElementById(
-            device + "Switch"
-        );
-
-
-    if (switchElement) {
-
-        switchElement.checked =
-            Boolean(state);
-
-    }
-
-
-    updateSwitchText(
-        device,
-        Boolean(state)
-    );
-
-}
-
-
-// ==========================================================
-// CONNECT SWITCHES
-// ==========================================================
-
-function connectSwitch(
-    device
-) {
-
-    const element =
-        document.getElementById(
-            device + "Switch"
-        );
-
-
-    if (!element) return;
-
-
-    element.addEventListener(
-        "change",
-        function() {
-
-            updateDeviceSwitch(
-                device,
-                this.checked
-            );
-
-        }
-    );
-
-}
-
-
-connectSwitch("light");
-connectSwitch("fan");
-connectSwitch("door");
-connectSwitch("alarm");
-
-
-// ==========================================================
-// CHART
-// ==========================================================
-
-const chartElement =
-    document.getElementById(
-        "environmentChart"
-    );
-
-
-let chart = null;
-
-
-if (chartElement) {
-
-    chart =
-        new Chart(
-            chartElement.getContext("2d"),
-            {
-
-                type: "line",
-
-                data: {
-
-                    labels: [],
-
-                    datasets: [
-
-                        {
-                            label:
-                                "Temperature (°C)",
-
-                            data: [],
-
-                            borderWidth: 2,
-
-                            tension: 0.3
-                        },
-
-                        {
-                            label:
-                                "Humidity (%)",
-
-                            data: [],
-
-                            borderWidth: 2,
-
-                            tension: 0.3
-                        }
-
-                    ]
-
-                },
-
-                options: {
-
-                    responsive: true,
-
-                    maintainAspectRatio: true
-
-                }
-
-            }
-        );
-
-}
-
-
-// ==========================================================
-// UPDATE CHART FROM FIREBASE
-// ==========================================================
-
-database
-    .ref("SmartStorage/history")
-    .limitToLast(15)
-    .on("value", function(snapshot) {
-
-        if (!chart) return;
-
-
-        const labels = [];
-
-        const temperatures = [];
-
-        const humidities = [];
-
-
-        snapshot.forEach(
-            function(child) {
-
-                const data =
-                    child.val();
-
-
-                if (
-                    data.temperature !== undefined &&
-                    data.humidity !== undefined
-                ) {
-
-                    labels.push(
-                        data.timestamp || ""
-                    );
-
-                    temperatures.push(
-                        Number(data.temperature)
-                    );
-
-                    humidities.push(
-                        Number(data.humidity)
-                    );
-
-                }
-
-            }
-        );
-
-
-        chart.data.labels =
-            labels;
-
-
-        chart.data.datasets[0].data =
-            temperatures;
-
-
-        chart.data.datasets[1].data =
-            humidities;
-
-
-        chart.update();
-
-    });
-
-
-// ==========================================================
-// MAKE FUNCTIONS AVAILABLE
-// ==========================================================
-
-window.saveManualData =
-    saveManualData;
-
-window.updateDeviceSwitch =
-    updateDeviceSwitch;
+</body>
+</html>
