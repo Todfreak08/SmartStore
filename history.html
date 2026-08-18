@@ -9,7 +9,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1.0">
 
-    <title>Sensor History</title>
+    <title>Smart Storage - History</title>
 
     <link
         rel="stylesheet"
@@ -17,63 +17,50 @@
 
 </head>
 
-
 <body>
-
 
 <!-- =====================================================
      SIDEBAR
-====================================================== -->
+===================================================== -->
 
 <div class="sidebar">
 
-    <h2>
-        📦 Smart Storage
-    </h2>
-
+    <h2>📦 Smart Storage</h2>
 
     <a href="dashboard.html">
         🏠 Dashboard
     </a>
 
-
     <a
         href="history.html"
         class="active">
-
         📋 History
-
     </a>
-
 
     <a href="alerts.html">
         🚨 Alerts
     </a>
 
-
     <a href="reports.html">
         📊 Reports
     </a>
-
 
     <a href="settings.html">
         ⚙️ Settings
     </a>
 
-
     <a href="profile.html">
         👤 Profile
     </a>
-
 
     <a href="about.html">
         ℹ️ About
     </a>
 
-
     <button
         type="button"
-        class="logout-btn">
+        class="logout-btn"
+        id="logoutButton">
 
         🚪 Logout
 
@@ -83,22 +70,21 @@
 
 
 <!-- =====================================================
-     MAIN
-====================================================== -->
+     MAIN CONTENT
+===================================================== -->
 
 <div class="main-content">
-
 
     <div class="top-bar">
 
         <div>
 
             <h1>
-                Sensor History
+                History
             </h1>
 
             <p>
-                Stored records from Firebase Realtime Database
+                ESP32 Real-Time Activity Logs
             </p>
 
         </div>
@@ -118,20 +104,80 @@
 
 
     <!-- =================================================
-         HISTORY TABLE
+         FIREBASE STATUS
     ================================================== -->
 
-    <div class="table-card">
+    <div
+        id="firebaseStatus"
+        class="status-card"
+        style="
+            padding:15px;
+            margin-bottom:20px;
+        ">
+
+        ● Connecting to Firebase...
+
+    </div>
 
 
-        <input
-            type="text"
-            id="searchInput"
-            placeholder="Search date, status, device, source..."
-            oninput="searchTable()">
+    <!-- =================================================
+         HISTORY CARD
+    ================================================== -->
+
+    <div class="chart-card">
+
+        <div
+            style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                gap:15px;
+                flex-wrap:wrap;
+            ">
+
+            <div>
+
+                <h2>
+                    📋 ESP32 Activity Logs
+                </h2>
+
+                <p
+                    style="
+                        color:#666;
+                        margin-top:5px;
+                    ">
+
+                    These records are automatically
+                    created by the ESP32.
+
+                </p>
+
+            </div>
 
 
-        <div style="overflow-x:auto;">
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="🔍 Search history..."
+                style="
+                    padding:12px;
+                    border:1px solid #ccc;
+                    border-radius:8px;
+                    min-width:220px;
+                ">
+
+        </div>
+
+
+        <!-- =================================================
+             TABLE
+        ================================================== -->
+
+        <div
+            style="
+                overflow-x:auto;
+                margin-top:25px;
+            ">
 
             <table id="historyTable">
 
@@ -140,23 +186,23 @@
                     <tr>
 
                         <th>
-                            Date & Time
+                            Date
                         </th>
 
                         <th>
-                            Temperature
+                            Time
                         </th>
 
                         <th>
-                            Humidity
+                            Timestamp
                         </th>
 
                         <th>
-                            Motion / Device
+                            Source
                         </th>
 
                         <th>
-                            Status
+                            Device Status
                         </th>
 
                     </tr>
@@ -170,9 +216,12 @@
 
                         <td
                             colspan="5"
-                            class="empty-message">
+                            style="
+                                text-align:center;
+                                padding:30px;
+                            ">
 
-                            Loading history...
+                            Waiting for ESP32 logs...
 
                         </td>
 
@@ -186,13 +235,12 @@
 
     </div>
 
-
 </div>
 
 
 <!-- =====================================================
      FIREBASE
-====================================================== -->
+===================================================== -->
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 
@@ -201,120 +249,12 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
 
 
-<!-- FIREBASE CONFIG -->
-
-<script src="firebase-config.js"></script>
-
-
-<!-- HISTORY -->
-
-<script src="history.js"></script>
-
-
-<!-- SHARED LOGOUT -->
-
-<script src="logout.js"></script>
-
-
-</body>
-
-</html>
-
-<!-- =================================================
-     HISTORY TABLE
-================================================== -->
-
-<div class="table-card">
-
-
-    <input
-        type="text"
-        id="searchInput"
-        placeholder="Search by date, status, source, or device..."
-        onkeyup="searchTable()"
-    >
-
-
-    <div style="overflow-x:auto;">
-
-        <table>
-
-            <thead>
-
-                <tr>
-
-                    <th>
-                        Date & Time
-                    </th>
-
-                    <th>
-                        Temperature
-                    </th>
-
-                    <th>
-                        Humidity
-                    </th>
-
-                    <th>
-                        Motion
-                    </th>
-
-                    <th>
-                        Status
-                    </th>
-
-                    <th>
-                        Device
-                    </th>
-
-                    <th>
-                        Source
-                    </th>
-
-                </tr>
-
-            </thead>
-
-
-            <tbody id="historyBody">
-
-                <tr>
-
-                    <td
-hhhhhhhhhhhhhhhhhh                        class="empty-message"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-                    >
-
-                        Loading Firebase history...
-
-                    </td>
-
-                </tr>
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-</div>
-
-</div>
-
-<!-- =====================================================
-     FIREBASE
-===================================================== -->
-
-<script src=""https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js" (https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js)"></script>
-
-<script src=""https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js" (https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js)"></script>
-
-<script src=""https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js" (https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js)"></script>
-
 <!-- =====================================================
      FIREBASE CONFIG
 ===================================================== -->
 
 <script src="firebase-config.js"></script>
+
 
 <!-- =====================================================
      HISTORY JAVASCRIPT
