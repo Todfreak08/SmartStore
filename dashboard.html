@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -10,6 +11,7 @@
     <link rel="stylesheet" href="style.css">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 
 <body>
@@ -38,36 +40,75 @@
 
 <div class="main-content">
 
+    <!-- ==========================================
+         TOP BAR
+    =========================================== -->
+
     <div class="top-bar">
 
         <div>
+
             <h1>Dashboard</h1>
-            <p>Smart Storage Environmental Monitoring</p>
+
+            <p>
+                Smart Storage Environmental Monitoring
+            </p>
+
+            <!-- LIVE DATE AND TIME -->
+
+            <p
+                id="currentDateTime"
+                style="
+                    margin-top:5px;
+                    font-weight:bold;
+                    color:#555;
+                ">
+
+                Loading date and time...
+
+            </p>
+
         </div>
 
+
         <div class="user-card">
+
             Logged in as:
-            <b id="userEmail">Loading...</b>
+
+            <b id="userEmail">
+                Loading...
+            </b>
+
         </div>
 
     </div>
 
 
-    <!-- FIREBASE STATUS -->
+    <!-- ==========================================
+         FIREBASE STATUS
+    =========================================== -->
 
     <div
         id="firebaseStatus"
         class="status-card"
-        style="padding:15px; margin-bottom:20px;">
+        style="
+            padding:15px;
+            margin-bottom:20px;
+        ">
 
         ● Connecting to Firebase...
 
     </div>
 
 
-    <!-- SENSOR CARDS -->
+    <!-- ==========================================
+         SENSOR CARDS
+    =========================================== -->
 
     <div class="card-grid">
+
+
+        <!-- TEMPERATURE -->
 
         <div class="card">
 
@@ -78,11 +119,13 @@
             </h1>
 
             <p id="temperatureSource">
-                Waiting for data...
+                Waiting for ESP32...
             </p>
 
         </div>
 
+
+        <!-- HUMIDITY -->
 
         <div class="card">
 
@@ -93,11 +136,13 @@
             </h1>
 
             <p id="humiditySource">
-                Waiting for data...
+                Waiting for ESP32...
             </p>
 
         </div>
 
+
+        <!-- MOTION -->
 
         <div class="card">
 
@@ -107,18 +152,24 @@
                 Waiting...
             </h1>
 
-            <p>PIR Sensor</p>
+            <p>
+                PIR Sensor
+            </p>
 
         </div>
 
     </div>
 
 
-    <!-- STORAGE STATUS -->
+    <!-- ==========================================
+         STORAGE STATUS
+    =========================================== -->
 
     <div class="status-card">
 
-        <h2>📦 Storage Status</h2>
+        <h2>
+            📦 Storage Status
+        </h2>
 
         <h1 id="storageStatus">
             Waiting for data...
@@ -131,15 +182,21 @@
     </div>
 
 
-    <!-- ==============================================
+    <!-- ==========================================
          MANUAL DATA ENTRY
-    =============================================== -->
+    =========================================== -->
 
     <div class="chart-card">
 
-        <h2>📝 Manual Data Entry</h2>
+        <h2>
+            📝 Manual Data Entry
+        </h2>
 
-        <p style="color:#666; margin:10px 0 20px;">
+        <p
+            style="
+                color:#666;
+                margin:10px 0 20px;
+            ">
 
             Enter environmental data manually while
             the ESP32 is not connected.
@@ -147,10 +204,14 @@
         </p>
 
 
+        <!-- TEMPERATURE -->
+
         <div class="input-group">
 
             <label for="manualTemperature">
+
                 🌡 Temperature (°C)
+
             </label>
 
             <input
@@ -162,10 +223,14 @@
         </div>
 
 
+        <!-- HUMIDITY -->
+
         <div class="input-group">
 
             <label for="manualHumidity">
+
                 💧 Humidity (%)
+
             </label>
 
             <input
@@ -179,20 +244,28 @@
         </div>
 
 
+        <!-- MOTION -->
+
         <div class="input-group">
 
             <label for="manualMotion">
+
                 🚶 Motion
+
             </label>
 
             <select id="manualMotion">
 
                 <option value="false">
+
                     No Motion
+
                 </option>
 
                 <option value="true">
+
                     Motion Detected
+
                 </option>
 
             </select>
@@ -200,7 +273,7 @@
         </div>
 
 
-        <!-- IMPORTANT: NO onclick HERE -->
+        <!-- SAVE -->
 
         <button
             type="button"
@@ -214,38 +287,61 @@
 
         <p
             id="manualMessage"
-            style="margin-top:15px; font-weight:bold;">
+            style="
+                margin-top:15px;
+                font-weight:bold;
+            ">
+
         </p>
 
     </div>
 
 
-    <!-- DEVICE SWITCHES -->
+    <!-- ==========================================
+         DEVICE SWITCHES
+    =========================================== -->
 
     <div class="chart-card">
 
-        <h2>🎛 Device Controls</h2>
+        <h2>
+            🎛 Device Controls
+        </h2>
 
-        <p style="color:#666; margin-bottom:20px;">
+        <p
+            style="
+                color:#666;
+                margin-bottom:20px;
+            ">
+
             Changes are automatically saved to Firebase.
+
         </p>
 
+
+        <!-- LIGHT -->
 
         <div class="control-row">
 
             <div class="control-info">
 
-                <div class="control-icon">💡</div>
+                <div class="control-icon">
+                    💡
+                </div>
 
                 <div>
-                    <strong>Storage Light</strong>
+
+                    <strong>
+                        Storage Light
+                    </strong>
 
                     <small id="lightStatus">
                         OFF
                     </small>
+
                 </div>
 
             </div>
+
 
             <label class="switch">
 
@@ -260,21 +356,30 @@
         </div>
 
 
+        <!-- FAN -->
+
         <div class="control-row">
 
             <div class="control-info">
 
-                <div class="control-icon">🌀</div>
+                <div class="control-icon">
+                    🌀
+                </div>
 
                 <div>
-                    <strong>Ventilation Fan</strong>
+
+                    <strong>
+                        Ventilation Fan
+                    </strong>
 
                     <small id="fanStatus">
                         OFF
                     </small>
+
                 </div>
 
             </div>
+
 
             <label class="switch">
 
@@ -289,21 +394,30 @@
         </div>
 
 
+        <!-- DOOR -->
+
         <div class="control-row">
 
             <div class="control-info">
 
-                <div class="control-icon">🚪</div>
+                <div class="control-icon">
+                    🚪
+                </div>
 
                 <div>
-                    <strong>Storage Door</strong>
+
+                    <strong>
+                        Storage Door
+                    </strong>
 
                     <small id="doorStatus">
                         CLOSED
                     </small>
+
                 </div>
 
             </div>
+
 
             <label class="switch">
 
@@ -318,21 +432,30 @@
         </div>
 
 
+        <!-- ALARM -->
+
         <div class="control-row">
 
             <div class="control-info">
 
-                <div class="control-icon">🚨</div>
+                <div class="control-icon">
+                    🚨
+                </div>
 
                 <div>
-                    <strong>Security Alarm</strong>
+
+                    <strong>
+                        Security Alarm
+                    </strong>
 
                     <small id="alarmStatus">
                         OFF
                     </small>
+
                 </div>
 
             </div>
+
 
             <label class="switch">
 
@@ -349,11 +472,15 @@
     </div>
 
 
-    <!-- CHART -->
+    <!-- ==========================================
+         CHART
+    =========================================== -->
 
     <div class="chart-card">
 
-        <h2>📈 Live Environment</h2>
+        <h2>
+            📈 Live Environment
+        </h2>
 
         <canvas id="environmentChart"></canvas>
 
@@ -362,7 +489,9 @@
 </div>
 
 
-<!-- FIREBASE -->
+<!-- ==============================================
+     FIREBASE
+================================================ -->
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 
@@ -371,14 +500,15 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
 
 
-<!-- YOUR EXISTING CONFIG -->
+<!-- FIREBASE CONFIG -->
 
 <script src="firebase-config.js"></script>
 
 
-<!-- DASHBOARD JS -->
+<!-- DASHBOARD JAVASCRIPT -->
 
 <script src="dashboard.js"></script>
+
 
 </body>
 
