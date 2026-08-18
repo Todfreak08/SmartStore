@@ -1,6 +1,10 @@
 // ==========================================================
 // SMART STORAGE MONITORING SYSTEM
-// COMPLETE HISTORY.JS
+// HISTORY.JS
+//
+// WEBSITE = VIEW ONLY
+// ESP32   = CREATES THE LOGS
+// FIREBASE = STORES THE LOGS
 // ==========================================================
 
 
@@ -12,43 +16,156 @@ auth.onAuthStateChanged(function (user) {
 
     if (!user) {
 
-        window.location.replace(
-            "index.html"
-        );
+        window.location.href =
+            "index.html";
 
         return;
 
     }
 
 
-    const userEmail =
+    const email =
         document.getElementById(
             "userEmail"
         );
 
 
-    if (userEmail) {
+    if (email) {
 
-        userEmail.textContent =
+        email.textContent =
             user.email;
 
     }
-
-
-    loadHistory();
 
 });
 
 
 // ==========================================================
-// HISTORY ARRAY
+// LOGOUT
 // ==========================================================
 
-let historyData = [];
+function initializeLogout() {
+
+    const button =
+        document.getElementById(
+            "logoutButton"
+        );
+
+
+    if (!button) {
+
+        return;
+
+    }
+
+
+    button.addEventListener(
+        "click",
+        function () {
+
+            button.disabled =
+                true;
+
+
+            button.textContent =
+                "Logging out...";
+
+
+            auth.signOut()
+
+                .then(function () {
+
+                    window.location.href =
+                        "index.html";
+
+                })
+
+                .catch(function (error) {
+
+                    console.error(
+                        "Logout error:",
+                        error
+                    );
+
+
+                    button.disabled =
+                        false;
+
+
+                    button.textContent =
+                        "🚪 Logout";
+
+
+                    alert(
+                        "Logout failed: " +
+                        error.message
+                    );
+
+                });
+
+        }
+    );
+
+}
 
 
 // ==========================================================
-// LOAD HISTORY
+// FIREBASE CONNECTION STATUS
+// ==========================================================
+
+function initializeFirebaseStatus() {
+
+    const status =
+        document.getElementById(
+            "firebaseStatus"
+        );
+
+
+    database
+        .ref(".info/connected")
+        .on(
+            "value",
+            function (snapshot) {
+
+                if (!status) {
+
+                    return;
+
+                }
+
+
+                if (
+                    snapshot.val() === true
+                ) {
+
+                    status.textContent =
+                        "● Firebase Connected";
+
+
+                    status.style.color =
+                        "#28a745";
+
+                }
+
+                else {
+
+                    status.textContent =
+                        "● Firebase Disconnected";
+
+
+                    status.style.color =
+                        "#dc3545";
+
+                }
+
+            }
+        );
+
+}
+
+
+// ==========================================================
+// LOAD ESP32 HISTORY
 // ==========================================================
 
 function loadHistory() {
@@ -70,73 +187,74 @@ function loadHistory() {
     }
 
 
-    historyBody.innerHTML = `
-
-        <tr>
-
-            <td
-                colspan="5"
-                class="empty-message">
-
-                Loading Firebase history...
-
-            </td>
-
-        </tr>
-
-    `;
-
+    // ======================================================
+    // IMPORTANT
+    // ======================================================
+    //
+    // ONLY READ:
+    //
+    // smartStorage/history
+    //
+    // The WEBSITE does NOT write here.
+    //
+    // ESP32 creates these records.
+    //
+    // ======================================================
 
     database
         .ref(
-            "SmartStorage/history"
+            "smartStorage/history"
         )
         .on(
-
             "value",
-
             function (snapshot) {
 
-                historyData = [];
+                historyBody.innerHTML =
+                    "";
 
 
-                // ==========================================
-                // NO DATA
-                // ==========================================
+                if (
+                    !snapshot.exists()
+                ) {
 
-                if (!snapshot.exists()) {
+                    historyBody.innerHTML = `
 
-                    displayHistory([]);
+                        <tr>
+
+                            <td
+                                colspan="5"
+                                style="
+                                    text-align:center;
+                                    padding:30px;
+                                ">
+
+                                📡 Waiting for ESP32
+                                history logs...
+
+                            </td>
+
+                        </tr>
+
+                    `;
 
                     return;
 
                 }
 
 
-                const data =
-                    snapshot.val();
+                const records = [];
 
 
-                // ==========================================
-                // CONVERT FIREBASE OBJECT TO ARRAY
-                // ==========================================
+                snapshot.forEach(
+                    function (child) {
 
-                Object.keys(data).forEach(
-                    function (key) {
+                        records.push({
 
-                        const record =
-                            data[key];
+                            key:
+                                child.key,
 
-
-                        if (!record) return;
-
-
-                        historyData.push({
-
-                            id:
-                                key,
-
-                            ...record
+                            data:
+                                child.val()
 
                         });
 
@@ -144,28 +262,114 @@ function loadHistory() {
                 );
 
 
-                // ==========================================
-                // SORT NEWEST FIRST
-                // ==========================================
+                // =================================================
+                // NEWEST FIRST
+                // =================================================
 
-                historyData.sort(
-                    function (a, b) {
+                records.reverse();
 
-                        return (
-                            getTimestamp(b) -
-                            getTimestamp(a)
+
+                records.forEach(
+                    function (record) {
+
+                        const data =
+                            record.data;
+
+
+                        const row =
+                            document.createElement(
+                                "tr"
+                            );
+
+
+                        const date =
+                            data.date ||
+                            "--";
+
+
+                        const time =
+                            data.time ||
+                            "--";
+
+
+                        const timestamp =
+                            data.timestamp ||
+                            "--";
+
+
+                        const source =
+                            data.source ||
+                            "ESP32";
+
+
+                        const online =
+                            data.online;
+
+
+                        let deviceStatus =
+                            "OFFLINE";
+
+
+                        if (
+                            online === true
+                        ) {
+
+                            deviceStatus =
+                                "ONLINE";
+
+                        }
+
+
+                        row.innerHTML = `
+
+                            <td>
+                                ${escapeHTML(
+                                    date
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHTML(
+                                    time
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHTML(
+                                    timestamp
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHTML(
+                                    source
+                                )}
+                            </td>
+
+                            <td>
+
+                                <span
+                                    class="history-status
+                                    ${
+                                        online === true
+                                            ? "normal"
+                                            : "danger"
+                                    }">
+
+                                    ${deviceStatus}
+
+                                </span>
+
+                            </td>
+
+                        `;
+
+
+                        historyBody.appendChild(
+                            row
                         );
 
                     }
-                );
-
-
-                // ==========================================
-                // DISPLAY
-                // ==========================================
-
-                displayHistory(
-                    historyData
                 );
 
             },
@@ -184,7 +388,11 @@ function loadHistory() {
 
                         <td
                             colspan="5"
-                            class="empty-message">
+                            style="
+                                text-align:center;
+                                color:#dc3545;
+                                padding:30px;
+                            ">
 
                             ❌ Firebase Error:
                             ${escapeHTML(
@@ -198,563 +406,162 @@ function loadHistory() {
                 `;
 
             }
-
         );
 
 }
 
 
 // ==========================================================
-// GET TIMESTAMP
-// ==========================================================
-
-function getTimestamp(
-    record
-) {
-
-    if (
-        typeof record.createdAt ===
-        "number"
-    ) {
-
-        return record.createdAt;
-
-    }
-
-
-    if (
-        record.timestamp
-    ) {
-
-        const parsed =
-            Date.parse(
-                record.timestamp
-            );
-
-
-        if (!isNaN(parsed)) {
-
-            return parsed;
-
-        }
-
-    }
-
-
-    return 0;
-
-}
-
-
-// ==========================================================
-// DISPLAY HISTORY
-// ==========================================================
-
-function displayHistory(
-    records
-) {
-
-    const historyBody =
-        document.getElementById(
-            "historyBody"
-        );
-
-
-    if (!historyBody) return;
-
-
-    historyBody.innerHTML = "";
-
-
-    if (
-        !records ||
-        records.length === 0
-    ) {
-
-        historyBody.innerHTML = `
-
-            <tr>
-
-                <td
-                    colspan="5"
-                    class="empty-message">
-
-                    📭 No history records found.
-
-                </td>
-
-            </tr>
-
-        `;
-
-        return;
-
-    }
-
-
-    records.forEach(
-        function (record) {
-
-            const row =
-                document.createElement(
-                    "tr"
-                );
-
-
-            // ==============================================
-            // DATE
-            // ==============================================
-
-            const date =
-                document.createElement(
-                    "td"
-                );
-
-
-            date.textContent =
-                getDateText(record);
-
-
-            // ==============================================
-            // TEMPERATURE
-            // ==============================================
-
-            const temperature =
-                document.createElement(
-                    "td"
-                );
-
-
-            if (
-                record.temperature !==
-                undefined
-            ) {
-
-                temperature.textContent =
-                    record.temperature +
-                    " °C";
-
-            }
-
-            else {
-
-                temperature.textContent =
-                    "—";
-
-            }
-
-
-            // ==============================================
-            // HUMIDITY
-            // ==============================================
-
-            const humidity =
-                document.createElement(
-                    "td"
-                );
-
-
-            if (
-                record.humidity !==
-                undefined
-            ) {
-
-                humidity.textContent =
-                    record.humidity +
-                    " %";
-
-            }
-
-            else {
-
-                humidity.textContent =
-                    "—";
-
-            }
-
-
-            // ==============================================
-            // MOTION / DEVICE
-            // ==============================================
-
-            const motion =
-                document.createElement(
-                    "td"
-                );
-
-
-            if (
-                record.motion !==
-                undefined
-            ) {
-
-                if (
-                    record.motion === true
-                ) {
-
-                    motion.textContent =
-                        "🚶 Detected";
-
-                }
-
-                else if (
-                    record.motion === false
-                ) {
-
-                    motion.textContent =
-                        "No Motion";
-
-                }
-
-                else {
-
-                    motion.textContent =
-                        record.motion;
-
-                }
-
-            }
-
-            else if (
-                record.device
-            ) {
-
-                const state =
-                    Boolean(
-                        record.state
-                    );
-
-
-                motion.textContent =
-                    getDeviceName(
-                        record.device
-                    ) +
-                    " " +
-                    (
-                        state
-                            ? "ON"
-                            : "OFF"
-                    );
-
-            }
-
-            else {
-
-                motion.textContent =
-                    "—";
-
-            }
-
-
-            // ==============================================
-            // STATUS
-            // ==============================================
-
-            const status =
-                document.createElement(
-                    "td"
-                );
-
-
-            if (
-                record.status
-            ) {
-
-                status.textContent =
-                    record.status;
-
-
-                applyStatus(
-                    status,
-                    record.status
-                );
-
-            }
-
-            else if (
-                record.device
-            ) {
-
-                const state =
-                    Boolean(
-                        record.state
-                    );
-
-
-                status.textContent =
-                    state
-                        ? "ON"
-                        : "OFF";
-
-            }
-
-            else {
-
-                status.textContent =
-                    "—";
-
-            }
-
-
-            // ==============================================
-            // ADD ROW
-            // ==============================================
-
-            row.appendChild(
-                date
-            );
-
-            row.appendChild(
-                temperature
-            );
-
-            row.appendChild(
-                humidity
-            );
-
-            row.appendChild(
-                motion
-            );
-
-            row.appendChild(
-                status
-            );
-
-
-            historyBody.appendChild(
-                row
-            );
-
-        }
-    );
-
-}
-
-
-// ==========================================================
-// DATE
-// ==========================================================
-
-function getDateText(
-    record
-) {
-
-    if (
-        record.timestamp
-    ) {
-
-        return record.timestamp;
-
-    }
-
-
-    if (
-        typeof record.createdAt ===
-        "number"
-    ) {
-
-        return new Date(
-            record.createdAt
-        ).toLocaleString();
-
-    }
-
-
-    return "Unknown";
-
-}
-
-
-// ==========================================================
-// DEVICE NAME
-// ==========================================================
-
-function getDeviceName(
-    device
-) {
-
-    switch (device) {
-
-        case "light":
-
-            return "💡 Light:";
-
-
-        case "fan":
-
-            return "🌀 Fan:";
-
-
-        case "door":
-
-            return "🚪 Door:";
-
-
-        case "alarm":
-
-            return "🚨 Alarm:";
-
-
-        default:
-
-            return device + ":";
-
-    }
-
-}
-
-
-// ==========================================================
-// STATUS
-// ==========================================================
-
-function applyStatus(
-    element,
-    status
-) {
-
-    const value =
-        String(status)
-            .toUpperCase();
-
-
-    element.classList.remove(
-        "status-normal",
-        "status-warning",
-        "status-danger"
-    );
-
-
-    if (
-        value === "NORMAL"
-    ) {
-
-        element.classList.add(
-            "status-normal"
-        );
-
-    }
-
-
-    else if (
-        value === "WARNING"
-    ) {
-
-        element.classList.add(
-            "status-warning"
-        );
-
-    }
-
-
-    else if (
-        value === "DANGER"
-    ) {
-
-        element.classList.add(
-            "status-danger"
-        );
-
-    }
-
-}
-
-
-// ==========================================================
-// SEARCH
+// SEARCH HISTORY
 // ==========================================================
 
 function searchTable() {
 
-    const searchInput =
+    const input =
         document.getElementById(
             "searchInput"
         );
 
 
-    if (!searchInput) return;
-
-
-    const query =
-        searchInput.value
-            .toLowerCase()
-            .trim();
-
-
-    if (!query) {
-
-        displayHistory(
-            historyData
+    const table =
+        document.getElementById(
+            "historyTable"
         );
+
+
+    if (
+        !input ||
+        !table
+    ) {
 
         return;
 
     }
 
 
-    const filtered =
-        historyData.filter(
-            function (record) {
-
-                const searchableText = [
-
-                    record.timestamp,
-
-                    record.temperature,
-
-                    record.humidity,
-
-                    record.motion,
-
-                    record.status,
-
-                    record.source,
-
-                    record.device,
-
-                    record.state
-
-                ]
-                    .join(" ")
-                    .toLowerCase();
+    const filter =
+        input.value
+            .toUpperCase();
 
 
-                return searchableText
-                    .includes(query);
-
-            }
+    const rows =
+        table.getElementsByTagName(
+            "tr"
         );
 
 
-    displayHistory(
-        filtered
-    );
+    for (
+        let i = 1;
+        i < rows.length;
+        i++
+    ) {
+
+        const text =
+            rows[i].textContent ||
+            rows[i].innerText;
+
+
+        if (
+            text
+                .toUpperCase()
+                .indexOf(filter) > -1
+        ) {
+
+            rows[i].style.display =
+                "";
+
+        }
+
+        else {
+
+            rows[i].style.display =
+                "none";
+
+        }
+
+    }
 
 }
 
 
-window.searchTable =
-    searchTable;
+// ==========================================================
+// SEARCH EVENT
+// ==========================================================
+
+function initializeSearch() {
+
+    const input =
+        document.getElementById(
+            "searchInput"
+        );
+
+
+    if (!input) {
+
+        return;
+
+    }
+
+
+    input.addEventListener(
+        "keyup",
+        searchTable
+    );
+
+}
 
 
 // ==========================================================
 // ESCAPE HTML
 // ==========================================================
 
-function escapeHTML(
-    value
-) {
+function escapeHTML(value) {
 
-    const div =
-        document.createElement(
-            "div"
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
         );
 
-
-    div.textContent =
-        value;
+}
 
 
-    return div.innerHTML;
+// ==========================================================
+// START HISTORY PAGE
+// ==========================================================
 
-        }
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        initializeLogout();
+
+        initializeFirebaseStatus();
+
+        initializeSearch();
+
+        loadHistory();
+
+    }
+);
