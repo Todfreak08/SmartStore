@@ -1,114 +1,506 @@
-// ==========================================
-// DASHBOARD
-// ==========================================
+// ==========================================================
+// SMART STORAGE MONITORING SYSTEM
+// ESP32 → FIREBASE → DASHBOARD
+// ==========================================================
 
-auth.onAuthStateChanged((user) => {
+
+// ==========================================================
+// GLOBAL VARIABLES
+// ==========================================================
+
+let environmentChart = null;
+
+let temperatureHistory = [];
+
+let humidityHistory = [];
+
+let chartLabels = [];
+
+
+// ==========================================================
+// AUTHENTICATION
+// ==========================================================
+
+auth.onAuthStateChanged(function (user) {
 
     if (!user) {
 
         window.location.href = "index.html";
 
         return;
+
     }
 
-    const email = document.getElementById("userEmail");
+
+    const email =
+        document.getElementById("userEmail");
+
 
     if (email) {
 
-        email.textContent = user.email;
+        email.textContent =
+            user.email;
 
     }
+
+
+    console.log(
+        "Logged in:",
+        user.email
+    );
 
 });
 
 
-// ==========================================
+// ==========================================================
 // LOGOUT
-// ==========================================
+// ==========================================================
 
-function logout() {
+function initializeLogout() {
 
-    auth.signOut().then(() => {
-
-        window.location.href = "index.html";
-
-    });
-
-}
+    const logoutButton =
+        document.getElementById(
+            "logoutButton"
+        );
 
 
-// ==========================================
-// FIREBASE STORAGE
-// ==========================================
+    if (!logoutButton) {
 
-database.ref("storage").on("value", (snapshot) => {
-
-    console.log("STORAGE:", snapshot.val());
-
-    if (!snapshot.exists()) {
-
-        document.getElementById("temperature").textContent = "-- °C";
-
-        document.getElementById("humidity").textContent = "-- %";
-
-        document.getElementById("motion").textContent = "Waiting...";
-
-        document.getElementById("storageStatus").textContent =
-            "Waiting for ESP32...";
-
-        document.getElementById("lastUpdate").textContent =
-            "No data";
+        console.warn(
+            "Logout button not found."
+        );
 
         return;
 
     }
 
 
-    const data = snapshot.val();
+    logoutButton.addEventListener(
+        "click",
+        function () {
+
+            logoutButton.disabled =
+                true;
 
 
-    // Temperature
-
-    document.getElementById("temperature").textContent =
-        Number(data.temperature).toFixed(1) + " °C";
+            logoutButton.textContent =
+                "Logging out...";
 
 
-    // Humidity
+            auth.signOut()
 
-    document.getElementById("humidity").textContent =
-        Number(data.humidity).toFixed(1) + " %";
+                .then(function () {
 
+                    window.location.href =
+                        "index.html";
 
-    // Motion
+                })
 
-    document.getElementById("motion").textContent =
-        data.motion || "No Motion";
+                .catch(function (error) {
 
-
-    // Status
-
-    document.getElementById("storageStatus").textContent =
-        data.status || "Normal";
-
-
-    // Last update
-
-    document.getElementById("lastUpdate").textContent =
-        data.lastUpdate || "No timestamp";
+                    console.error(
+                        "Logout error:",
+                        error
+                    );
 
 
-    // Status class
+                    logoutButton.disabled =
+                        false;
 
-    const statusElement =
-        document.getElementById("storageStatus");
 
-    statusElement.classList.remove(
-        "normal",
-        "warning",
-        "danger"
+                    logoutButton.textContent =
+                        "🚪 Logout";
+
+
+                    alert(
+                        "Logout failed: " +
+                        error.message
+                    );
+
+                });
+
+        }
+    );
+
+}
+
+
+// ==========================================================
+// FIREBASE CONNECTION STATUS
+// ==========================================================
+
+function initializeFirebaseConnection() {
+
+    const status =
+        document.getElementById(
+            "firebaseStatus"
+        );
+
+
+    database
+        .ref(".info/connected")
+        .on(
+            "value",
+            function (snapshot) {
+
+                if (!status) {
+
+                    return;
+
+                }
+
+
+                if (snapshot.val() === true) {
+
+                    status.textContent =
+                        "● Firebase Connected";
+
+
+                    status.style.color =
+                        "#28a745";
+
+                }
+
+                else {
+
+                    status.textContent =
+                        "● Firebase Disconnected";
+
+
+                    status.style.color =
+                        "#dc3545";
+
+                }
+
+            }
+        );
+
+}
+
+
+// ==========================================================
+// ESP32 / FIREBASE DATA LISTENER
+// ==========================================================
+//
+// ESP32 writes:
+//
+// /storage/temperature
+// /storage/humidity
+// /storage/motion
+// /storage/status
+// /storage/lastUpdate
+//
+// ==========================================================
+
+function initializeFirebaseListener() {
+
+    database
+        .ref("storage")
+        .on(
+
+            "value",
+
+            function (snapshot) {
+
+                console.log(
+                    "ESP32 DATA FROM FIREBASE:",
+                    snapshot.val()
+                );
+
+
+                if (!snapshot.exists()) {
+
+                    updateDashboard(null);
+
+                    return;
+
+                }
+
+
+                const data =
+                    snapshot.val();
+
+
+                updateDashboard(
+                    data
+                );
+
+            },
+
+
+            function (error) {
+
+                console.error(
+                    "Firebase listener error:",
+                    error
+                );
+
+
+                const status =
+                    document.getElementById(
+                        "firebaseStatus"
+                    );
+
+
+                if (status) {
+
+                    status.textContent =
+                        "● Firebase Error";
+
+
+                    status.style.color =
+                        "#dc3545";
+
+                }
+
+            }
+        );
+
+}
+
+
+// ==========================================================
+// UPDATE DASHBOARD
+// ==========================================================
+
+function updateDashboard(data) {
+
+    if (!data) {
+
+        setText(
+            "temperature",
+            "-- °C"
+        );
+
+
+        setText(
+            "humidity",
+            "-- %"
+        );
+
+
+        setText(
+            "motion",
+            "Waiting..."
+        );
+
+
+        setText(
+            "storageStatus",
+            "Waiting for ESP32..."
+        );
+
+
+        setText(
+            "lastUpdate",
+            "No data received yet."
+        );
+
+
+        setText(
+            "temperatureSource",
+            "Waiting for ESP32..."
+        );
+
+
+        setText(
+            "humiditySource",
+            "Waiting for ESP32..."
+        );
+
+
+        return;
+
+    }
+
+
+    // ======================================================
+    // TEMPERATURE
+    // ======================================================
+
+    if (
+        data.temperature !== undefined &&
+        data.temperature !== null
+    ) {
+
+        const temperature =
+            Number(data.temperature);
+
+
+        setText(
+            "temperature",
+            temperature.toFixed(1) +
+            " °C"
+        );
+
+
+        setText(
+            "temperatureSource",
+            "Source: ESP32"
+        );
+
+    }
+
+
+    // ======================================================
+    // HUMIDITY
+    // ======================================================
+
+    if (
+        data.humidity !== undefined &&
+        data.humidity !== null
+    ) {
+
+        const humidity =
+            Number(data.humidity);
+
+
+        setText(
+            "humidity",
+            humidity.toFixed(1) +
+            " %"
+        );
+
+
+        setText(
+            "humiditySource",
+            "Source: ESP32"
+        );
+
+    }
+
+
+    // ======================================================
+    // MOTION
+    // ======================================================
+
+    let motion =
+        data.motion;
+
+
+    if (motion === true) {
+
+        motion =
+            "Motion Detected";
+
+    }
+
+    else if (motion === false) {
+
+        motion =
+            "No Motion";
+
+    }
+
+    else if (
+        motion === undefined ||
+        motion === null
+    ) {
+
+        motion =
+            "Waiting...";
+
+    }
+
+
+    setText(
+        "motion",
+        motion
     );
 
 
+    // ======================================================
+    // STATUS
+    // ======================================================
+
+    const status =
+        data.status ||
+        "NORMAL";
+
+
+    setText(
+        "storageStatus",
+        status
+    );
+
+
+    // ======================================================
+    // LAST UPDATE
+    // ======================================================
+
+    setText(
+        "lastUpdate",
+
+        data.lastUpdate
+            ? "Last Update: " +
+              data.lastUpdate
+
+            : "No timestamp"
+    );
+
+
+    // ======================================================
+    // STATUS CLASS
+    // ======================================================
+
+    const statusElement =
+        document.getElementById(
+            "storageStatus"
+        );
+
+
+    if (statusElement) {
+
+        statusElement.classList.remove(
+            "normal",
+            "warning",
+            "danger"
+        );
+
+
+        if (
+            String(status)
+                .toUpperCase()
+                === "DANGER"
+        ) {
+
+            statusElement.classList.add(
+                "danger"
+            );
+
+        }
+
+        else if (
+            String(status)
+                .toUpperCase()
+                === "WARNING"
+        ) {
+
+            statusElement.classList.add(
+                "warning"
+            );
+
+        }
+
+        else {
+
+            statusElement.classList.add(
+                "normal"
+            );
+
+        }
+
+    }
+
+
+    // ======================================================
+    // UPDATE CHART
+    // ======================================================
+
+    if (
+        data.temperature !== undefined &&
+        data.humidity !== undefined
+   
     if (data.status === "Danger") {
 
         statusElement.classList.add("danger");
