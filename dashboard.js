@@ -1,21 +1,39 @@
 // ==========================================================
 // SMART STORAGE MONITORING SYSTEM
 // DASHBOARD.JS
+// ==========================================================
 //
 // SYSTEM:
+//
 // WEBSITE
 //    ↓
 // FIREBASE REALTIME DATABASE
 //    ↓
 // ESP32
-//    ↓
-// PHYSICAL GPIO OUTPUTS
 //
-// NO DHT11
-// NO HUMIDITY SENSOR
-// NO MOTION SENSOR
-// NO SD CARD
+// ESP32 sensor/data path:
+//
+// smartStorage/sensorData
+//
+// Website command paths:
+//
+// smartStorage/commands/light/state
+// smartStorage/commands/fan/state
+// smartStorage/commands/door/state
+// smartStorage/commands/alarm/state
+//
 // ==========================================================
+
+
+// ==========================================================
+// GLOBAL VARIABLES
+// ==========================================================
+
+let environmentChart = null;
+
+let temperatureHistory = [];
+let humidityHistory = [];
+let chartLabels = [];
 
 
 // ==========================================================
@@ -31,12 +49,20 @@ auth.onAuthStateChanged(function (user) {
         return;
     }
 
-    const email =
+
+    console.log(
+        "Logged in:",
+        user.email
+    );
+
+
+    const emailElement =
         document.getElementById("userEmail");
 
-    if (email) {
 
-        email.textContent =
+    if (emailElement) {
+
+        emailElement.textContent =
             user.email;
 
     }
@@ -66,6 +92,11 @@ function logout() {
                 error
             );
 
+            alert(
+                "Logout failed: " +
+                error.message
+            );
+
         });
 
 }
@@ -82,6 +113,7 @@ function initializeLogout() {
             "logoutButton"
         );
 
+
     if (!logoutButton) {
 
         console.warn(
@@ -89,17 +121,19 @@ function initializeLogout() {
         );
 
         return;
+
     }
+
 
     logoutButton.addEventListener(
         "click",
         function () {
 
-            logoutButton.disabled =
-                true;
+            logoutButton.disabled = true;
 
             logoutButton.textContent =
                 "Logging out...";
+
 
             auth.signOut()
 
@@ -117,11 +151,14 @@ function initializeLogout() {
                         error
                     );
 
+
                     logoutButton.disabled =
                         false;
 
+
                     logoutButton.textContent =
                         "🚪 Logout";
+
 
                     alert(
                         "Logout failed: " +
@@ -137,186 +174,385 @@ function initializeLogout() {
 
 
 // ==========================================================
-// FIREBASE CONNECTION STATUS
+// FIREBASE SENSOR DATA LISTENER
+// ==========================================================
+//
+// ESP32 writes:
+//
+// smartStorage/sensorData
+//
 // ==========================================================
 
-function initializeFirebaseConnection() {
+function initializeSensorListener() {
 
-    const status =
-        document.getElementById(
-            "firebaseStatus"
+    console.log(
+        "Starting ESP32 data listener..."
+    );
+
+
+    const sensorReference =
+        database.ref(
+            "smartStorage/sensorData"
         );
 
-    if (!status) {
 
-        return;
-    }
+    sensorReference.on(
 
-    database
-        .ref(".info/connected")
-        .on(
-            "value",
-            function (snapshot) {
+        "value",
 
-                if (
-                    snapshot.val() === true
-                ) {
+        function (snapshot) {
 
-                    status.textContent =
-                        "● Firebase Connected";
-
-                    status.style.color =
-                        "#28a745";
-
-                }
-
-                else {
-
-                    status.textContent =
-                        "● Firebase Disconnected";
-
-                    status.style.color =
-                        "#dc3545";
-
-                }
-
-            }
-        );
-
-}
+            console.log(
+                "ESP32 DATA:",
+                snapshot.val()
+            );
 
 
-// ==========================================================
-// ESP32 STATUS LISTENER
-// ==========================================================
-//
-// Reads:
-//
-// smartStorage
-//     esp32
-//         online
-//         lastSeen
-//         device
-//
-// ==========================================================
-
-function initializeESP32Listener() {
-
-    database
-        .ref("smartStorage/esp32")
-        .on(
-            "value",
-            function (snapshot) {
-
-                const status =
-                    document.getElementById(
-                        "firebaseStatus"
-                    );
-
-                if (!snapshot.exists()) {
-
-                    if (status) {
-
-                        status.textContent =
-                            "● Firebase Connected — Waiting for ESP32";
-
-                        status.style.color =
-                            "#f39c12";
-
-                    }
-
-                    return;
-                }
-
-                const esp32 =
-                    snapshot.val();
-
-                if (
-                    esp32.online === true
-                ) {
-
-                    if (status) {
-
-                        status.textContent =
-                            "● ESP32 Connected";
-
-                        status.style.color =
-                            "#28a745";
-
-                    }
-
-                }
-
-                else {
-
-                    if (status) {
-
-                        status.textContent =
-                            "● ESP32 Offline";
-
-                        status.style.color =
-                            "#dc3545";
-
-                    }
-
-                }
-
-                console.log(
-                    "ESP32 STATUS:",
-                    esp32
+            const firebaseStatus =
+                document.getElementById(
+                    "firebaseStatus"
                 );
 
+
+            if (firebaseStatus) {
+
+                firebaseStatus.textContent =
+                    "● Firebase Connected";
+
+                firebaseStatus.style.color =
+                    "#28a745";
+
             }
+
+
+            if (!snapshot.exists()) {
+
+                console.log(
+                    "No ESP32 data yet."
+                );
+
+
+                updateDashboard(null);
+
+                return;
+
+            }
+
+
+            const data =
+                snapshot.val();
+
+
+            updateDashboard(data);
+
+        },
+
+        function (error) {
+
+            console.error(
+                "Firebase sensor listener error:",
+                error
+            );
+
+
+            const firebaseStatus =
+                document.getElementById(
+                    "firebaseStatus"
+                );
+
+
+            if (firebaseStatus) {
+
+                firebaseStatus.textContent =
+                    "● Firebase Error";
+
+                firebaseStatus.style.color =
+                    "#dc3545";
+
+            }
+
+        }
+
+    );
+
+}
+
+
+// ==========================================================
+// UPDATE DASHBOARD
+// ==========================================================
+
+function updateDashboard(data) {
+
+    if (!data) {
+
+        setText(
+            "temperature",
+            "-- °C"
         );
 
+
+        setText(
+            "humidity",
+            "-- %"
+        );
+
+
+        setText(
+            "motion",
+            "Waiting..."
+        );
+
+
+        setText(
+            "storageStatus",
+            "Waiting for ESP32..."
+        );
+
+
+        setText(
+            "lastUpdate",
+            "No ESP32 data received yet."
+        );
+
+
+        setText(
+            "temperatureSource",
+            "Waiting for ESP32..."
+        );
+
+
+        setText(
+            "humiditySource",
+            "Waiting for ESP32..."
+        );
+
+
+        return;
+
+    }
+
+
+    // ======================================================
+    // TEMPERATURE
+    // ======================================================
+
+    let temperature =
+        data.temperature;
+
+
+    if (
+        temperature !== undefined &&
+        temperature !== null
+    ) {
+
+        temperature =
+            Number(temperature);
+
+
+        setText(
+            "temperature",
+            temperature.toFixed(1) +
+            " °C"
+        );
+
+    }
+
+    else {
+
+        setText(
+            "temperature",
+            "-- °C"
+        );
+
+    }
+
+
+    // ======================================================
+    // HUMIDITY
+    // ======================================================
+
+    let humidity =
+        data.humidity;
+
+
+    if (
+        humidity !== undefined &&
+        humidity !== null
+    ) {
+
+        humidity =
+            Number(humidity);
+
+
+        setText(
+            "humidity",
+            humidity.toFixed(1) +
+            " %"
+        );
+
+    }
+
+    else {
+
+        setText(
+            "humidity",
+            "-- %"
+        );
+
+    }
+
+
+    // ======================================================
+    // MOTION
+    // ======================================================
+
+    let motion =
+        data.motion;
+
+
+    if (motion === true) {
+
+        setText(
+            "motion",
+            "Motion Detected"
+        );
+
+    }
+
+    else if (motion === false) {
+
+        setText(
+            "motion",
+            "No Motion"
+        );
+
+    }
+
+    else if (
+        motion !== undefined &&
+        motion !== null
+    ) {
+
+        setText(
+            "motion",
+            String(motion)
+        );
+
+    }
+
+    else {
+
+        setText(
+            "motion",
+            "Waiting..."
+        );
+
+    }
+
+
+    // ======================================================
+    // STATUS
+    // ======================================================
+
+    const status =
+        data.status ||
+        "NORMAL";
+
+
+    setText(
+        "storageStatus",
+        status
+    );
+
+
+    updateStatusClass(
+        status
+    );
+
+
+    // ======================================================
+    // TIMESTAMP
+    // ======================================================
+
+    if (data.timestamp) {
+
+        setText(
+            "lastUpdate",
+            "Last Update: " +
+            data.timestamp
+        );
+
+    }
+
+    else if (data.date && data.time) {
+
+        setText(
+            "lastUpdate",
+            "Last Update: " +
+            data.date +
+            " " +
+            data.time
+        );
+
+    }
+
+    else {
+
+        setText(
+            "lastUpdate",
+            "No timestamp received."
+        );
+
+    }
+
+
+    // ======================================================
+    // SOURCE
+    // ======================================================
+
+    setText(
+        "temperatureSource",
+        "Source: " +
+        (data.source || "ESP32")
+    );
+
+
+    setText(
+        "humiditySource",
+        "Source: " +
+        (data.source || "ESP32")
+    );
+
+
+    // ======================================================
+    // UPDATE CHART
+    // ======================================================
+
+    if (
+        temperature !== undefined &&
+        humidity !== undefined &&
+        !isNaN(temperature) &&
+        !isNaN(humidity)
+    ) {
+
+        updateChart(
+            temperature,
+            humidity
+        );
+
+    }
+
 }
 
 
 // ==========================================================
-// LOAD SWITCH STATES
-// ==========================================================
-//
-// Reads the exact Firebase paths:
-//
-// smartStorage/commands/light/state
-// smartStorage/commands/fan/state
-// smartStorage/commands/door/state
-// smartStorage/commands/alarm/state
-//
+// SET TEXT HELPER
 // ==========================================================
 
-function initializeSwitchListeners() {
-
-    loadSwitch(
-        "light",
-        "lightSwitch"
-    );
-
-    loadSwitch(
-        "fan",
-        "fanSwitch"
-    );
-
-    loadSwitch(
-        "door",
-        "doorSwitch"
-    );
-
-    loadSwitch(
-        "alarm",
-        "alarmSwitch"
-    );
-
-}
-
-
-// ==========================================================
-// LOAD ONE SWITCH
-// ==========================================================
-
-function loadSwitch(
-    device,
-    elementId
+function setText(
+    elementId,
+    value
 ) {
 
     const element =
@@ -324,90 +560,367 @@ function loadSwitch(
             elementId
         );
 
-    if (!element) {
+
+    if (element) {
+
+        element.textContent =
+            value;
+
+    }
+
+}
+
+
+// ==========================================================
+// STATUS CLASS
+// ==========================================================
+
+function updateStatusClass(
+    status
+) {
+
+    const statusElement =
+        document.getElementById(
+            "storageStatus"
+        );
+
+
+    if (!statusElement) {
+
+        return;
+
+    }
+
+
+    statusElement.classList.remove(
+        "normal",
+        "warning",
+        "danger"
+    );
+
+
+    const currentStatus =
+        String(status)
+            .toUpperCase();
+
+
+    if (
+        currentStatus ===
+        "DANGER"
+    ) {
+
+        statusElement.classList.add(
+            "danger"
+        );
+
+    }
+
+    else if (
+        currentStatus ===
+        "WARNING"
+    ) {
+
+        statusElement.classList.add(
+            "warning"
+        );
+
+    }
+
+    else {
+
+        statusElement.classList.add(
+            "normal"
+        );
+
+    }
+
+}
+
+
+// ==========================================================
+// CHART INITIALIZATION
+// ==========================================================
+
+function initializeChart() {
+
+    const canvas =
+        document.getElementById(
+            "environmentChart"
+        );
+
+
+    if (!canvas) {
 
         console.warn(
-            "Switch not found:",
-            elementId
+            "Chart canvas not found."
         );
 
         return;
+
     }
 
-    const path =
-        "smartStorage/commands/" +
-        device +
-        "/state";
 
-    database
-        .ref(path)
-        .on(
-            "value",
-            function (snapshot) {
+    const ctx =
+        canvas.getContext(
+            "2d"
+        );
 
-                if (
-                    snapshot.exists()
-                ) {
 
-                    const state =
-                        snapshot.val();
+    environmentChart =
+        new Chart(
 
-                    element.checked =
-                        Boolean(state);
+            ctx,
 
-                    updateSwitchStatus(
-                        device,
-                        Boolean(state)
-                    );
+            {
 
-                    console.log(
-                        device +
-                        " state:",
-                        state
-                    );
+                type: "line",
 
-                }
+                data: {
 
-                else {
+                    labels:
+                        chartLabels,
 
-                    // Default state
+                    datasets: [
 
-                    element.checked =
-                        false;
+                        {
 
-                    updateSwitchStatus(
-                        device,
-                        false
-                    );
+                            label:
+                                "Temperature (°C)",
+
+                            data:
+                                temperatureHistory,
+
+                            borderWidth:
+                                2,
+
+                            tension:
+                                0.3,
+
+                            fill:
+                                false
+
+                        },
+
+                        {
+
+                            label:
+                                "Humidity (%)",
+
+                            data:
+                                humidityHistory,
+
+                            borderWidth:
+                                2,
+
+                            tension:
+                                0.3,
+
+                            fill:
+                                false
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive:
+                        true,
+
+                    maintainAspectRatio:
+                        true,
+
+                    interaction: {
+
+                        mode:
+                            "index",
+
+                        intersect:
+                            false
+
+                    }
 
                 }
 
             }
+
         );
 
 }
 
 
 // ==========================================================
-// CONNECT WEBSITE SWITCHES
+// UPDATE CHART
 // ==========================================================
 
-function initializeSwitchControls() {
+function updateChart(
+    temperature,
+    humidity
+) {
+
+    if (!environmentChart) {
+
+        return;
+
+    }
+
+
+    const now =
+        new Date();
+
+
+    let label;
+
+
+    label =
+        now.toLocaleTimeString(
+            "en-PH"
+        );
+
+
+    chartLabels.push(
+        label
+    );
+
+
+    temperatureHistory.push(
+        Number(temperature)
+    );
+
+
+    humidityHistory.push(
+        Number(humidity)
+    );
+
+
+    // Keep only latest 15 records
+
+    if (
+        chartLabels.length > 15
+    ) {
+
+        chartLabels.shift();
+
+        temperatureHistory.shift();
+
+        humidityHistory.shift();
+
+    }
+
+
+    environmentChart.update();
+
+}
+
+
+// ==========================================================
+// WEBSITE CLOCK
+// ==========================================================
+
+function updateClock() {
+
+    const element =
+        document.getElementById(
+            "currentDateTime"
+        );
+
+
+    if (!element) {
+
+        return;
+
+    }
+
+
+    const now =
+        new Date();
+
+
+    element.textContent =
+
+        now.toLocaleDateString(
+            "en-PH",
+            {
+
+                weekday:
+                    "long",
+
+                year:
+                    "numeric",
+
+                month:
+                    "long",
+
+                day:
+                    "numeric"
+
+            }
+        )
+
+        +
+
+        " • "
+
+        +
+
+        now.toLocaleTimeString(
+            "en-PH"
+        );
+
+}
+
+
+updateClock();
+
+setInterval(
+    updateClock,
+    1000
+);
+
+
+// ==========================================================
+// WEBSITE COMMAND SWITCHES
+// ==========================================================
+//
+// IMPORTANT:
+//
+// These are the EXACT Firebase paths:
+//
+// light:
+// smartStorage/commands/light/state
+//
+// fan:
+// smartStorage/commands/fan/state
+//
+// door:
+// smartStorage/commands/door/state
+//
+// alarm:
+// smartStorage/commands/alarm/state
+//
+// ==========================================================
+
+function initializeSwitches() {
 
     connectSwitch(
         "lightSwitch",
         "light"
     );
 
+
     connectSwitch(
         "fanSwitch",
         "fan"
     );
 
+
     connectSwitch(
         "doorSwitch",
         "door"
     );
+
 
     connectSwitch(
         "alarmSwitch",
@@ -418,7 +931,7 @@ function initializeSwitchControls() {
 
 
 // ==========================================================
-// CONNECT ONE SWITCH
+// CONNECT INDIVIDUAL SWITCH
 // ==========================================================
 
 function connectSwitch(
@@ -431,15 +944,18 @@ function connectSwitch(
             elementId
         );
 
+
     if (!element) {
 
         console.warn(
-            "Cannot connect switch:",
+            "Switch not found:",
             elementId
         );
 
         return;
+
     }
+
 
     element.addEventListener(
         "change",
@@ -448,13 +964,15 @@ function connectSwitch(
             const state =
                 element.checked;
 
+
             console.log(
-                "WEBSITE COMMAND:",
+                "Website command:",
                 device,
                 state
             );
 
-            updateDeviceCommand(
+
+            sendCommandToFirebase(
                 device,
                 state
             );
@@ -466,80 +984,47 @@ function connectSwitch(
 
 
 // ==========================================================
-// UPDATE DEVICE COMMAND
-// ==========================================================
-//
-// THIS IS THE MOST IMPORTANT FUNCTION.
-//
-// Website writes:
-//
-// smartStorage/commands/light/state
-// smartStorage/commands/fan/state
-// smartStorage/commands/door/state
-// smartStorage/commands/alarm/state
-//
-// ESP32 reads those exact paths.
-//
+// SEND WEBSITE COMMAND TO FIREBASE
 // ==========================================================
 
-function updateDeviceCommand(
+function sendCommandToFirebase(
     device,
     state
 ) {
 
-    const path =
+    // ======================================================
+    // EXACT COMMAND PATH
+    // ======================================================
+
+    const commandPath =
         "smartStorage/commands/" +
         device +
         "/state";
 
-    const commandData = {
-
-        state:
-            Boolean(state),
-
-        source:
-            "Website",
-
-        timestamp:
-            new Date()
-                .toLocaleString(
-                    "en-PH"
-                ),
-
-        updatedAt:
-            firebase.database
-                .ServerValue
-                .TIMESTAMP
-
-    };
 
     console.log(
-        "Sending command to Firebase:",
-        path,
-        commandData
+        "Writing command to:",
+        commandPath
     );
 
 
     // ======================================================
-    // WRITE COMMAND
+    // WRITE ONLY THE STATE
     // ======================================================
 
     database
-        .ref(
-            "smartStorage/commands/" +
-            device
-        )
-        .set(
-            commandData
-        )
+        .ref(commandPath)
+        .set(Boolean(state))
 
         .then(function () {
 
             console.log(
-                "COMMAND SUCCESS:",
-                device,
+                "Command successfully written:",
+                commandPath,
+                "=",
                 state
             );
+
 
             updateSwitchStatus(
                 device,
@@ -551,22 +1036,24 @@ function updateDeviceCommand(
         .catch(function (error) {
 
             console.error(
-                "COMMAND FAILED:",
+                "Command write failed:",
                 error
             );
 
+
             alert(
-                "Unable to send command to Firebase.\n\n" +
+                "Unable to send command to ESP32.\n\n" +
                 error.message
             );
 
 
-            // Revert switch
+            // Return switch to previous state
 
             const element =
                 document.getElementById(
                     device + "Switch"
                 );
+
 
             if (element) {
 
@@ -581,7 +1068,7 @@ function updateDeviceCommand(
 
 
 // ==========================================================
-// UPDATE SWITCH TEXT
+// SWITCH STATUS DISPLAY
 // ==========================================================
 
 function updateSwitchStatus(
@@ -589,7 +1076,7 @@ function updateSwitchStatus(
     state
 ) {
 
-    let statusId = "";
+    let statusId;
 
 
     if (device === "light") {
@@ -624,6 +1111,7 @@ function updateSwitchStatus(
     if (!statusId) {
 
         return;
+
     }
 
 
@@ -632,13 +1120,13 @@ function updateSwitchStatus(
             statusId
         );
 
+
     if (!element) {
 
         return;
+
     }
 
-
-    // Door uses OPEN/CLOSED
 
     if (device === "door") {
 
@@ -668,94 +1156,475 @@ function updateSwitchStatus(
 
 
 // ==========================================================
-// LIVE CLOCK
+// OPTIONAL: READ CURRENT COMMAND STATES
+// ==========================================================
+//
+// This allows the website to remember the switch state
+// after refreshing the page.
+//
 // ==========================================================
 
-function updateClock() {
+function loadCommandStates() {
+
+    const commandsReference =
+        database.ref(
+            "smartStorage/commands"
+        );
+
+
+    commandsReference.on(
+        "value",
+        function (snapshot) {
+
+            if (!snapshot.exists()) {
+
+                return;
+
+            }
+
+
+            const commands =
+                snapshot.val();
+
+
+            // LIGHT
+
+            if (
+                commands.light &&
+                commands.light.state !== undefined
+            ) {
+
+                setSwitchFromFirebase(
+                    "light",
+                    commands.light.state
+                );
+
+            }
+
+
+            // FAN
+
+            if (
+                commands.fan &&
+                commands.fan.state !== undefined
+            ) {
+
+                setSwitchFromFirebase(
+                    "fan",
+                    commands.fan.state
+                );
+
+            }
+
+
+            // DOOR
+
+            if (
+                commands.door &&
+                commands.door.state !== undefined
+            ) {
+
+                setSwitchFromFirebase(
+                    "door",
+                    commands.door.state
+                );
+
+            }
+
+
+            // ALARM
+
+            if (
+                commands.alarm &&
+                commands.alarm.state !== undefined
+            ) {
+
+                setSwitchFromFirebase(
+                    "alarm",
+                    commands.alarm.state
+                );
+
+            }
+
+        },
+
+        function (error) {
+
+            console.error(
+                "Command listener error:",
+                error
+            );
+
+        }
+    );
+
+}
+
+
+// ==========================================================
+// SET SWITCH FROM FIREBASE
+// ==========================================================
+
+function setSwitchFromFirebase(
+    device,
+    state
+) {
 
     const element =
         document.getElementById(
-            "currentDateTime"
+            device + "Switch"
         );
+
 
     if (!element) {
 
         return;
+
     }
+
+
+    element.checked =
+        Boolean(state);
+
+
+    updateSwitchStatus(
+        device,
+        Boolean(state)
+    );
+
+}
+
+
+// ==========================================================
+// MANUAL DATA ENTRY
+// ==========================================================
+//
+// This remains available for testing the website.
+// It writes to smartStorage/sensorData.
+//
+// Your ESP32 can later overwrite this data.
+//
+// ==========================================================
+
+function initializeSaveButton() {
+
+    const saveButton =
+        document.getElementById(
+            "saveDataButton"
+        );
+
+
+    if (!saveButton) {
+
+        return;
+
+    }
+
+
+    saveButton.addEventListener(
+        "click",
+        function () {
+
+            saveManualData();
+
+        }
+    );
+
+}
+
+
+// ==========================================================
+// SAVE MANUAL DATA
+// ==========================================================
+
+function saveManualData() {
+
+    const temperatureInput =
+        document.getElementById(
+            "manualTemperature"
+        );
+
+
+    const humidityInput =
+        document.getElementById(
+            "manualHumidity"
+        );
+
+
+    const motionInput =
+        document.getElementById(
+            "manualMotion"
+        );
+
+
+    if (
+        !temperatureInput ||
+        !humidityInput ||
+        !motionInput
+    ) {
+
+        showManualMessage(
+            "❌ Input fields not found.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const temperature =
+        parseFloat(
+            temperatureInput.value
+        );
+
+
+    const humidity =
+        parseFloat(
+            humidityInput.value
+        );
+
+
+    const motion =
+        motionInput.value === "true";
+
+
+    if (isNaN(temperature)) {
+
+        showManualMessage(
+            "❌ Please enter temperature.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (isNaN(humidity)) {
+
+        showManualMessage(
+            "❌ Please enter humidity.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (
+        humidity < 0 ||
+        humidity > 100
+    ) {
+
+        showManualMessage(
+            "❌ Humidity must be between 0 and 100.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    let status =
+        "NORMAL";
+
+
+    if (
+        temperature >= 35 ||
+        humidity >= 80
+    ) {
+
+        status =
+            "WARNING";
+
+    }
+
+
+    if (
+        temperature >= 40 ||
+        humidity >= 90
+    ) {
+
+        status =
+            "DANGER";
+
+    }
+
 
     const now =
         new Date();
 
-    element.textContent =
 
-        now.toLocaleDateString(
-            "en-PH",
-            {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric"
-            }
-        )
-
-        + " • " +
-
-        now.toLocaleTimeString(
+    const timestamp =
+        now.toLocaleString(
             "en-PH"
         );
 
+
+    const data = {
+
+        temperature:
+            temperature,
+
+        humidity:
+            humidity,
+
+        motion:
+            motion,
+
+        status:
+            status,
+
+        timestamp:
+            timestamp,
+
+        date:
+            now.toLocaleDateString(
+                "en-CA"
+            ),
+
+        time:
+            now.toLocaleTimeString(
+                "en-PH"
+            ),
+
+        source:
+            "Website"
+
+    };
+
+
+    database
+        .ref(
+            "smartStorage/sensorData"
+        )
+        .set(data)
+
+        .then(function () {
+
+            showManualMessage(
+                "✅ Data saved to Firebase.",
+                "success"
+            );
+
+
+            temperatureInput.value =
+                "";
+
+            humidityInput.value =
+                "";
+
+            motionInput.value =
+                "false";
+
+        })
+
+        .catch(function (error) {
+
+            console.error(
+                "Manual save error:",
+                error
+            );
+
+
+            showManualMessage(
+                "❌ Firebase Error: " +
+                error.message,
+                "error"
+            );
+
+        });
+
 }
 
 
-updateClock();
-
-setInterval(
-    updateClock,
-    1000
-);
-
-
 // ==========================================================
-// INITIALIZE DASHBOARD
+// MANUAL MESSAGE
 // ==========================================================
 
-function initializeDashboard() {
+function showManualMessage(
+    message,
+    type
+) {
 
-    console.log(
-        "================================"
-    );
-
-    console.log(
-        "SMART STORAGE DASHBOARD"
-    );
-
-    console.log(
-        "================================"
-    );
-
-    console.log(
-        "Website → Firebase → ESP32"
-    );
+    const element =
+        document.getElementById(
+            "manualMessage"
+        );
 
 
-    initializeLogout();
+    if (!element) {
 
-    initializeFirebaseConnection();
+        return;
 
-    initializeESP32Listener();
+    }
 
-    initializeSwitchListeners();
 
-    initializeSwitchControls();
+    element.textContent =
+        message;
+
+
+    if (type === "success") {
+
+        element.style.color =
+            "#28a745";
+
+    }
+
+    else if (type === "error") {
+
+        element.style.color =
+            "#dc3545";
+
+    }
+
+    else {
+
+        element.style.color =
+            "#0b2447";
+
+    }
 
 }
 
+
+// ==========================================================
+// INITIALIZE EVERYTHING
+// ==========================================================
 
 document.addEventListener(
     "DOMContentLoaded",
     function () {
 
-        initializeDashboard();
+        console.log(
+            "Smart Storage Dashboard starting..."
+        );
+
+
+        initializeLogout();
+
+
+        initializeSensorListener();
+
+
+        initializeSwitches();
+
+
+        loadCommandStates();
+
+
+        initializeSaveButton();
+
+
+        initializeChart();
+
+
+        console.log(
+            "Smart Storage Dashboard ready."
+        );
 
     }
 );
@@ -768,8 +1637,10 @@ document.addEventListener(
 window.logout =
     logout;
 
-window.updateDeviceCommand =
-    updateDeviceCommand;
 
-window.updateSwitchStatus =
-    updateSwitchStatus;
+window.saveManualData =
+    saveManualData;
+
+
+window.sendCommandToFirebase =
+    sendCommandToFirebase;
