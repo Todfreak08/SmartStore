@@ -3,59 +3,407 @@
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
 
-<title>Alerts</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="style.css">
+    <title>Smart Storage - Alerts</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css">
 
 </head>
 
+
 <body>
+
+
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
 
 <div class="sidebar">
 
-<h2>📦 Smart Storage</h2>
+    <h2>📦 Smart Storage</h2>
 
-<a href="dashboard.html">🏠 Dashboard</a>
-<a href="history.html">📋 History</a>
-<a href="alerts.html" class="active">🚨 Alerts</a>
-<a href="reports.html">📊 Reports</a>
-<a href="settings.html">⚙️ Settings</a>
-<a href="profile.html">👤 Profile</a>
-<a href="about.html">ℹ️ About</a>
 
-<button class="logout-btn" onclick="logout()">
-Logout
-</button>
+    <a href="dashboard.html">
+        🏠 Dashboard
+    </a>
+
+
+    <a href="history.html">
+        📋 History
+    </a>
+
+
+    <a
+        href="alerts.html"
+        class="active">
+
+        🚨 Alerts
+
+    </a>
+
+
+    <a href="reports.html">
+        📊 Reports
+    </a>
+
+
+    <a href="settings.html">
+        ⚙️ Settings
+    </a>
+
+
+    <a href="profile.html">
+        👤 Profile
+    </a>
+
+
+    <a href="about.html">
+        ℹ️ About
+    </a>
+
+
+    <button
+        type="button"
+        class="logout-btn"
+        id="logoutButton">
+
+        🚪 Logout
+
+    </button>
 
 </div>
+
+
+
+<!-- =====================================================
+     MAIN CONTENT
+===================================================== -->
 
 <div class="main-content">
 
-<h1>System Alerts</h1>
 
-<div id="alertsContainer">
+    <!-- =================================================
+         TOP BAR
+    ================================================== -->
 
-<div class="alert-box alert-normal">
+    <div class="top-bar">
 
-<h3>No Alerts</h3>
+        <div>
 
-<p>Waiting for ESP32 to send alerts...</p>
+            <h1>
+                Alerts
+            </h1>
+
+            <p>
+                ESP32 Device Alerts & Activity
+            </p>
+
+        </div>
+
+
+        <div class="user-card">
+
+            Logged in as:
+
+            <b id="userEmail">
+                Loading...
+            </b>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         FIREBASE STATUS
+    ================================================== -->
+
+    <div
+        id="firebaseStatus"
+        class="status-card"
+        style="
+            padding:15px;
+            margin-bottom:20px;
+        ">
+
+        ● Connecting to Firebase...
+
+    </div>
+
+
+
+    <!-- =================================================
+         ESP32 CONNECTION STATUS
+    ================================================== -->
+
+    <div class="card-grid">
+
+
+        <div class="card">
+
+            <h3>
+                📡 ESP32
+            </h3>
+
+
+            <h1 id="espStatus">
+
+                Checking...
+
+            </h1>
+
+
+            <p id="espLastSeen">
+
+                Waiting for ESP32...
+
+            </p>
+
+        </div>
+
+
+
+        <div class="card">
+
+            <h3>
+                📋 Activity
+            </h3>
+
+
+            <h1 id="activityCount">
+
+                0
+
+            </h1>
+
+
+            <p>
+                Logged events
+            </p>
+
+        </div>
+
+
+
+        <div class="card">
+
+            <h3>
+                🚨 Alerts
+            </h3>
+
+
+            <h1 id="alertCount">
+
+                0
+
+            </h1>
+
+
+            <p>
+                Current alerts
+            </p>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         CURRENT ALERT
+    ================================================== -->
+
+    <div
+        id="currentAlert"
+        class="status-card"
+        style="
+            margin-top:20px;
+            padding:20px;
+        ">
+
+        <h2>
+            🔔 Current Device Status
+        </h2>
+
+
+        <h1 id="alertTitle">
+
+            Waiting for ESP32...
+
+        </h1>
+
+
+        <p id="alertDescription">
+
+            The system is waiting for the ESP32
+            to send its first status update.
+
+        </p>
+
+    </div>
+
+
+
+    <!-- =================================================
+         ALERT LOG
+    ================================================== -->
+
+    <div
+        class="chart-card"
+        style="margin-top:20px;">
+
+        <div
+            style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                gap:15px;
+                flex-wrap:wrap;
+            ">
+
+            <div>
+
+                <h2>
+                    🚨 Device Alert Log
+                </h2>
+
+
+                <p
+                    style="
+                        color:#666;
+                        margin-top:5px;
+                    ">
+
+                    Real-time logs received from
+                    the ESP32 through Firebase.
+
+                </p>
+
+            </div>
+
+
+            <button
+                type="button"
+                id="clearAlertsButton"
+                class="save-btn">
+
+                🗑 Clear Display
+
+            </button>
+
+        </div>
+
+
+
+        <!-- =================================================
+             ALERT TABLE
+        ================================================== -->
+
+        <div
+            style="
+                overflow-x:auto;
+                margin-top:25px;
+            ">
+
+
+            <table id="alertsTable">
+
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Date
+                        </th>
+
+                        <th>
+                            Time
+                        </th>
+
+                        <th>
+                            Event
+                        </th>
+
+                        <th>
+                            Source
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+
+                <tbody id="alertsBody">
+
+                    <tr>
+
+                        <td
+                            colspan="5"
+                            style="
+                                text-align:center;
+                                padding:30px;
+                            ">
+
+                            📡 Waiting for ESP32 alerts...
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+
+            </table>
+
+        </div>
+
+    </div>
+
 
 </div>
 
-</div>
 
-</div>
+
+<!-- =====================================================
+     FIREBASE
+===================================================== -->
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
 
+
+
+<!-- =====================================================
+     FIREBASE CONFIG
+===================================================== -->
+
 <script src="firebase-config.js"></script>
+
+
+
+<!-- =====================================================
+     ALERTS JAVASCRIPT
+===================================================== -->
+
 <script src="alerts.js"></script>
+
 
 </body>
 
