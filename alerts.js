@@ -1,6 +1,6 @@
-// ----------------------------
-// Authentication
-// ----------------------------
+// ==========================================
+// AUTHENTICATION
+// ==========================================
 
 auth.onAuthStateChanged((user) => {
 
@@ -12,9 +12,10 @@ auth.onAuthStateChanged((user) => {
 
 });
 
-// ----------------------------
-// Logout
-// ----------------------------
+
+// ==========================================
+// LOGOUT
+// ==========================================
 
 function logout() {
 
@@ -26,27 +27,38 @@ function logout() {
 
 }
 
-// ----------------------------
-// Alerts
-// ----------------------------
 
-const container = document.getElementById("alertsContainer");
+// ==========================================
+// ALERTS
+// ==========================================
+
+const container =
+    document.getElementById("alertsContainer");
+
 
 database.ref("Alerts").on("value", (snapshot) => {
 
+    console.log("ALERTS:", snapshot.val());
+
+
     container.innerHTML = "";
+
+
+    // No alerts
 
     if (!snapshot.exists()) {
 
         container.innerHTML = `
 
-        <div class="alert-box alert-normal">
+            <div class="alert-box alert-normal">
 
-            <h3>No Alerts</h3>
+                <h3>🟢 No Alerts</h3>
 
-            <p>Waiting for ESP32 to send alerts...</p>
+                <p>
+                    No alerts from the ESP32.
+                </p>
 
-        </div>
+            </div>
 
         `;
 
@@ -54,43 +66,66 @@ database.ref("Alerts").on("value", (snapshot) => {
 
     }
 
+
     const alerts = [];
+
 
     snapshot.forEach((child) => {
 
-        alerts.push(child.val());
+        const alert = child.val();
+
+        alerts.push(alert);
 
     });
 
+
+    // Newest first
+
     alerts.reverse();
+
 
     alerts.forEach((alert) => {
 
-        let css = "alert-normal";
+        let alertClass = "alert-normal";
+
+        let icon = "ℹ️";
+
 
         if (alert.level === "Warning") {
 
-            css = "alert-warning";
+            alertClass = "alert-warning";
+
+            icon = "⚠️";
 
         }
+
 
         if (alert.level === "Danger") {
 
-            css = "alert-danger";
+            alertClass = "alert-danger";
+
+            icon = "🚨";
 
         }
 
+
         container.innerHTML += `
 
-        <div class="alert-box ${css}">
+            <div class="alert-box ${alertClass}">
 
-            <h3>${alert.level || "Alert"}</h3>
+                <h3>
+                    ${icon} ${alert.level || "Alert"}
+                </h3>
 
-            <p>${alert.message || "No message"}</p>
+                <p>
+                    ${alert.message || "No message"}
+                </p>
 
-            <small>${alert.timestamp || "--"}</small>
+                <small>
+                    ${alert.timestamp || "No timestamp"}
+                </small>
 
-        </div>
+            </div>
 
         `;
 
