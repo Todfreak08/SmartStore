@@ -1,114 +1,161 @@
-// ==========================================================
-// SMART STORAGE MONITORING SYSTEM
-// COMPLETE dashboard.js
-// Firebase Realtime Database
-// ==========================================================
+// ==========================================
+// DASHBOARD
+// ==========================================
 
+auth.onAuthStateChanged((user) => {
 
-// ==========================================================
-// GLOBAL VARIABLES
-// ==========================================================
+    if (!user) {
 
-let environmentChart = null;
-
-const chartLabels = [];
-const temperatureHistory = [];
-const humidityHistory = [];
-
-
-// ==========================================================
-// PAGE LOAD
-// ==========================================================
-
-document.addEventListener("DOMContentLoaded", function () {
-
-    console.log("Dashboard JavaScript loaded.");
-
-    // ------------------------------------------------------
-    // CHECK FIREBASE
-    // ------------------------------------------------------
-
-    if (
-        typeof firebase === "undefined" ||
-        typeof auth === "undefined" ||
-        typeof database === "undefined"
-    ) {
-
-        console.error("Firebase is not loaded.");
-
-        showManualMessage(
-            "❌ Firebase is not loaded.",
-            "error"
-        );
+        window.location.href = "index.html";
 
         return;
     }
 
+    const email = document.getElementById("userEmail");
 
-    // ------------------------------------------------------
-    // INITIALIZE
-    // ------------------------------------------------------
+    if (email) {
 
-    initializeChart();
+        email.textContent = user.email;
 
-    initializeAuthentication();
-
-    initializeSaveButton();
-
-    initializeLogout();
-
-    initializeSwitches();
-
-    initializeFirebaseListener();
+    }
 
 });
 
 
-// ==========================================================
-// AUTHENTICATION
-// ==========================================================
+// ==========================================
+// LOGOUT
+// ==========================================
 
-function initializeAuthentication() {
+function logout() {
 
-    auth.onAuthStateChanged(function (user) {
+    auth.signOut().then(() => {
 
-        if (!user) {
-
-            console.log(
-                "No logged-in user."
-            );
-
-            window.location.href =
-                "index.html";
-
-            return;
-        }
-
-
-        console.log(
-            "Logged in:",
-            user.email
-        );
-
-
-        const emailElement =
-            document.getElementById(
-                "userEmail"
-            );
-
-
-        if (emailElement) {
-
-            emailElement.textContent =
-                user.email;
-
-        }
+        window.location.href = "index.html";
 
     });
 
 }
 
 
+// ==========================================
+// FIREBASE STORAGE
+// ==========================================
+
+database.ref("storage").on("value", (snapshot) => {
+
+    console.log("STORAGE:", snapshot.val());
+
+    if (!snapshot.exists()) {
+
+        document.getElementById("temperature").textContent = "-- °C";
+
+        document.getElementById("humidity").textContent = "-- %";
+
+        document.getElementById("motion").textContent = "Waiting...";
+
+        document.getElementById("storageStatus").textContent =
+            "Waiting for ESP32...";
+
+        document.getElementById("lastUpdate").textContent =
+            "No data";
+
+        return;
+
+    }
+
+
+    const data = snapshot.val();
+
+
+    // Temperature
+
+    document.getElementById("temperature").textContent =
+        Number(data.temperature).toFixed(1) + " °C";
+
+
+    // Humidity
+
+    document.getElementById("humidity").textContent =
+        Number(data.humidity).toFixed(1) + " %";
+
+
+    // Motion
+
+    document.getElementById("motion").textContent =
+        data.motion || "No Motion";
+
+
+    // Status
+
+    document.getElementById("storageStatus").textContent =
+        data.status || "Normal";
+
+
+    // Last update
+
+    document.getElementById("lastUpdate").textContent =
+        data.lastUpdate || "No timestamp";
+
+
+    // Status class
+
+    const statusElement =
+        document.getElementById("storageStatus");
+
+    statusElement.classList.remove(
+        "normal",
+        "warning",
+        "danger"
+    );
+
+
+    if (data.status === "Danger") {
+
+        statusElement.classList.add("danger");
+
+    }
+    else if (data.status === "Warning") {
+
+        statusElement.classList.add("warning");
+
+    }
+    else {
+
+        statusElement.classList.add("normal");
+
+    }
+
+});
+
+
+// ==========================================
+// LIVE WEBSITE CLOCK
+// ==========================================
+
+function updateClock() {
+
+    const element =
+        document.getElementById("currentDateTime");
+
+    if (!element) return;
+
+    const now = new Date();
+
+    element.textContent =
+        now.toLocaleDateString("en-PH", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        })
+        + " • " +
+        now.toLocaleTimeString("en-PH");
+
+}
+
+updateClock();
+
+setInterval(updateClock, 1000);
 // ==========================================================
 // LOGOUT
 // ==========================================================
