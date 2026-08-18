@@ -1,70 +1,31 @@
-// ==========================================================
-// SMART STORAGE MONITORING SYSTEM
-// DASHBOARD.JS
-//
-// WEBSITE
-//     ↓
-// FIREBASE COMMANDS
-//     ↓
-// ESP32
-//
-// ESP32
-//     ↓
-// FIREBASE SENSOR DATA
-//     ↓
-// WEBSITE
-// ==========================================================
+// =====================================================
+// SMART STORAGE ESP32 DASHBOARD
+// =====================================================
 
 
-// ==========================================================
-// GLOBAL VARIABLES
-// ==========================================================
+// =====================================================
+// GLOBAL
+// =====================================================
 
-let environmentChart = null;
+let currentStates = {
 
-let temperatureHistory = [];
+    light: false,
 
-let humidityHistory = [];
+    fan: false,
 
-let chartLabels = [];
+    door: false,
 
+    alarm: false
 
-// ==========================================================
-// DATABASE REFERENCES
-// ==========================================================
-
-// These references come from firebase-config.js
-
-// Sensor data from ESP32
-const esp32SensorRef =
-    database.ref(
-        "smartStorage/sensorData"
-    );
-
-// Commands from website to ESP32
-const esp32CommandsRef =
-    database.ref(
-        "smartStorage/commands"
-    );
-
-// History
-const esp32HistoryRef =
-    database.ref(
-        "smartStorage/history"
-    );
-
-// Alerts
-const esp32AlertsRef =
-    database.ref(
-        "smartStorage/alerts"
-    );
+};
 
 
-// ==========================================================
+// =====================================================
 // AUTHENTICATION
-// ==========================================================
+// =====================================================
 
-auth.onAuthStateChanged(function (user) {
+auth.onAuthStateChanged(function(user) {
+
 
     if (!user) {
 
@@ -72,974 +33,48 @@ auth.onAuthStateChanged(function (user) {
             "index.html";
 
         return;
+
     }
 
 
-    const userEmail =
+    const email =
         document.getElementById(
             "userEmail"
         );
 
 
-    if (userEmail) {
+    if (email) {
 
-        userEmail.textContent =
+        email.textContent =
             user.email;
 
     }
 
-
-    console.log(
-        "User logged in:",
-        user.email
-    );
-
 });
 
 
-// ==========================================================
+
+// =====================================================
 // LOGOUT
-// ==========================================================
+// =====================================================
 
-function initializeLogout() {
+function logout() {
 
-    const logoutButton =
-        document.getElementById(
-            "logoutButton"
-        );
 
+    auth.signOut()
 
-    if (!logoutButton) {
+        .then(function() {
 
-        console.warn(
-            "Logout button not found."
-        );
-
-        return;
-    }
-
-
-    logoutButton.addEventListener(
-        "click",
-        function () {
-
-            logoutButton.disabled =
-                true;
-
-
-            logoutButton.textContent =
-                "Logging out...";
-
-
-            auth.signOut()
-
-                .then(function () {
-
-                    window.location.href =
-                        "index.html";
-
-                })
-
-                .catch(function (error) {
-
-                    console.error(
-                        "Logout error:",
-                        error
-                    );
-
-
-                    logoutButton.disabled =
-                        false;
-
-
-                    logoutButton.textContent =
-                        "🚪 Logout";
-
-
-                    alert(
-                        "Logout failed: " +
-                        error.message
-                    );
-
-                });
-
-        }
-    );
-
-}
-
-
-// ==========================================================
-// FIREBASE CONNECTION STATUS
-// ==========================================================
-
-function initializeFirebaseConnection() {
-
-    const firebaseStatus =
-        document.getElementById(
-            "firebaseStatus"
-        );
-
-
-    database
-        .ref(".info/connected")
-        .on(
-            "value",
-            function (snapshot) {
-
-                if (!firebaseStatus) {
-
-                    return;
-
-                }
-
-
-                if (
-                    snapshot.val() === true
-                ) {
-
-                    firebaseStatus.textContent =
-                        "● Firebase Connected";
-
-
-                    firebaseStatus.style.color =
-                        "#28a745";
-
-                }
-
-                else {
-
-                    firebaseStatus.textContent =
-                        "● Firebase Disconnected";
-
-
-                    firebaseStatus.style.color =
-                        "#dc3545";
-
-                }
-
-            }
-        );
-
-}
-
-
-// ==========================================================
-// LISTEN TO ESP32 SENSOR DATA
-// ==========================================================
-//
-// Firebase path:
-//
-// smartStorage
-//      └── sensorData
-//
-// ESP32 will write:
-//
-// temperature
-// humidity
-// motion
-// status
-// timestamp
-// source
-//
-// ==========================================================
-
-function initializeSensorListener() {
-
-    esp32SensorRef.on(
-
-        "value",
-
-        function (snapshot) {
-
-            console.log(
-                "ESP32 SENSOR DATA:",
-                snapshot.val()
-            );
-
-
-            if (!snapshot.exists()) {
-
-                showWaitingForESP32();
-
-                return;
-
-            }
-
-
-            const data =
-                snapshot.val();
-
-
-            updateDashboard(
-                data
-            );
-
-        },
-
-        function (error) {
-
-            console.error(
-                "Sensor Firebase error:",
-                error
-            );
-
-
-            setText(
-                "firebaseStatus",
-                "● Firebase Sensor Error"
-            );
-
-
-            const status =
-                document.getElementById(
-                    "firebaseStatus"
-                );
-
-
-            if (status) {
-
-                status.style.color =
-                    "#dc3545";
-
-            }
-
-        }
-
-    );
-
-}
-
-
-// ==========================================================
-// WAITING FOR ESP32
-// ==========================================================
-
-function showWaitingForESP32() {
-
-    setText(
-        "temperature",
-        "-- °C"
-    );
-
-
-    setText(
-        "humidity",
-        "-- %"
-    );
-
-
-    setText(
-        "motion",
-        "Waiting..."
-    );
-
-
-    setText(
-        "storageStatus",
-        "Waiting for ESP32..."
-    );
-
-
-    setText(
-        "lastUpdate",
-        "No ESP32 data received yet."
-    );
-
-
-    setText(
-        "temperatureSource",
-        "Waiting for ESP32..."
-    );
-
-
-    setText(
-        "humiditySource",
-        "Waiting for ESP32..."
-    );
-
-}
-
-
-// ==========================================================
-// UPDATE DASHBOARD
-// ==========================================================
-
-function updateDashboard(data) {
-
-    if (!data) {
-
-        showWaitingForESP32();
-
-        return;
-
-    }
-
-
-    // ======================================================
-    // TEMPERATURE
-    // ======================================================
-
-    if (
-        data.temperature !== undefined &&
-        data.temperature !== null
-    ) {
-
-        const temperature =
-            Number(
-                data.temperature
-            );
-
-
-        if (!isNaN(temperature)) {
-
-            setText(
-                "temperature",
-                temperature.toFixed(1) +
-                " °C"
-            );
-
-        }
-
-    }
-
-
-    // ======================================================
-    // HUMIDITY
-    // ======================================================
-
-    if (
-        data.humidity !== undefined &&
-        data.humidity !== null
-    ) {
-
-        const humidity =
-            Number(
-                data.humidity
-            );
-
-
-        if (!isNaN(humidity)) {
-
-            setText(
-                "humidity",
-                humidity.toFixed(1) +
-                " %"
-            );
-
-        }
-
-    }
-
-
-    // ======================================================
-    // MOTION
-    // ======================================================
-
-    let motion =
-        data.motion;
-
-
-    if (motion === true) {
-
-        motion =
-            "Motion Detected";
-
-    }
-
-    else if (motion === false) {
-
-        motion =
-            "No Motion";
-
-    }
-
-    else if (
-        motion === undefined ||
-        motion === null
-    ) {
-
-        motion =
-            "Waiting...";
-
-    }
-
-
-    setText(
-        "motion",
-        motion
-    );
-
-
-    // ======================================================
-    // STORAGE STATUS
-    // ======================================================
-
-    const storageStatus =
-        data.status ||
-        "NORMAL";
-
-
-    setText(
-        "storageStatus",
-        storageStatus
-    );
-
-
-    updateStatusAppearance(
-        storageStatus
-    );
-
-
-    // ======================================================
-    // SOURCE
-    // ======================================================
-
-    setText(
-        "temperatureSource",
-        "Source: " +
-        (data.source || "ESP32")
-    );
-
-
-    setText(
-        "humiditySource",
-        "Source: " +
-        (data.source || "ESP32")
-    );
-
-
-    // ======================================================
-    // TIMESTAMP
-    // ======================================================
-
-    if (
-        data.timestamp !== undefined &&
-        data.timestamp !== null
-    ) {
-
-        let timestampText =
-            formatTimestamp(
-                data.timestamp
-            );
-
-
-        setText(
-            "lastUpdate",
-            "Last Update: " +
-            timestampText
-        );
-
-    }
-
-    else {
-
-        setText(
-            "lastUpdate",
-            "Timestamp unavailable"
-        );
-
-    }
-
-
-    // ======================================================
-    // UPDATE CHART
-    // ======================================================
-
-    if (
-        data.temperature !== undefined &&
-        data.humidity !== undefined
-    ) {
-
-        const temperature =
-            Number(
-                data.temperature
-            );
-
-
-        const humidity =
-            Number(
-                data.humidity
-            );
-
-
-        if (
-            !isNaN(temperature) &&
-            !isNaN(humidity)
-        ) {
-
-            updateChart(
-                temperature,
-                humidity
-            );
-
-        }
-
-    }
-
-
-    // ======================================================
-    // LOAD CURRENT DEVICE STATES
-    // ======================================================
-
-    loadDeviceStates();
-
-}
-
-
-// ==========================================================
-// STATUS APPEARANCE
-// ==========================================================
-
-function updateStatusAppearance(
-    status
-) {
-
-    const element =
-        document.getElementById(
-            "storageStatus"
-        );
-
-
-    if (!element) {
-
-        return;
-
-    }
-
-
-    element.classList.remove(
-        "normal",
-        "warning",
-        "danger"
-    );
-
-
-    const statusText =
-        String(status)
-            .toUpperCase();
-
-
-    if (
-        statusText === "DANGER"
-    ) {
-
-        element.classList.add(
-            "danger"
-        );
-
-    }
-
-    else if (
-        statusText === "WARNING"
-    ) {
-
-        element.classList.add(
-            "warning"
-        );
-
-    }
-
-    else {
-
-        element.classList.add(
-            "normal"
-        );
-
-    }
-
-}
-
-
-// ==========================================================
-// FORMAT FIREBASE TIMESTAMP
-// ==========================================================
-
-function formatTimestamp(
-    timestamp
-) {
-
-    // Firebase ServerValue timestamp
-    // is normally a number in milliseconds.
-
-    if (
-        typeof timestamp ===
-        "number"
-    ) {
-
-        return new Date(
-            timestamp
-        ).toLocaleString(
-            "en-PH",
-            {
-                dateStyle:
-                    "medium",
-
-                timeStyle:
-                    "medium"
-            }
-        );
-
-    }
-
-
-    // If ESP32 sends a text timestamp
-    // use it directly.
-
-    return String(
-        timestamp
-    );
-
-}
-
-
-// ==========================================================
-// WEBSITE LIVE CLOCK
-// ==========================================================
-
-function updateClock() {
-
-    const element =
-        document.getElementById(
-            "currentDateTime"
-        );
-
-
-    if (!element) {
-
-        return;
-
-    }
-
-
-    const now =
-        new Date();
-
-
-    element.textContent =
-
-        now.toLocaleDateString(
-            "en-PH",
-            {
-                weekday:
-                    "long",
-
-                year:
-                    "numeric",
-
-                month:
-                    "long",
-
-                day:
-                    "numeric"
-            }
-        )
-
-        + " • " +
-
-        now.toLocaleTimeString(
-            "en-PH"
-        );
-
-}
-
-
-updateClock();
-
-setInterval(
-    updateClock,
-    1000
-);
-
-
-// ==========================================================
-// MANUAL DATA ENTRY
-// ==========================================================
-//
-// Manual entry is optional.
-//
-// The real sensor source is ESP32.
-//
-// If you use manual entry, it writes to the same
-// sensorData path so the dashboard can display it.
-//
-// ==========================================================
-
-function initializeSaveButton() {
-
-    const saveButton =
-        document.getElementById(
-            "saveDataButton"
-        );
-
-
-    if (!saveButton) {
-
-        return;
-
-    }
-
-
-    saveButton.addEventListener(
-        "click",
-        function (event) {
-
-            event.preventDefault();
-
-            saveManualData();
-
-        }
-    );
-
-}
-
-
-// ==========================================================
-// SAVE MANUAL DATA
-// ==========================================================
-
-function saveManualData() {
-
-    const temperatureInput =
-        document.getElementById(
-            "manualTemperature"
-        );
-
-
-    const humidityInput =
-        document.getElementById(
-            "manualHumidity"
-        );
-
-
-    const motionInput =
-        document.getElementById(
-            "manualMotion"
-        );
-
-
-    if (
-        !temperatureInput ||
-        !humidityInput ||
-        !motionInput
-    ) {
-
-        showManualMessage(
-            "❌ Input fields not found.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    const temperature =
-        parseFloat(
-            temperatureInput.value
-        );
-
-
-    const humidity =
-        parseFloat(
-            humidityInput.value
-        );
-
-
-    const motion =
-        motionInput.value ===
-        "true";
-
-
-    // ======================================================
-    // VALIDATION
-    // ======================================================
-
-    if (isNaN(temperature)) {
-
-        showManualMessage(
-            "❌ Please enter temperature.",
-            "error"
-        );
-
-        temperatureInput.focus();
-
-        return;
-
-    }
-
-
-    if (isNaN(humidity)) {
-
-        showManualMessage(
-            "❌ Please enter humidity.",
-            "error"
-        );
-
-        humidityInput.focus();
-
-        return;
-
-    }
-
-
-    if (
-        humidity < 0 ||
-        humidity > 100
-    ) {
-
-        showManualMessage(
-            "❌ Humidity must be between 0 and 100.",
-            "error"
-        );
-
-        humidityInput.focus();
-
-        return;
-
-    }
-
-
-    // ======================================================
-    // DETERMINE STATUS
-    // ======================================================
-
-    let status =
-        "NORMAL";
-
-
-    if (
-        temperature >= 35 ||
-        humidity >= 80
-    ) {
-
-        status =
-            "WARNING";
-
-    }
-
-
-    if (
-        temperature >= 40 ||
-        humidity >= 90
-    ) {
-
-        status =
-            "DANGER";
-
-    }
-
-
-    // ======================================================
-    // TIMESTAMP
-    // ======================================================
-
-    const timestamp =
-        firebase.database
-            .ServerValue
-            .TIMESTAMP;
-
-
-    // ======================================================
-    // DATA
-    // ======================================================
-
-    const sensorData = {
-
-        temperature:
-            temperature,
-
-        humidity:
-            humidity,
-
-        motion:
-            motion,
-
-        status:
-            status,
-
-        timestamp:
-            timestamp,
-
-        source:
-            "Manual Entry"
-
-    };
-
-
-    // ======================================================
-    // SAVE CURRENT SENSOR DATA
-    // ======================================================
-
-    esp32SensorRef
-        .set(sensorData)
-
-        .then(function () {
-
-            // ==============================================
-            // SAVE HISTORY
-            // ==============================================
-
-            return esp32HistoryRef
-                .push({
-
-                    temperature:
-                        temperature,
-
-                    humidity:
-                        humidity,
-
-                    motion:
-                        motion,
-
-                    status:
-                        status,
-
-                    timestamp:
-                        firebase.database
-                            .ServerValue
-                            .TIMESTAMP,
-
-                    source:
-                        "Manual Entry"
-
-                });
+            window.location.href =
+                "index.html";
 
         })
 
-        .then(function () {
-
-            showManualMessage(
-                "✅ Data saved to Firebase!",
-                "success"
-            );
-
-
-            temperatureInput.value =
-                "";
-
-
-            humidityInput.value =
-                "";
-
-
-            motionInput.value =
-                "false";
-
-        })
-
-        .catch(function (error) {
+        .catch(function(error) {
 
             console.error(
-                "Manual data error:",
+                "Logout error:",
                 error
-            );
-
-
-            showManualMessage(
-                "❌ Firebase Error: " +
-                error.message,
-                "error"
             );
 
         });
@@ -1047,153 +82,618 @@ function saveManualData() {
 }
 
 
-// ==========================================================
-// MANUAL DATA MESSAGE
-// ==========================================================
 
-function showManualMessage(
-    message,
-    type
-) {
+// =====================================================
+// LOGOUT BUTTON
+// =====================================================
 
-    const element =
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+
+        const logoutButton =
+            document.getElementById(
+                "logoutButton"
+            );
+
+
+        if (logoutButton) {
+
+
+            logoutButton.addEventListener(
+                "click",
+                logout
+            );
+
+        }
+
+
+        initializeSwitches();
+
+        initializeFirebase();
+
+    }
+);
+
+
+
+// =====================================================
+// FIREBASE
+// =====================================================
+
+function initializeFirebase() {
+
+
+    const firebaseStatus =
         document.getElementById(
-            "manualMessage"
+            "firebaseStatus"
         );
 
 
-    if (!element) {
+    if (firebaseStatus) {
 
-        return;
+        firebaseStatus.textContent =
+            "🔄 Connecting to Firebase...";
+
+    }
+
+
+    // =================================================
+    // DEVICE
+    // =================================================
+
+    database
+        .ref("smartStorage/device")
+        .on(
+
+            "value",
+
+            function(snapshot) {
+
+
+                const data =
+                    snapshot.val();
+
+
+                if (!data) {
+
+
+                    updateDeviceOffline();
+
+
+                    return;
+
+                }
+
+
+                updateDeviceStatus(
+                    data
+                );
+
+            },
+
+
+            function(error) {
+
+
+                console.error(
+                    "Device listener error:",
+                    error
+                );
+
+
+                if (firebaseStatus) {
+
+                    firebaseStatus.textContent =
+                        "🔴 Firebase Error";
+
+                }
+
+            }
+
+        );
+
+
+    // =================================================
+    // CURRENT STATES
+    // =================================================
+
+    database
+        .ref("smartStorage/current")
+        .on(
+
+            "value",
+
+            function(snapshot) {
+
+
+                const data =
+                    snapshot.val();
+
+
+                if (!data) {
+
+                    return;
+
+                }
+
+
+                updateCurrentStates(
+                    data
+                );
+
+            }
+
+        );
+
+
+    // =================================================
+    // FIREBASE CONNECTION
+    // =================================================
+
+    database
+        .ref(".info/connected")
+        .on(
+
+            "value",
+
+            function(snapshot) {
+
+
+                if (snapshot.val() === true) {
+
+
+                    if (firebaseStatus) {
+
+                        firebaseStatus.textContent =
+                            "🟢 Firebase Connected";
+
+                        firebaseStatus.style.color =
+                            "#28a745";
+
+                    }
+
+
+                }
+
+                else {
+
+
+                    if (firebaseStatus) {
+
+                        firebaseStatus.textContent =
+                            "🔴 Firebase Disconnected";
+
+                        firebaseStatus.style.color =
+                            "#dc3545";
+
+                    }
+
+                }
+
+            }
+
+        );
+
+}
+
+
+
+// =====================================================
+// DEVICE STATUS
+// =====================================================
+
+function updateDeviceStatus(
+    data
+) {
+
+
+    const status =
+        document.getElementById(
+            "deviceStatus"
+        );
+
+
+    const source =
+        document.getElementById(
+            "deviceSource"
+        );
+
+
+    const ip =
+        document.getElementById(
+            "deviceIP"
+        );
+
+
+    const wifi =
+        document.getElementById(
+            "wifiSignal"
+        );
+
+
+    const dateTime =
+        document.getElementById(
+            "deviceDateTime"
+        );
+
+
+    const lastUpdate =
+        document.getElementById(
+            "lastUpdate"
+        );
+
+
+    // =================================================
+    // ONLINE
+    // =================================================
+
+    if (status) {
+
+        status.textContent =
+            data.online
+                ? "ONLINE"
+                : "OFFLINE";
+
+
+        status.style.color =
+            data.online
+                ? "#28a745"
+                : "#dc3545";
 
     }
 
 
-    element.textContent =
-        message;
+    // =================================================
+    // SOURCE
+    // =================================================
 
+    if (source) {
 
-    if (
-        type === "success"
-    ) {
-
-        element.style.color =
-            "#28a745";
+        source.textContent =
+            data.source ||
+            "ESP32";
 
     }
 
-    else if (
-        type === "error"
-    ) {
 
-        element.style.color =
+    // =================================================
+    // IP
+    // =================================================
+
+    if (ip) {
+
+        ip.textContent =
+            data.ip ||
+            "--";
+
+    }
+
+
+    // =================================================
+    // WIFI
+    // =================================================
+
+    if (wifi) {
+
+
+        if (
+            data.wifiRSSI !==
+            undefined
+        ) {
+
+            wifi.textContent =
+                data.wifiRSSI +
+                " dBm";
+
+        }
+
+        else {
+
+            wifi.textContent =
+                "--";
+
+        }
+
+    }
+
+
+    // =================================================
+    // DATE/TIME
+    // =================================================
+
+    if (dateTime) {
+
+        dateTime.textContent =
+            data.timestamp ||
+            "Waiting for ESP32...";
+
+    }
+
+
+    // =================================================
+    // LAST UPDATE
+    // =================================================
+
+    if (lastUpdate) {
+
+        lastUpdate.textContent =
+            data.timestamp
+                ? "Last update: " +
+                  data.timestamp
+                : "No update received";
+
+    }
+
+}
+
+
+
+// =====================================================
+// OFFLINE
+// =====================================================
+
+function updateDeviceOffline() {
+
+
+    const status =
+        document.getElementById(
+            "deviceStatus"
+        );
+
+
+    const source =
+        document.getElementById(
+            "deviceSource"
+        );
+
+
+    if (status) {
+
+        status.textContent =
+            "OFFLINE";
+
+        status.style.color =
             "#dc3545";
 
     }
 
-    else {
 
-        element.style.color =
-            "#0b2447";
+    if (source) {
+
+        source.textContent =
+            "Waiting for ESP32...";
 
     }
 
 }
 
 
-// ==========================================================
-// DEVICE COMMANDS
-// ==========================================================
-//
-// WEBSITE → FIREBASE → ESP32
-//
-// These values are commands.
-//
-// ==========================================================
+
+// =====================================================
+// CURRENT STATES
+// =====================================================
+
+function updateCurrentStates(
+    data
+) {
+
+
+    // =================================================
+    // LIGHT
+    // =================================================
+
+    if (
+        data.light !== undefined
+    ) {
+
+        currentStates.light =
+            Boolean(data.light);
+
+        updateSwitch(
+            "light",
+            currentStates.light
+        );
+
+    }
+
+
+    // =================================================
+    // FAN
+    // =================================================
+
+    if (
+        data.fan !== undefined
+    ) {
+
+        currentStates.fan =
+            Boolean(data.fan);
+
+        updateSwitch(
+            "fan",
+            currentStates.fan
+        );
+
+    }
+
+
+    // =================================================
+    // DOOR
+    // =================================================
+
+    if (
+        data.door !== undefined
+    ) {
+
+        currentStates.door =
+            Boolean(data.door);
+
+        updateSwitch(
+            "door",
+            currentStates.door
+        );
+
+    }
+
+
+    // =================================================
+    // ALARM
+    // =================================================
+
+    if (
+        data.alarm !== undefined
+    ) {
+
+        currentStates.alarm =
+            Boolean(data.alarm);
+
+        updateSwitch(
+            "alarm",
+            currentStates.alarm
+        );
+
+    }
+
+}
+
+
+
+// =====================================================
+// INITIALIZE SWITCHES
+// =====================================================
 
 function initializeSwitches() {
 
-    connectSwitch(
-        "lightSwitch",
-        "light"
-    );
 
-
-    connectSwitch(
-        "fanSwitch",
-        "fan"
-    );
-
-
-    connectSwitch(
-        "doorSwitch",
-        "door"
-    );
-
-
-    connectSwitch(
-        "alarmSwitch",
-        "alarm"
-    );
-
-}
-
-
-// ==========================================================
-// CONNECT SWITCH
-// ==========================================================
-
-function connectSwitch(
-    elementId,
-    device
-) {
-
-    const element =
+    const light =
         document.getElementById(
-            elementId
+            "lightSwitch"
         );
 
 
-    if (!element) {
+    const fan =
+        document.getElementById(
+            "fanSwitch"
+        );
 
-        return;
+
+    const door =
+        document.getElementById(
+            "doorSwitch"
+        );
+
+
+    const alarm =
+        document.getElementById(
+            "alarmSwitch"
+        );
+
+
+    // =================================================
+    // LIGHT
+    // =================================================
+
+    if (light) {
+
+
+        light.addEventListener(
+            "change",
+            function() {
+
+
+                sendCommand(
+                    "light",
+                    light.checked
+                );
+
+            }
+        );
 
     }
 
 
-    element.addEventListener(
-        "change",
-        function () {
+    // =================================================
+    // FAN
+    // =================================================
 
-            sendCommandToESP32(
-                device,
-                element.checked
-            );
+    if (fan) {
 
-        }
-    );
+
+        fan.addEventListener(
+            "change",
+            function() {
+
+
+                sendCommand(
+                    "fan",
+                    fan.checked
+                );
+
+            }
+        );
+
+    }
+
+
+    // =================================================
+    // DOOR
+    // =================================================
+
+    if (door) {
+
+
+        door.addEventListener(
+            "change",
+            function() {
+
+
+                sendCommand(
+                    "door",
+                    door.checked
+                );
+
+            }
+        );
+
+    }
+
+
+    // =================================================
+    // ALARM
+    // =================================================
+
+    if (alarm) {
+
+
+        alarm.addEventListener(
+            "change",
+            function() {
+
+
+                sendCommand(
+                    "alarm",
+                    alarm.checked
+                );
+
+            }
+        );
+
+    }
 
 }
 
 
-// ==========================================================
-// SEND COMMAND TO ESP32
-// ==========================================================
-//
-// Example:
-//
-// smartStorage
-//     └── commands
-//         └── light: true
-//
-// ESP32 will read this value.
-//
-// ==========================================================
 
-function sendCommandToESP32(
+// =====================================================
+// SEND COMMAND TO FIREBASE
+// =====================================================
+
+function sendCommand(
     device,
     state
 ) {
+
 
     console.log(
         "Sending command:",
@@ -1204,25 +704,36 @@ function sendCommandToESP32(
 
     const commandData = {
 
+
         state:
             Boolean(state),
+
+
+        source:
+            "Website",
+
 
         timestamp:
             firebase.database
                 .ServerValue
-                .TIMESTAMP,
+                .TIMESTAMP
 
-        source:
-            "Website"
 
     };
 
 
-    esp32CommandsRef
-        .child(device)
-        .set(commandData)
+    database
+        .ref(
+            "smartStorage/commands/" +
+            device
+        )
 
-        .then(function () {
+        .set(
+            commandData
+        )
+
+        .then(function() {
+
 
             console.log(
                 "Command sent successfully:",
@@ -1231,480 +742,178 @@ function sendCommandToESP32(
             );
 
 
-            updateSwitchStatus(
-                device,
-                state
-            );
-
         })
 
-        .catch(function (error) {
+        .catch(function(error) {
+
 
             console.error(
-                "Command error:",
+                "Command failed:",
                 error
             );
 
 
             alert(
-                "Unable to send command:\n" +
+                "Command could not be sent:\n" +
                 error.message
             );
 
 
-            const switchElement =
-                document.getElementById(
-                    device + "Switch"
-                );
+            // Restore previous state
 
-
-            if (switchElement) {
-
-                switchElement.checked =
-                    !state;
-
-            }
+            updateSwitch(
+                device,
+                currentStates[device]
+            );
 
         });
 
 }
 
 
-// ==========================================================
-// LOAD COMMAND STATES
-// ==========================================================
-//
-// Reads Firebase commands so the website remains
-// synchronized with ESP32 commands.
-//
-// ==========================================================
 
-function loadDeviceStates() {
+// =====================================================
+// UPDATE SWITCH
+// =====================================================
 
-    esp32CommandsRef.once(
-        "value",
-        function (snapshot) {
-
-            if (!snapshot.exists()) {
-
-                return;
-
-            }
-
-
-            const commands =
-                snapshot.val();
-
-
-            setDeviceState(
-                "light",
-                commands.light
-            );
-
-
-            setDeviceState(
-                "fan",
-                commands.fan
-            );
-
-
-            setDeviceState(
-                "door",
-                commands.door
-            );
-
-
-            setDeviceState(
-                "alarm",
-                commands.alarm
-            );
-
-        }
-    );
-
-}
-
-
-// ==========================================================
-// SET DEVICE STATE
-// ==========================================================
-
-function setDeviceState(
+function updateSwitch(
     device,
-    command
+    state
 ) {
 
-    if (!command) {
 
-        return;
-
-    }
-
-
-    let state =
-        false;
-
-
-    if (
-        typeof command ===
-        "object"
-    ) {
-
-        state =
-            Boolean(
-                command.state
-            );
-
-    }
-
-    else {
-
-        state =
-            Boolean(command);
-
-    }
-
-
-    const element =
+    const switchElement =
         document.getElementById(
             device + "Switch"
         );
 
 
-    if (element) {
+    if (switchElement) {
 
-        element.checked =
-            state;
+        switchElement.checked =
+            Boolean(state);
 
     }
 
 
-    updateSwitchStatus(
-        device,
-        state
-    );
+    // =================================================
+    // LIGHT
+    // =================================================
+
+    if (device === "light") {
+
+
+        setText(
+            "lightStatus",
+            state ? "ON" : "OFF"
+        );
+
+
+        setText(
+            "currentLight",
+            state ? "ON" : "OFF"
+        );
+
+    }
+
+
+    // =================================================
+    // FAN
+    // =================================================
+
+    if (device === "fan") {
+
+
+        setText(
+            "fanStatus",
+            state ? "ON" : "OFF"
+        );
+
+
+        setText(
+            "currentFan",
+            state ? "ON" : "OFF"
+        );
+
+    }
+
+
+    // =================================================
+    // DOOR
+    // =================================================
+
+    if (device === "door") {
+
+
+        setText(
+            "doorStatus",
+            state ? "OPEN" : "CLOSED"
+        );
+
+
+        setText(
+            "currentDoor",
+            state ? "OPEN" : "CLOSED"
+        );
+
+    }
+
+
+    // =================================================
+    // ALARM
+    // =================================================
+
+    if (device === "alarm") {
+
+
+        setText(
+            "alarmStatus",
+            state ? "ON" : "OFF"
+        );
+
+
+        setText(
+            "currentAlarm",
+            state ? "ON" : "OFF"
+        );
+
+    }
 
 }
 
 
-// ==========================================================
-// SWITCH STATUS TEXT
-// ==========================================================
 
-function updateSwitchStatus(
-    device,
-    state
+// =====================================================
+// SET TEXT
+// =====================================================
+
+function setText(
+    id,
+    value
 ) {
-
-    let statusId =
-        "";
-
-
-    if (
-        device === "light"
-    ) {
-
-        statusId =
-            "lightStatus";
-
-    }
-
-    else if (
-        device === "fan"
-    ) {
-
-        statusId =
-            "fanStatus";
-
-    }
-
-    else if (
-        device === "door"
-    ) {
-
-        statusId =
-            "doorStatus";
-
-    }
-
-    else if (
-        device === "alarm"
-    ) {
-
-        statusId =
-            "alarmStatus";
-
-    }
-
-
-    if (!statusId) {
-
-        return;
-
-    }
 
 
     const element =
-        document.getElementById(
-            statusId
-        );
+        document.getElementById(id);
 
 
-    if (!element) {
-
-        return;
-
-    }
-
-
-    if (
-        device === "door"
-    ) {
+    if (element) {
 
         element.textContent =
-            state
-                ? "OPEN"
-                : "CLOSED";
+            value;
 
     }
-
-    else {
-
-        element.textContent =
-            state
-                ? "ON"
-                : "OFF";
-
-    }
-
-
-    element.style.color =
-        state
-            ? "#28a745"
-            : "#777";
 
 }
 
 
-// ==========================================================
-// CHART INITIALIZATION
-// ==========================================================
 
-function initializeChart() {
+// =====================================================
+// MAKE FUNCTIONS AVAILABLE
+// =====================================================
 
-    const canvas =
-        document.getElementById(
-            "environmentChart"
-        );
+window.sendCommand =
+    sendCommand;
 
-
-    if (!canvas) {
-
-        console.warn(
-            "Chart canvas not found."
-        );
-
-        return;
-
-    }
-
-
-    const ctx =
-        canvas.getContext(
-            "2d"
-        );
-
-
-    environmentChart =
-        new Chart(
-            ctx,
-            {
-
-                type:
-                    "line",
-
-                data: {
-
-                    labels:
-                        chartLabels,
-
-                    datasets: [
-
-                        {
-
-                            label:
-                                "Temperature (°C)",
-
-                            data:
-                                temperatureHistory,
-
-                            borderWidth:
-                                2,
-
-                            tension:
-                                0.3,
-
-                            fill:
-                                false
-
-                        },
-
-
-                        {
-
-                            label:
-                                "Humidity (%)",
-
-                            data:
-                                humidityHistory,
-
-                            borderWidth:
-                                2,
-
-                            tension:
-                                0.3,
-
-                            fill:
-                                false
-
-                        }
-
-                    ]
-
-                },
-
-                options: {
-
-                    responsive:
-                        true,
-
-                    maintainAspectRatio:
-                        true,
-
-                    interaction: {
-
-                        mode:
-                            "index",
-
-                        intersect:
-                            false
-
-                    }
-
-                }
-
-            }
-        );
-
-}
-
-
-// ==========================================================
-// UPDATE CHART
-// ==========================================================
-
-function updateChart(
-    temperature,
-    humidity
-) {
-
-    if (
-        !environmentChart
-    ) {
-
-        return;
-
-    }
-
-
-    chartLabels.push(
-        new Date()
-            .toLocaleTimeString(
-                "en-PH"
-            )
-    );
-
-
-    temperatureHistory.push(
-        temperature
-    );
-
-
-    humidityHistory.push(
-        humidity
-    );
-
-
-    // Keep last 15 readings
-
-    if (
-        chartLabels.length >
-        15
-    ) {
-
-        chartLabels.shift();
-
-        temperatureHistory.shift();
-
-        humidityHistory.shift();
-
-    }
-
-
-    environmentChart.update();
-
-}
-
-
-// ==========================================================
-// START DASHBOARD
-// ==========================================================
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-        console.log(
-            "Smart Storage Dashboard starting..."
-        );
-
-
-        initializeLogout();
-
-
-        initializeFirebaseConnection();
-
-
-        initializeSensorListener();
-
-
-        initializeSaveButton();
-
-
-        initializeSwitches();
-
-
-        initializeChart();
-
-
-        updateClock();
-
-
-        console.log(
-            "Dashboard ready."
-        );
-
-    }
-);
-
-
-// ==========================================================
-// GLOBAL FUNCTIONS
-// ==========================================================
-
-window.saveManualData =
-    saveManualData;
-
-
-window.sendCommandToESP32 =
-    sendCommandToESP32;
+window.logout =
+    logout;
