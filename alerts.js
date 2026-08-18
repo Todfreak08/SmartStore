@@ -1,23 +1,15 @@
-// ==========================================================
-// SMART STORAGE MONITORING SYSTEM
-// ALERTS.JS
-//
-// WEBSITE = DISPLAY ONLY
-// ESP32   = DEVICE
-// FIREBASE = REAL-TIME DATABASE
-//
-// NO DHT11
-// NO HUMIDITY SENSOR
-// NO SD CARD
-// ==========================================================
+// =====================================================
+// SMART STORAGE ALERTS
+// ESP32 → Firebase → Website
+// =====================================================
 
 
 
-// ==========================================================
-// AUTHENTICATION
-// ==========================================================
+// =====================================================
+// LOGIN
+// =====================================================
 
-auth.onAuthStateChanged(function (user) {
+auth.onAuthStateChanged(function(user) {
 
     if (!user) {
 
@@ -46,65 +38,34 @@ auth.onAuthStateChanged(function (user) {
 
 
 
-// ==========================================================
+// =====================================================
 // LOGOUT
-// ==========================================================
+// =====================================================
 
-function initializeLogout() {
-
-    const button =
-        document.getElementById(
-            "logoutButton"
-        );
+const logoutButton =
+    document.getElementById(
+        "logoutButton"
+    );
 
 
-    if (!button) {
+if (logoutButton) {
 
-        return;
-
-    }
-
-
-    button.addEventListener(
+    logoutButton.addEventListener(
         "click",
-        function () {
-
-            button.disabled =
-                true;
-
-
-            button.textContent =
-                "Logging out...";
-
+        function() {
 
             auth.signOut()
-
-                .then(function () {
+                .then(function() {
 
                     window.location.href =
                         "index.html";
 
                 })
-
-                .catch(function (error) {
+                .catch(function(error) {
 
                     console.error(
                         "Logout error:",
                         error
-                    );
-
-
-                    button.disabled =
-                        false;
-
-
-                    button.textContent =
-                        "🚪 Logout";
-
-
-                    alert(
-                        "Logout failed: " +
-                        error.message
                     );
 
                 });
@@ -116,699 +77,585 @@ function initializeLogout() {
 
 
 
-// ==========================================================
-// FIREBASE CONNECTION STATUS
-// ==========================================================
+// =====================================================
+// FIREBASE STATUS
+// =====================================================
 
-function initializeFirebaseStatus() {
+const firebaseStatus =
+    document.getElementById(
+        "firebaseStatus"
+    );
 
-    const status =
-        document.getElementById(
-            "firebaseStatus"
-        );
 
 
-    database
-        .ref(".info/connected")
-        .on(
-            "value",
-            function (snapshot) {
+// =====================================================
+// CURRENT ESP32 DATA
+// =====================================================
+//
+// ESP32 writes:
+//
+// smartStorage/sensorData
+//
+// =====================================================
 
-                if (!status) {
+database
+    .ref("smartStorage/sensorData")
+    .on(
 
-                    return;
+        "value",
 
-                }
+        function(snapshot) {
 
-
-                if (
-                    snapshot.val() === true
-                ) {
-
-                    status.textContent =
-                        "● Firebase Connected";
-
-                    status.style.color =
-                        "#28a745";
-
-                }
-
-                else {
-
-                    status.textContent =
-                        "● Firebase Disconnected";
-
-                    status.style.color =
-                        "#dc3545";
-
-                }
-
-            }
-        );
-
-}
-
-
-
-// ==========================================================
-// ESP32 STATUS
-// ==========================================================
-
-function initializeESP32Status() {
-
-    database
-        .ref("smartStorage/device")
-        .on(
-            "value",
-            function (snapshot) {
-
-                const status =
-                    document.getElementById(
-                        "espStatus"
-                    );
-
-
-                const lastSeen =
-                    document.getElementById(
-                        "espLastSeen"
-                    );
-
-
-                if (!snapshot.exists()) {
-
-                    if (status) {
-
-                        status.textContent =
-                            "OFFLINE";
-
-                        status.style.color =
-                            "#dc3545";
-
-                    }
-
-
-                    if (lastSeen) {
-
-                        lastSeen.textContent =
-                            "No ESP32 data";
-
-                    }
-
-
-                    return;
-
-                }
-
-
-                const data =
-                    snapshot.val();
-
-
-                if (
-                    data.online === true
-                ) {
-
-                    if (status) {
-
-                        status.textContent =
-                            "ONLINE";
-
-                        status.style.color =
-                            "#28a745";
-
-                    }
-
-                }
-
-                else {
-
-                    if (status) {
-
-                        status.textContent =
-                            "OFFLINE";
-
-                        status.style.color =
-                            "#dc3545";
-
-                    }
-
-                }
-
-
-                if (lastSeen) {
-
-                    lastSeen.textContent =
-                        data.timestamp
-                            ? "Last seen: " +
-                              data.timestamp
-                            : "Timestamp unavailable";
-
-                }
-
-            }
-        );
-
-}
-
-
-
-// ==========================================================
-// LOAD ESP32 ALERTS
-// ==========================================================
-
-function initializeAlerts() {
-
-    const alertsBody =
-        document.getElementById(
-            "alertsBody"
-        );
-
-
-    if (!alertsBody) {
-
-        return;
-
-    }
-
-
-    database
-        .ref("smartStorage/alerts")
-        .on(
-            "value",
-            function (snapshot) {
-
-                alertsBody.innerHTML =
-                    "";
-
-
-                let count = 0;
-
-
-                if (
-                    !snapshot.exists()
-                ) {
-
-                    alertsBody.innerHTML = `
-
-                        <tr>
-
-                            <td
-                                colspan="5"
-                                style="
-                                    text-align:center;
-                                    padding:30px;
-                                ">
-
-                                ✅ No alerts from ESP32.
-
-                            </td>
-
-                        </tr>
-
-                    `;
-
-
-                    updateAlertCount(0);
-
-                    return;
-
-                }
-
-
-                const alerts = [];
-
-
-                snapshot.forEach(
-                    function (child) {
-
-                        alerts.push({
-
-                            key:
-                                child.key,
-
-                            data:
-                                child.val()
-
-                        });
-
-                    }
-                );
-
-
-                // Newest first
-
-                alerts.reverse();
-
-
-                alerts.forEach(
-                    function (item) {
-
-                        const data =
-                            item.data;
-
-
-                        count++;
-
-
-                        const row =
-                            document.createElement(
-                                "tr"
-                            );
-
-
-                        const date =
-                            data.date ||
-                            "--";
-
-
-                        const time =
-                            data.time ||
-                            "--";
-
-
-                        const event =
-                            data.event ||
-                            "Device Event";
-
-
-                        const source =
-                            data.source ||
-                            "ESP32";
-
-
-                        const status =
-                            data.status ||
-                            "INFO";
-
-
-                        row.innerHTML = `
-
-                            <td>
-                                ${escapeHTML(date)}
-                            </td>
-
-                            <td>
-                                ${escapeHTML(time)}
-                            </td>
-
-                            <td>
-                                ${escapeHTML(event)}
-                            </td>
-
-                            <td>
-                                ${escapeHTML(source)}
-                            </td>
-
-                            <td>
-
-                                <span
-                                    class="
-                                        alert-status
-                                        ${getStatusClass(status)}
-                                    ">
-
-                                    ${escapeHTML(status)}
-
-                                </span>
-
-                            </td>
-
-                        `;
-
-
-                        alertsBody.appendChild(
-                            row
-                        );
-
-                    }
-                );
-
-
-                updateAlertCount(count);
-
-
-                updateCurrentAlert(
-                    alerts.length > 0
-                        ? alerts[0].data
-                        : null
-                );
-
-            },
-
-            function (error) {
-
-                console.error(
-                    "Alert listener error:",
-                    error
-                );
-
-
-                alertsBody.innerHTML = `
-
-                    <tr>
-
-                        <td
-                            colspan="5"
-                            style="
-                                text-align:center;
-                                color:#dc3545;
-                                padding:30px;
-                            ">
-
-                            ❌ Firebase Error:
-                            ${escapeHTML(
-                                error.message
-                            )}
-
-                        </td>
-
-                    </tr>
-
-                `;
-
-            }
-        );
-
-}
-
-
-
-// ==========================================================
-// UPDATE ALERT COUNT
-// ==========================================================
-
-function updateAlertCount(count) {
-
-    const element =
-        document.getElementById(
-            "alertCount"
-        );
-
-
-    if (element) {
-
-        element.textContent =
-            count;
-
-    }
-
-}
-
-
-
-// ==========================================================
-// UPDATE CURRENT ALERT
-// ==========================================================
-
-function updateCurrentAlert(data) {
-
-    const title =
-        document.getElementById(
-            "alertTitle"
-        );
-
-
-    const description =
-        document.getElementById(
-            "alertDescription"
-        );
-
-
-    const container =
-        document.getElementById(
-            "currentAlert"
-        );
-
-
-    if (!data) {
-
-        if (title) {
-
-            title.textContent =
-                "No Current Alerts";
-
-        }
-
-
-        if (description) {
-
-            description.textContent =
-                "The ESP32 has not reported any alerts.";
-
-        }
-
-
-        if (container) {
-
-            container.style.borderLeft =
-                "5px solid #28a745";
-
-        }
-
-
-        return;
-
-    }
-
-
-    const event =
-        data.event ||
-        "Device Event";
-
-
-    const status =
-        data.status ||
-        "INFO";
-
-
-    if (title) {
-
-        title.textContent =
-            event;
-
-    }
-
-
-    if (description) {
-
-        description.textContent =
-            "Status: " +
-            status +
-            " • " +
-            (
-                data.timestamp ||
-                "Time unavailable"
+            console.log(
+                "ESP32 SENSOR DATA:",
+                snapshot.val()
             );
 
-    }
+
+            if (firebaseStatus) {
+
+                firebaseStatus.textContent =
+                    "● Firebase Connected";
+
+                firebaseStatus.style.color =
+                    "#28a745";
+
+            }
 
 
-    if (container) {
+            if (!snapshot.exists()) {
 
-        if (
-            status === "DANGER"
-        ) {
-
-            container.style.borderLeft =
-                "5px solid #dc3545";
-
-        }
-
-        else if (
-            status === "WARNING"
-        ) {
-
-            container.style.borderLeft =
-                "5px solid #ffc107";
-
-        }
-
-        else {
-
-            container.style.borderLeft =
-                "5px solid #28a745";
-
-        }
-
-    }
-
-}
-
-
-
-// ==========================================================
-// STATUS CLASS
-// ==========================================================
-
-function getStatusClass(status) {
-
-    if (!status) {
-
-        return "info";
-
-    }
-
-
-    status =
-        String(status)
-            .toUpperCase();
-
-
-    if (
-        status === "DANGER"
-    ) {
-
-        return "danger";
-
-    }
-
-
-    if (
-        status === "WARNING"
-    ) {
-
-        return "warning";
-
-    }
-
-
-    if (
-        status === "ONLINE" ||
-        status === "NORMAL" ||
-        status === "SUCCESS"
-    ) {
-
-        return "normal";
-
-    }
-
-
-    return "info";
-
-}
-
-
-
-// ==========================================================
-// CLEAR DISPLAY
-//
-// This does NOT delete Firebase data.
-// It only reloads the alerts from Firebase.
-// ==========================================================
-
-function initializeClearButton() {
-
-    const button =
-        document.getElementById(
-            "clearAlertsButton"
-        );
-
-
-    if (!button) {
-
-        return;
-
-    }
-
-
-    button.addEventListener(
-        "click",
-        function () {
-
-            const body =
-                document.getElementById(
-                    "alertsBody"
-                );
-
-
-            if (!body) {
+                showNoSensorData();
 
                 return;
 
             }
 
 
-            body.innerHTML = `
+            const data =
+                snapshot.val();
 
-                <tr>
 
-                    <td
-                        colspan="5"
-                        style="
-                            text-align:center;
-                            padding:30px;
-                        ">
+            updateCurrentAlert(
+                data
+            );
 
-                        Display cleared.
-                        Waiting for new ESP32 alerts...
+        },
 
-                    </td>
 
-                </tr>
+        function(error) {
 
-            `;
+            console.error(
+                "Firebase sensor error:",
+                error
+            );
+
+
+            if (firebaseStatus) {
+
+                firebaseStatus.textContent =
+                    "● Firebase Error";
+
+                firebaseStatus.style.color =
+                    "#dc3545";
+
+            }
 
         }
+
+    );
+
+
+
+// =====================================================
+// UPDATE CURRENT ALERT
+// =====================================================
+
+function updateCurrentAlert(data) {
+
+
+    // =================================================
+    // TEMPERATURE
+    // =================================================
+
+    const temperature =
+        data.temperature;
+
+
+    const temperatureElement =
+        document.getElementById(
+            "alertTemperature"
+        );
+
+
+    if (temperatureElement) {
+
+        temperatureElement.textContent =
+            temperature !== undefined
+                ? Number(
+                    temperature
+                ).toFixed(1) + " °C"
+                : "-- °C";
+
+    }
+
+
+
+    // =================================================
+    // HUMIDITY
+    // =================================================
+
+    const humidity =
+        data.humidity;
+
+
+    const humidityElement =
+        document.getElementById(
+            "alertHumidity"
+        );
+
+
+    if (humidityElement) {
+
+        humidityElement.textContent =
+            humidity !== undefined
+                ? Number(
+                    humidity
+                ).toFixed(1) + " %"
+                : "-- %";
+
+    }
+
+
+
+    // =================================================
+    // MOTION
+    // =================================================
+
+    let motion =
+        data.motion;
+
+
+    if (motion === true) {
+
+        motion =
+            "Motion Detected";
+
+    }
+
+    else if (motion === false) {
+
+        motion =
+            "No Motion";
+
+    }
+
+    else {
+
+        motion =
+            "Unknown";
+
+    }
+
+
+    const motionElement =
+        document.getElementById(
+            "alertMotion"
+        );
+
+
+    if (motionElement) {
+
+        motionElement.textContent =
+            motion;
+
+    }
+
+
+
+    // =================================================
+    // STATUS
+    // =================================================
+
+    const status =
+        String(
+            data.status ||
+            "NORMAL"
+        ).toUpperCase();
+
+
+    const statusElement =
+        document.getElementById(
+            "alertStatus"
+        );
+
+
+    if (statusElement) {
+
+        statusElement.textContent =
+            status;
+
+
+        statusElement.classList.remove(
+            "normal",
+            "warning",
+            "danger"
+        );
+
+
+        if (status === "DANGER") {
+
+            statusElement.classList.add(
+                "danger"
+            );
+
+        }
+
+        else if (status === "WARNING") {
+
+            statusElement.classList.add(
+                "warning"
+            );
+
+        }
+
+        else {
+
+            statusElement.classList.add(
+                "normal"
+            );
+
+        }
+
+    }
+
+
+
+    // =================================================
+    // TIMESTAMP
+    // =================================================
+
+    const timestamp =
+        data.timestamp ||
+        "No timestamp";
+
+
+    const timestampElement =
+        document.getElementById(
+            "alertTimestamp"
+        );
+
+
+    if (timestampElement) {
+
+        timestampElement.textContent =
+            "Last ESP32 Update: " +
+            timestamp;
+
+    }
+
+
+
+    // =================================================
+    // CREATE ALERT
+    // =================================================
+
+    createCurrentAlert(
+        data,
+        status,
+        motion
     );
 
 }
 
 
 
-// ==========================================================
-// HTML SECURITY
-// ==========================================================
+// =====================================================
+// CREATE CURRENT ALERT
+// =====================================================
 
-function escapeHTML(value) {
+function createCurrentAlert(
+    data,
+    status,
+    motion
+) {
 
-    return String(value)
-
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-
-        .replace(
-            /</g,
-            "&lt;"
-        )
-
-        .replace(
-            />/g,
-            "&gt;"
-        )
-
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-
-        .replace(
-            /'/g,
-            "&#039;"
+    const container =
+        document.getElementById(
+            "alertsContainer"
         );
+
+
+    const message =
+        document.getElementById(
+            "alertsMessage"
+        );
+
+
+    if (!container) {
+
+        return;
+
+    }
+
+
+    container.innerHTML = "";
+
+
+    let hasAlert = false;
+
+
+
+    // =================================================
+    // DANGER
+    // =================================================
+
+    if (status === "DANGER") {
+
+        addAlert(
+            container,
+            "🔴",
+            "Danger",
+            "The storage environment requires immediate attention.",
+            data.timestamp
+        );
+
+        hasAlert = true;
+
+    }
+
+
+
+    // =================================================
+    // WARNING
+    // =================================================
+
+    else if (status === "WARNING") {
+
+        addAlert(
+            container,
+            "🟠",
+            "Warning",
+            "The storage environment is outside the normal range.",
+            data.timestamp
+        );
+
+        hasAlert = true;
+
+    }
+
+
+
+    // =================================================
+    // MOTION
+    // =================================================
+
+    if (
+        data.motion === true
+    ) {
+
+        addAlert(
+            container,
+            "🚶",
+            "Motion Detected",
+            "The ESP32 detected motion.",
+            data.timestamp
+        );
+
+        hasAlert = true;
+
+    }
+
+
+
+    // =================================================
+    // NORMAL
+    // =================================================
+
+    if (!hasAlert) {
+
+        addAlert(
+            container,
+            "🟢",
+            "Normal",
+            "No active alerts detected.",
+            data.timestamp
+        );
+
+    }
+
+
+    if (message) {
+
+        message.style.display =
+            "none";
+
+    }
 
 }
 
 
 
-// ==========================================================
-// START ALERTS PAGE
-// ==========================================================
+// =====================================================
+// ADD ALERT CARD
+// =====================================================
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+function addAlert(
+    container,
+    icon,
+    title,
+    description,
+    timestamp
+) {
 
-        initializeLogout();
+    const alert =
+        document.createElement(
+            "div"
+        );
 
-        initializeFirebaseStatus();
 
-        initializeESP32Status();
+    alert.style.padding =
+        "18px";
 
-        initializeAlerts();
 
-        initializeClearButton();
+    alert.style.marginBottom =
+        "12px";
+
+
+    alert.style.borderRadius =
+        "10px";
+
+
+    alert.style.background =
+        "#f8f9fa";
+
+
+    alert.style.border =
+        "1px solid #ddd";
+
+
+    alert.innerHTML = `
+
+        <h3>
+            ${icon}
+            ${escapeHTML(title)}
+        </h3>
+
+        <p>
+            ${escapeHTML(description)}
+        </p>
+
+        <small>
+            ESP32 Timestamp:
+            ${escapeHTML(timestamp || "-")}
+        </small>
+
+    `;
+
+
+    container.appendChild(
+        alert
+    );
+
+}
+
+
+
+// =====================================================
+// NO DATA
+// =====================================================
+
+function showNoSensorData() {
+
+    const temperature =
+        document.getElementById(
+            "alertTemperature"
+        );
+
+
+    const humidity =
+        document.getElementById(
+            "alertHumidity"
+        );
+
+
+    const motion =
+        document.getElementById(
+            "alertMotion"
+        );
+
+
+    const status =
+        document.getElementById(
+            "alertStatus"
+        );
+
+
+    const timestamp =
+        document.getElementById(
+            "alertTimestamp"
+        );
+
+
+    if (temperature) {
+
+        temperature.textContent =
+            "-- °C";
 
     }
-);
+
+
+    if (humidity) {
+
+        humidity.textContent =
+            "-- %";
+
+    }
+
+
+    if (motion) {
+
+        motion.textContent =
+            "Waiting...";
+
+    }
+
+
+    if (status) {
+
+        status.textContent =
+            "Waiting for ESP32...";
+
+    }
+
+
+    if (timestamp) {
+
+        timestamp.textContent =
+            "No data received yet.";
+
+    }
+
+}
+
+
+
+// =====================================================
+// ESCAPE HTML
+// =====================================================
+
+function escapeHTML(value) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.textContent =
+        value;
+
+
+    return div.innerHTML;
+
+}
