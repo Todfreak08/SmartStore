@@ -1,10 +1,18 @@
 // ==========================================================
 // SMART STORAGE MONITORING SYSTEM
 // HISTORY.JS
+// ==========================================================
 //
-// WEBSITE = VIEW ONLY
-// ESP32   = CREATES THE LOGS
-// FIREBASE = STORES THE LOGS
+// DATA SOURCE:
+//
+// ESP32
+//    ↓
+// Firebase Realtime Database
+//    ↓
+// smartStorage/history
+//    ↓
+// Website History Page
+//
 // ==========================================================
 
 
@@ -16,32 +24,54 @@ auth.onAuthStateChanged(function (user) {
 
     if (!user) {
 
-        window.location.href =
-            "index.html";
+        window.location.href = "index.html";
 
         return;
-
     }
 
 
-    const email =
-        document.getElementById(
-            "userEmail"
-        );
-
-
-    if (email) {
-
-        email.textContent =
-            user.email;
-
-    }
+    console.log(
+        "History page logged in:",
+        user.email
+    );
 
 });
 
 
 // ==========================================================
 // LOGOUT
+// ==========================================================
+
+function logout() {
+
+    auth.signOut()
+
+        .then(function () {
+
+            window.location.href =
+                "index.html";
+
+        })
+
+        .catch(function (error) {
+
+            console.error(
+                "Logout error:",
+                error
+            );
+
+            alert(
+                "Logout failed: " +
+                error.message
+            );
+
+        });
+
+}
+
+
+// ==========================================================
+// LOGOUT BUTTON
 // ==========================================================
 
 function initializeLogout() {
@@ -54,8 +84,11 @@ function initializeLogout() {
 
     if (!button) {
 
-        return;
+        console.warn(
+            "Logout button not found."
+        );
 
+        return;
     }
 
 
@@ -65,7 +98,6 @@ function initializeLogout() {
 
             button.disabled =
                 true;
-
 
             button.textContent =
                 "Logging out...";
@@ -91,7 +123,6 @@ function initializeLogout() {
                     button.disabled =
                         false;
 
-
                     button.textContent =
                         "🚪 Logout";
 
@@ -110,303 +141,436 @@ function initializeLogout() {
 
 
 // ==========================================================
-// FIREBASE CONNECTION STATUS
+// FIREBASE HISTORY LISTENER
+// ==========================================================
+//
+// EXACT PATH:
+//
+// smartStorage/history
+//
 // ==========================================================
 
-function initializeFirebaseStatus() {
+function initializeHistoryListener() {
 
-    const status =
-        document.getElementById(
-            "firebaseStatus"
+    console.log(
+        "Listening to smartStorage/history..."
+    );
+
+
+    const historyReference =
+        database.ref(
+            "smartStorage/history"
         );
 
 
-    database
-        .ref(".info/connected")
-        .on(
-            "value",
-            function (snapshot) {
+    historyReference.on(
 
-                if (!status) {
+        "value",
 
-                    return;
+        function (snapshot) {
 
-                }
-
-
-                if (
-                    snapshot.val() === true
-                ) {
-
-                    status.textContent =
-                        "● Firebase Connected";
+            console.log(
+                "History Firebase data:",
+                snapshot.val()
+            );
 
 
-                    status.style.color =
-                        "#28a745";
-
-                }
-
-                else {
-
-                    status.textContent =
-                        "● Firebase Disconnected";
+            const firebaseStatus =
+                document.getElementById(
+                    "firebaseStatus"
+                );
 
 
-                    status.style.color =
-                        "#dc3545";
+            if (firebaseStatus) {
 
-                }
+                firebaseStatus.textContent =
+                    "● Firebase Connected";
+
+                firebaseStatus.style.color =
+                    "#28a745";
 
             }
-        );
+
+
+            const tbody =
+                document.getElementById(
+                    "historyBody"
+                );
+
+
+            if (!tbody) {
+
+                console.error(
+                    "historyBody element not found."
+                );
+
+                return;
+            }
+
+
+            tbody.innerHTML = "";
+
+
+            if (!snapshot.exists()) {
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                row.innerHTML = `
+                    <td colspan="5">
+                        No ESP32 history data yet.
+                    </td>
+                `;
+
+
+                tbody.appendChild(
+                    row
+                );
+
+
+                return;
+            }
+
+
+            const records = [];
+
+
+            snapshot.forEach(
+                function (child) {
+
+                    const data =
+                        child.val();
+
+
+                    records.push({
+
+                        key:
+                            child.key,
+
+                        data:
+                            data
+
+                    });
+
+                }
+            );
+
+
+            // ==================================================
+            // NEWEST RECORD FIRST
+            // ==================================================
+
+            records.reverse();
+
+
+            records.forEach(
+                function (record) {
+
+                    addHistoryRow(
+                        tbody,
+                        record.data
+                    );
+
+                }
+            );
+
+        },
+
+        function (error) {
+
+            console.error(
+                "History Firebase error:",
+                error
+            );
+
+
+            const firebaseStatus =
+                document.getElementById(
+                    "firebaseStatus"
+                );
+
+
+            if (firebaseStatus) {
+
+                firebaseStatus.textContent =
+                    "● Firebase Error";
+
+                firebaseStatus.style.color =
+                    "#dc3545";
+
+            }
+
+        }
+
+    );
 
 }
 
 
 // ==========================================================
-// LOAD ESP32 HISTORY
+// ADD HISTORY ROW
 // ==========================================================
 
-function loadHistory() {
+function addHistoryRow(
+    tbody,
+    data
+) {
 
-    const historyBody =
-        document.getElementById(
-            "historyBody"
+    const row =
+        document.createElement(
+            "tr"
         );
 
 
-    if (!historyBody) {
+    // ======================================================
+    // TIMESTAMP
+    // ======================================================
 
-        console.error(
-            "historyBody not found."
-        );
+    let timestamp =
+        data.timestamp ||
+        "";
 
-        return;
+
+    if (!timestamp) {
+
+        if (
+            data.date &&
+            data.time
+        ) {
+
+            timestamp =
+                data.date +
+                " " +
+                data.time;
+
+        }
+
+        else if (
+            data.createdAt
+        ) {
+
+            timestamp =
+                formatTimestamp(
+                    data.createdAt
+                );
+
+        }
+
+        else {
+
+            timestamp =
+                "Unknown";
+
+        }
 
     }
 
 
     // ======================================================
-    // IMPORTANT
-    // ======================================================
-    //
-    // ONLY READ:
-    //
-    // smartStorage/history
-    //
-    // The WEBSITE does NOT write here.
-    //
-    // ESP32 creates these records.
-    //
+    // TEMPERATURE
     // ======================================================
 
-    database
-        .ref(
-            "smartStorage/history"
-        )
-        .on(
-            "value",
-            function (snapshot) {
+    let temperature =
+        data.temperature;
 
-                historyBody.innerHTML =
-                    "";
 
+    if (
+        temperature !== undefined &&
+        temperature !== null
+    ) {
 
-                if (
-                    !snapshot.exists()
-                ) {
+        temperature =
+            Number(temperature)
+                .toFixed(1)
+                +
+                " °C";
 
-                    historyBody.innerHTML = `
+    }
 
-                        <tr>
+    else {
 
-                            <td
-                                colspan="5"
-                                style="
-                                    text-align:center;
-                                    padding:30px;
-                                ">
+        temperature =
+            "--";
 
-                                📡 Waiting for ESP32
-                                history logs...
+    }
 
-                            </td>
 
-                        </tr>
+    // ======================================================
+    // HUMIDITY
+    // ======================================================
 
-                    `;
+    let humidity =
+        data.humidity;
 
-                    return;
 
-                }
+    if (
+        humidity !== undefined &&
+        humidity !== null
+    ) {
 
+        humidity =
+            Number(humidity)
+                .toFixed(1)
+                +
+                " %";
 
-                const records = [];
+    }
 
+    else {
 
-                snapshot.forEach(
-                    function (child) {
+        humidity =
+            "--";
 
-                        records.push({
+    }
 
-                            key:
-                                child.key,
 
-                            data:
-                                child.val()
+    // ======================================================
+    // MOTION
+    // ======================================================
 
-                        });
+    let motion =
+        data.motion;
 
-                    }
-                );
 
+    if (motion === true) {
 
-                // =================================================
-                // NEWEST FIRST
-                // =================================================
+        motion =
+            "Motion Detected";
 
-                records.reverse();
+    }
 
+    else if (motion === false) {
 
-                records.forEach(
-                    function (record) {
+        motion =
+            "No Motion";
 
-                        const data =
-                            record.data;
+    }
 
+    else if (
+        motion === undefined ||
+        motion === null
+    ) {
 
-                        const row =
-                            document.createElement(
-                                "tr"
-                            );
+        motion =
+            "--";
 
+    }
 
-                        const date =
-                            data.date ||
-                            "--";
 
+    // ======================================================
+    // STATUS
+    // ======================================================
 
-                        const time =
-                            data.time ||
-                            "--";
+    const status =
+        data.status ||
+        "NORMAL";
 
 
-                        const timestamp =
-                            data.timestamp ||
-                            "--";
+    // ======================================================
+    // CREATE HTML
+    // ======================================================
 
+    row.innerHTML = `
 
-                        const source =
-                            data.source ||
-                            "ESP32";
+        <td>
+            ${escapeHTML(timestamp)}
+        </td>
 
+        <td>
+            ${escapeHTML(temperature)}
+        </td>
 
-                        const online =
-                            data.online;
+        <td>
+            ${escapeHTML(humidity)}
+        </td>
 
+        <td>
+            ${escapeHTML(motion)}
+        </td>
 
-                        let deviceStatus =
-                            "OFFLINE";
+        <td>
+            <span class="history-status ${getStatusClass(status)}">
+                ${escapeHTML(status)}
+            </span>
+        </td>
 
+    `;
 
-                        if (
-                            online === true
-                        ) {
 
-                            deviceStatus =
-                                "ONLINE";
+    tbody.appendChild(
+        row
+    );
 
-                        }
+}
 
 
-                        row.innerHTML = `
+// ==========================================================
+// STATUS CLASS
+// ==========================================================
 
-                            <td>
-                                ${escapeHTML(
-                                    date
-                                )}
-                            </td>
+function getStatusClass(
+    status
+) {
 
-                            <td>
-                                ${escapeHTML(
-                                    time
-                                )}
-                            </td>
+    const value =
+        String(status)
+            .toLowerCase();
 
-                            <td>
-                                ${escapeHTML(
-                                    timestamp
-                                )}
-                            </td>
 
-                            <td>
-                                ${escapeHTML(
-                                    source
-                                )}
-                            </td>
+    if (
+        value === "danger"
+    ) {
 
-                            <td>
+        return "danger";
 
-                                <span
-                                    class="history-status
-                                    ${
-                                        online === true
-                                            ? "normal"
-                                            : "danger"
-                                    }">
+    }
 
-                                    ${deviceStatus}
 
-                                </span>
+    if (
+        value === "warning"
+    ) {
 
-                            </td>
+        return "warning";
 
-                        `;
+    }
 
 
-                        historyBody.appendChild(
-                            row
-                        );
+    return "normal";
 
-                    }
-                );
+}
 
-            },
 
-            function (error) {
+// ==========================================================
+// TIMESTAMP FORMATTER
+// ==========================================================
 
-                console.error(
-                    "History Firebase error:",
-                    error
-                );
+function formatTimestamp(
+    timestamp
+) {
 
-
-                historyBody.innerHTML = `
-
-                    <tr>
-
-                        <td
-                            colspan="5"
-                            style="
-                                text-align:center;
-                                color:#dc3545;
-                                padding:30px;
-                            ">
-
-                            ❌ Firebase Error:
-                            ${escapeHTML(
-                                error.message
-                            )}
-
-                        </td>
-
-                    </tr>
-
-                `;
-
-            }
+    const date =
+        new Date(
+            Number(timestamp)
         );
+
+
+    if (
+        isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return "Unknown";
+
+    }
+
+
+    return date.toLocaleString(
+        "en-PH"
+    );
 
 }
 
@@ -445,9 +609,10 @@ function searchTable() {
 
 
     const rows =
-        table.getElementsByTagName(
-            "tr"
-        );
+        table
+            .getElementsByTagName(
+                "tr"
+            );
 
 
     for (
@@ -456,25 +621,30 @@ function searchTable() {
         i++
     ) {
 
+        const row =
+            rows[i];
+
+
         const text =
-            rows[i].textContent ||
-            rows[i].innerText;
+            row.textContent ||
+            row.innerText ||
+            "";
 
 
         if (
             text
                 .toUpperCase()
-                .indexOf(filter) > -1
+                .includes(filter)
         ) {
 
-            rows[i].style.display =
+            row.style.display =
                 "";
 
         }
 
         else {
 
-            rows[i].style.display =
+            row.style.display =
                 "none";
 
         }
@@ -485,83 +655,66 @@ function searchTable() {
 
 
 // ==========================================================
-// SEARCH EVENT
-// ==========================================================
-
-function initializeSearch() {
-
-    const input =
-        document.getElementById(
-            "searchInput"
-        );
-
-
-    if (!input) {
-
-        return;
-
-    }
-
-
-    input.addEventListener(
-        "keyup",
-        searchTable
-    );
-
-}
-
-
-// ==========================================================
 // ESCAPE HTML
 // ==========================================================
+//
+// Prevents Firebase values from being interpreted as HTML.
+//
+// ==========================================================
 
-function escapeHTML(value) {
+function escapeHTML(
+    value
+) {
 
-    return String(value)
-
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-
-        .replace(
-            /</g,
-            "&lt;"
-        )
-
-        .replace(
-            />/g,
-            "&gt;"
-        )
-
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-
-        .replace(
-            /'/g,
-            "&#039;"
+    const div =
+        document.createElement(
+            "div"
         );
+
+
+    div.textContent =
+        value;
+
+
+    return div.innerHTML;
 
 }
 
 
 // ==========================================================
-// START HISTORY PAGE
+// INITIALIZE
 // ==========================================================
 
 document.addEventListener(
     "DOMContentLoaded",
     function () {
 
+        console.log(
+            "History page starting..."
+        );
+
+
         initializeLogout();
 
-        initializeFirebaseStatus();
 
-        initializeSearch();
+        initializeHistoryListener();
 
-        loadHistory();
+
+        console.log(
+            "History page ready."
+        );
 
     }
 );
+
+
+// ==========================================================
+// GLOBAL FUNCTIONS
+// ==========================================================
+
+window.logout =
+    logout;
+
+
+window.searchTable =
+    searchTable;
