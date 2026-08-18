@@ -11,13 +11,13 @@
 
     <title>Smart Storage - History</title>
 
-    <link
-        rel="stylesheet"
-        href="style.css">
+    <link rel="stylesheet" href="style.css">
 
 </head>
 
+
 <body>
+
 
 <!-- =====================================================
      SIDEBAR
@@ -31,9 +31,7 @@
         🏠 Dashboard
     </a>
 
-    <a
-        href="history.html"
-        class="active">
+    <a href="history.html" class="active">
         📋 History
     </a>
 
@@ -57,6 +55,7 @@
         ℹ️ About
     </a>
 
+
     <button
         type="button"
         class="logout-btn"
@@ -69,22 +68,24 @@
 </div>
 
 
+
 <!-- =====================================================
      MAIN CONTENT
 ===================================================== -->
 
 <div class="main-content">
 
+
     <div class="top-bar">
 
         <div>
 
             <h1>
-                History
+                Sensor History
             </h1>
 
             <p>
-                ESP32 Real-Time Activity Logs
+                ESP32 Real-Time Data Logs
             </p>
 
         </div>
@@ -103,107 +104,75 @@
     </div>
 
 
+
     <!-- =================================================
          FIREBASE STATUS
-    ================================================== -->
+    ================================================= -->
 
     <div
         id="firebaseStatus"
         class="status-card"
-        style="
-            padding:15px;
-            margin-bottom:20px;
-        ">
+        style="padding:15px;margin-bottom:20px;">
 
         ● Connecting to Firebase...
 
     </div>
 
 
+
     <!-- =================================================
-         HISTORY CARD
-    ================================================== -->
+         SEARCH
+    ================================================= -->
 
     <div class="chart-card">
 
-        <div
+        <h2>
+            📋 ESP32 Data History
+        </h2>
+
+
+        <input
+            type="text"
+            id="historySearch"
+            placeholder="Search date, time, status, or source..."
             style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                gap:15px;
-                flex-wrap:wrap;
+                width:100%;
+                padding:12px;
+                margin:15px 0;
+                border:1px solid #ccc;
+                border-radius:8px;
+                box-sizing:border-box;
             ">
 
-            <div>
 
-                <h2>
-                    📋 ESP32 Activity Logs
-                </h2>
+        <div style="overflow-x:auto;">
 
-                <p
-                    style="
-                        color:#666;
-                        margin-top:5px;
-                    ">
-
-                    These records are automatically
-                    created by the ESP32.
-
-                </p>
-
-            </div>
-
-
-            <input
-                type="text"
-                id="searchInput"
-                placeholder="🔍 Search history..."
+            <table
+                id="historyTable"
                 style="
-                    padding:12px;
-                    border:1px solid #ccc;
-                    border-radius:8px;
-                    min-width:220px;
+                    width:100%;
+                    border-collapse:collapse;
                 ">
-
-        </div>
-
-
-        <!-- =================================================
-             TABLE
-        ================================================== -->
-
-        <div
-            style="
-                overflow-x:auto;
-                margin-top:25px;
-            ">
-
-            <table id="historyTable">
 
                 <thead>
 
                     <tr>
 
-                        <th>
-                            Date
-                        </th>
+                        <th>Date</th>
 
-                        <th>
-                            Time
-                        </th>
+                        <th>Time</th>
 
-                        <th>
-                            Timestamp
-                        </th>
+                        <th>Timestamp</th>
 
-                        <th>
-                            Source
-                        </th>
+                        <th>Temperature</th>
 
-                        <th>
-                            Device Status
-                        </th>
+                        <th>Humidity</th>
+
+                        <th>Motion</th>
+
+                        <th>Status</th>
+
+                        <th>Source</th>
 
                     </tr>
 
@@ -212,30 +181,30 @@
 
                 <tbody id="historyBody">
 
-                    <tr>
-
-                        <td
-                            colspan="5"
-                            style="
-                                text-align:center;
-                                padding:30px;
-                            ">
-
-                            Waiting for ESP32 logs...
-
-                        </td>
-
-                    </tr>
-
                 </tbody>
 
             </table>
 
         </div>
 
+
+        <p
+            id="historyMessage"
+            style="
+                text-align:center;
+                padding:20px;
+                color:#666;
+            ">
+
+            Waiting for ESP32 data...
+
+        </p>
+
     </div>
 
+
 </div>
+
 
 
 <!-- =====================================================
@@ -249,18 +218,15 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
 
 
-<!-- =====================================================
-     FIREBASE CONFIG
-===================================================== -->
+<!-- YOUR FIREBASE CONFIG -->
 
 <script src="firebase-config.js"></script>
 
 
-<!-- =====================================================
-     HISTORY JAVASCRIPT
-===================================================== -->
+<!-- HISTORY SCRIPT -->
 
 <script src="history.js"></script>
+
 
 </body>
 
