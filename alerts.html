@@ -11,9 +11,7 @@
 
     <title>Smart Storage - Alerts</title>
 
-    <link
-        rel="stylesheet"
-        href="style.css">
+    <link rel="stylesheet" href="style.css">
 
 </head>
 
@@ -40,12 +38,8 @@
     </a>
 
 
-    <a
-        href="alerts.html"
-        class="active">
-
+    <a href="alerts.html" class="active">
         🚨 Alerts
-
     </a>
 
 
@@ -89,10 +83,6 @@
 <div class="main-content">
 
 
-    <!-- =================================================
-         TOP BAR
-    ================================================== -->
-
     <div class="top-bar">
 
         <div>
@@ -102,7 +92,7 @@
             </h1>
 
             <p>
-                ESP32 Device Alerts & Activity
+                Smart Storage ESP32 Alerts
             </p>
 
         </div>
@@ -124,7 +114,7 @@
 
     <!-- =================================================
          FIREBASE STATUS
-    ================================================== -->
+    ================================================= -->
 
     <div
         id="firebaseStatus"
@@ -141,8 +131,8 @@
 
 
     <!-- =================================================
-         ESP32 CONNECTION STATUS
-    ================================================== -->
+         CURRENT ALERT STATUS
+    ================================================= -->
 
     <div class="card-grid">
 
@@ -150,22 +140,12 @@
         <div class="card">
 
             <h3>
-                📡 ESP32
+                🌡 Temperature
             </h3>
 
-
-            <h1 id="espStatus">
-
-                Checking...
-
+            <h1 id="alertTemperature">
+                -- °C
             </h1>
-
-
-            <p id="espLastSeen">
-
-                Waiting for ESP32...
-
-            </p>
 
         </div>
 
@@ -174,20 +154,12 @@
         <div class="card">
 
             <h3>
-                📋 Activity
+                💧 Humidity
             </h3>
 
-
-            <h1 id="activityCount">
-
-                0
-
+            <h1 id="alertHumidity">
+                -- %
             </h1>
-
-
-            <p>
-                Logged events
-            </p>
 
         </div>
 
@@ -196,22 +168,15 @@
         <div class="card">
 
             <h3>
-                🚨 Alerts
+                🚶 Motion
             </h3>
 
-
-            <h1 id="alertCount">
-
-                0
-
+            <h1 id="alertMotion">
+                Waiting...
             </h1>
 
-
-            <p>
-                Current alerts
-            </p>
-
         </div>
+
 
     </div>
 
@@ -219,33 +184,24 @@
 
     <!-- =================================================
          CURRENT ALERT
-    ================================================== -->
+    ================================================= -->
 
     <div
         id="currentAlert"
-        class="status-card"
-        style="
-            margin-top:20px;
-            padding:20px;
-        ">
+        class="status-card">
 
         <h2>
-            🔔 Current Device Status
+            🚨 Current Status
         </h2>
 
 
-        <h1 id="alertTitle">
-
+        <h1 id="alertStatus">
             Waiting for ESP32...
-
         </h1>
 
 
-        <p id="alertDescription">
-
-            The system is waiting for the ESP32
-            to send its first status update.
-
+        <p id="alertTimestamp">
+            No data received yet.
         </p>
 
     </div>
@@ -254,122 +210,32 @@
 
     <!-- =================================================
          ALERT LOG
-    ================================================== -->
+    ================================================= -->
 
-    <div
-        class="chart-card"
-        style="margin-top:20px;">
+    <div class="chart-card">
+
+        <h2>
+            🚨 Alert Log
+        </h2>
+
 
         <div
-            style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                gap:15px;
-                flex-wrap:wrap;
-            ">
-
-            <div>
-
-                <h2>
-                    🚨 Device Alert Log
-                </h2>
-
-
-                <p
-                    style="
-                        color:#666;
-                        margin-top:5px;
-                    ">
-
-                    Real-time logs received from
-                    the ESP32 through Firebase.
-
-                </p>
-
-            </div>
-
-
-            <button
-                type="button"
-                id="clearAlertsButton"
-                class="save-btn">
-
-                🗑 Clear Display
-
-            </button>
+            id="alertsContainer">
 
         </div>
 
 
-
-        <!-- =================================================
-             ALERT TABLE
-        ================================================== -->
-
-        <div
+        <p
+            id="alertsMessage"
             style="
-                overflow-x:auto;
-                margin-top:25px;
+                text-align:center;
+                padding:20px;
+                color:#666;
             ">
 
+            Waiting for ESP32 alerts...
 
-            <table id="alertsTable">
-
-
-                <thead>
-
-                    <tr>
-
-                        <th>
-                            Date
-                        </th>
-
-                        <th>
-                            Time
-                        </th>
-
-                        <th>
-                            Event
-                        </th>
-
-                        <th>
-                            Source
-                        </th>
-
-                        <th>
-                            Status
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-
-
-                <tbody id="alertsBody">
-
-                    <tr>
-
-                        <td
-                            colspan="5"
-                            style="
-                                text-align:center;
-                                padding:30px;
-                            ">
-
-                            📡 Waiting for ESP32 alerts...
-
-                        </td>
-
-                    </tr>
-
-                </tbody>
-
-
-            </table>
-
-        </div>
+        </p>
 
     </div>
 
@@ -389,18 +255,12 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
 
 
-
-<!-- =====================================================
-     FIREBASE CONFIG
-===================================================== -->
+<!-- FIREBASE CONFIG -->
 
 <script src="firebase-config.js"></script>
 
 
-
-<!-- =====================================================
-     ALERTS JAVASCRIPT
-===================================================== -->
+<!-- ALERTS SCRIPT -->
 
 <script src="alerts.js"></script>
 
