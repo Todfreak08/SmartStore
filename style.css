@@ -1006,5 +1006,147 @@ button:hover {
 
         transform: translateX(28px);
     }
+     /* =========================================================
+   HISTORY TABLE
+========================================================= */
 
+#historyTable th {
+
+    background: #0b2447;
+
+    color: white;
+
+    padding: 14px 12px;
+
+    text-align: center;
+
+    white-space: nowrap;
+
+}
+
+
+#historyTable td {
+
+    padding: 13px 12px;
+
+    border-bottom: 1px solid #e0e0e0;
+
+    text-align: center;
+
+    white-space: nowrap;
+
+}
+
+
+#historyTable tbody tr:hover {
+
+    background: #f5f8fc;
+
+}
+
+
+/* =========================================================
+   HISTORY STATUS
+========================================================= */
+
+.history-on {
+
+    display: inline-block;
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    background: #d4edda;
+
+    color: #155724;
+
+    font-weight: bold;
+
+}
+
+
+.history-off {
+
+    display: inline-block;
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    background: #eeeeee;
+
+    color: #666;
+
+    font-weight: bold;
+
+}
+
+
+.history-warning {
+
+    display: inline-block;
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    background: #fff3cd;
+
+    color: #856404;
+
+    font-weight: bold;
+
+}
+
+
+.history-danger {
+
+    display: inline-block;
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    background: #f8d7da;
+
+    color: #721c24;
+
+    font-weight: bold;
+
+}
+
+
+/* =========================================================
+   MOBILE HISTORY
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .main-content {
+
+        margin-left: 0;
+
+        padding: 15px;
+
+    }
+
+
+    #historyTable {
+
+        min-width: 1100px;
+
+    }
+
+
+    #historyTable th,
+    #historyTable td {
+
+        font-size: 13px;
+
+        padding: 10px;
+
+    }
+
+}
 }
