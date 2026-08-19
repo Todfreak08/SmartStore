@@ -1,69 +1,58 @@
 // =====================================================
-// DASHBOARD.JS
 // SMART STORAGE MONITORING SYSTEM
+// DASHBOARD JAVASCRIPT
 // =====================================================
 
 
 // =====================================================
-// CHECK FIREBASE
-// =====================================================
-
-if (typeof firebase === "undefined") {
-
-    console.error("Firebase library was not loaded.");
-
-}
-
-
-// =====================================================
-// FIREBASE DATABASE
+// FIREBASE
 // =====================================================
 
 const database = firebase.database();
 
 
 // =====================================================
-// DOM ELEMENT HELPER
+// HELPER FUNCTION
 // =====================================================
 
 function setText(id, value) {
 
-    const element = document.getElementById(id);
+    const element =
+        document.getElementById(id);
 
     if (element) {
-        element.textContent = value;
+
+        element.textContent =
+            value;
+
     }
 
 }
 
 
 // =====================================================
-// FIREBASE CONNECTION STATUS
+// FIREBASE CONNECTION
 // =====================================================
 
-const connectedRef = database.ref(".info/connected");
+const connectedRef =
+    database.ref(".info/connected");
 
 
 connectedRef.on("value", (snapshot) => {
 
-    const firebaseStatus =
-        document.getElementById("firebaseStatus");
-
-
-    if (!firebaseStatus) {
-        return;
-    }
-
-
     if (snapshot.val() === true) {
 
-        firebaseStatus.textContent =
-            "🟢 Firebase Connected";
+        setText(
+            "firebaseStatus",
+            "🟢 Firebase Connected"
+        );
 
     } else {
 
-        firebaseStatus.textContent =
-            "🔴 Firebase Disconnected";
+        setText(
+            "firebaseStatus",
+            "🔴 Firebase Disconnected"
+        );
 
     }
 
@@ -83,20 +72,11 @@ firebase.auth().onAuthStateChanged((user) => {
             user.email || "User"
         );
 
-        console.log(
-            "Logged in as:",
-            user.email
-        );
-
     } else {
 
         setText(
             "userEmail",
             "Not logged in"
-        );
-
-        console.log(
-            "No user logged in."
         );
 
     }
@@ -145,24 +125,172 @@ if (logoutButton) {
 
 
 // =====================================================
-// ESP32 SENSOR DATA
+// COLLECTION CONTROL
 // =====================================================
 //
 // Firebase:
 //
-// sensor/
-//     motion
-//     temperature
-//     humidity
-//     status
+// collection/
+//     enabled
+//
+// true  = START
+// false = STOP
 //
 // =====================================================
 
-const sensorRef =
-    database.ref("sensor");
+const collectionRef =
+    database.ref("collection/enabled");
 
 
-sensorRef.on(
+// =====================================================
+// START COLLECTION
+// =====================================================
+
+const startButton =
+    document.getElementById(
+        "startCollection"
+    );
+
+
+if (startButton) {
+
+    startButton.addEventListener(
+        "click",
+        () => {
+
+            collectionRef
+                .set(true)
+                .then(() => {
+
+                    console.log(
+                        "Collection started."
+                    );
+
+                })
+                .catch((error) => {
+
+                    console.error(
+                        "Start error:",
+                        error
+                    );
+
+                    alert(
+                        "Unable to start collection."
+                    );
+
+                });
+
+        }
+    );
+
+}
+
+
+// =====================================================
+// STOP COLLECTION
+// =====================================================
+
+const stopButton =
+    document.getElementById(
+        "stopCollection"
+    );
+
+
+if (stopButton) {
+
+    stopButton.addEventListener(
+        "click",
+        () => {
+
+            collectionRef
+                .set(false)
+                .then(() => {
+
+                    console.log(
+                        "Collection stopped."
+                    );
+
+                })
+                .catch((error) => {
+
+                    console.error(
+                        "Stop error:",
+                        error
+                    );
+
+                    alert(
+                        "Unable to stop collection."
+                    );
+
+                });
+
+        }
+    );
+
+}
+
+
+// =====================================================
+// COLLECTION STATUS
+// =====================================================
+
+collectionRef.on(
+    "value",
+    (snapshot) => {
+
+        const enabled =
+            snapshot.val() === true;
+
+
+        if (enabled) {
+
+            setText(
+                "collectionStatus",
+                "RUNNING"
+            );
+
+            setText(
+                "summaryCollection",
+                "RUNNING"
+            );
+
+        } else {
+
+            setText(
+                "collectionStatus",
+                "STOPPED"
+            );
+
+            setText(
+                "summaryCollection",
+                "STOPPED"
+            );
+
+        }
+
+    }
+);
+
+
+// =====================================================
+// READ COLLECTED DATA
+// =====================================================
+//
+// Firebase:
+//
+// collection/
+//     data/
+//         intValue
+//         floatValue
+//         stringValue
+//
+// =====================================================
+
+const dataRef =
+    database.ref("collection/data");
+
+
+dataRef.on(
     "value",
     (snapshot) => {
 
@@ -173,47 +301,7 @@ sensorRef.on(
         if (!data) {
 
             console.log(
-                "No sensor data found."
-            );
-
-            setText(
-                "temperature",
-                "--"
-            );
-
-            setText(
-                "humidity",
-                "--"
-            );
-
-            setText(
-                "motion",
-                "--"
-            );
-
-            setText(
-                "sensorStatus",
-                "--"
-            );
-
-            setText(
-                "summaryTemperature",
-                "--"
-            );
-
-            setText(
-                "summaryHumidity",
-                "--"
-            );
-
-            setText(
-                "summaryMotion",
-                "--"
-            );
-
-            setText(
-                "summaryStatus",
-                "--"
+                "No collection data."
             );
 
             return;
@@ -222,145 +310,94 @@ sensorRef.on(
 
 
         // =================================================
-        // MOTION
         // INT
         // =================================================
 
-        const motion =
-            Number(data.motion);
+        if (
+            data.intValue !== undefined &&
+            data.intValue !== null
+        ) {
 
+            const intValue =
+                parseInt(
+                    data.intValue
+                );
 
-        if (motion === 1) {
 
             setText(
-                "motion",
-                "Detected"
+                "intValue",
+                intValue
             );
 
-            setText(
-                "summaryMotion",
-                "Motion Detected"
-            );
-
-        } else {
 
             setText(
-                "motion",
-                "No Motion"
-            );
-
-            setText(
-                "summaryMotion",
-                "No Motion"
+                "summaryInt",
+                intValue
             );
 
         }
 
 
         // =================================================
-        // TEMPERATURE
         // FLOAT
         // =================================================
 
         if (
-            data.temperature !== undefined &&
-            data.temperature !== null
+            data.floatValue !== undefined &&
+            data.floatValue !== null
         ) {
 
-            const temperature =
-                Number(data.temperature);
-
-
-            if (!isNaN(temperature)) {
-
-                const temperatureText =
-                    temperature.toFixed(2) +
-                    " °C";
-
-
-                setText(
-                    "temperature",
-                    temperatureText
+            const floatValue =
+                parseFloat(
+                    data.floatValue
                 );
 
 
-                setText(
-                    "summaryTemperature",
-                    temperatureText
-                );
+            setText(
+                "floatValue",
+                floatValue.toFixed(2)
+            );
 
-            }
+
+            setText(
+                "summaryFloat",
+                floatValue.toFixed(2)
+            );
 
         }
 
 
         // =================================================
-        // HUMIDITY
-        // FLOAT
-        // =================================================
-
-        if (
-            data.humidity !== undefined &&
-            data.humidity !== null
-        ) {
-
-            const humidity =
-                Number(data.humidity);
-
-
-            if (!isNaN(humidity)) {
-
-                const humidityText =
-                    humidity.toFixed(2) +
-                    " %";
-
-
-                setText(
-                    "humidity",
-                    humidityText
-                );
-
-
-                setText(
-                    "summaryHumidity",
-                    humidityText
-                );
-
-            }
-
-        }
-
-
-        // =================================================
-        // STATUS
         // STRING
         // =================================================
 
         if (
-            data.status !== undefined &&
-            data.status !== null
+            data.stringValue !== undefined &&
+            data.stringValue !== null
         ) {
 
-            const status =
-                String(data.status);
+            const stringValue =
+                String(
+                    data.stringValue
+                );
 
 
             setText(
-                "sensorStatus",
-                status
+                "stringValue",
+                stringValue
             );
 
 
             setText(
-                "summaryStatus",
-                status
+                "summaryString",
+                stringValue
             );
 
         }
 
 
         // =================================================
-        // UPDATE LAST DATA RECEIVED
+        // LAST UPDATE
         // =================================================
 
         const now =
@@ -369,7 +406,6 @@ sensorRef.on(
 
         setText(
             "lastUpdate",
-            "Last data received: " +
             now.toLocaleString()
         );
 
@@ -386,20 +422,14 @@ sensorRef.on(
 
         setText(
             "deviceSource",
-            "Receiving data from ESP32"
-        );
-
-
-        console.log(
-            "Sensor data:",
-            data
+            "ESP32 is connected"
         );
 
     },
     (error) => {
 
         console.error(
-            "Sensor data error:",
+            "Data error:",
             error
         );
 
@@ -408,412 +438,36 @@ sensorRef.on(
 
 
 // =====================================================
-// DEVICE INFORMATION
+// RECORD COUNT
 // =====================================================
 //
 // Firebase:
 //
-// device/
-//     status
-//     wifiSignal
-//     ip
-//     dateTime
+// collection/
+//     records
+//
+// The ESP32 increments this number
+// every time data is collected.
 //
 // =====================================================
 
-const deviceRef =
-    database.ref("device");
+const recordCountRef =
+    database.ref("collection/recordCount");
 
 
-deviceRef.on(
+recordCountRef.on(
     "value",
     (snapshot) => {
 
-        const data =
-            snapshot.val();
-
-
-        if (!data) {
-
-            console.log(
-                "No device information found."
-            );
-
-            return;
-
-        }
-
-
-        // =================================================
-        // DEVICE STATUS
-        // =================================================
-
-        if (
-            data.status !== undefined &&
-            data.status !== null
-        ) {
-
-            setText(
-                "deviceStatus",
-                String(data.status)
-            );
-
-        }
-
-
-        // =================================================
-        // WIFI SIGNAL
-        // =================================================
-
-        if (
-            data.wifiSignal !== undefined &&
-            data.wifiSignal !== null
-        ) {
-
-            setText(
-                "wifiSignal",
-                String(data.wifiSignal)
-            );
-
-        }
-
-
-        // =================================================
-        // ESP32 IP
-        // =================================================
-
-        if (
-            data.ip !== undefined &&
-            data.ip !== null
-        ) {
-
-            setText(
-                "deviceIP",
-                String(data.ip)
-            );
-
-        }
-
-
-        // =================================================
-        // ESP32 DATE/TIME
-        // =================================================
-
-        if (
-            data.dateTime !== undefined &&
-            data.dateTime !== null
-        ) {
-
-            setText(
-                "deviceDateTime",
-                String(data.dateTime)
-            );
-
-        }
-
-
-        console.log(
-            "Device data:",
-            data
-        );
-
-    },
-    (error) => {
-
-        console.error(
-            "Device data error:",
-            error
-        );
-
-    }
-);
-
-
-// =====================================================
-// DEVICE CONTROLS
-// =====================================================
-//
-// Firebase:
-//
-// controls/
-//     light
-//     fan
-//     door
-//     alarm
-//
-// =====================================================
-
-
-// =====================================================
-// LIGHT
-// =====================================================
-
-const lightSwitch =
-    document.getElementById("lightSwitch");
-
-
-const lightRef =
-    database.ref("controls/light");
-
-
-if (lightSwitch) {
-
-    lightSwitch.addEventListener(
-        "change",
-        () => {
-
-            const value =
-                lightSwitch.checked;
-
-
-            lightRef.set(value)
-                .catch((error) => {
-
-                    console.error(
-                        "Light control error:",
-                        error
-                    );
-
-                });
-
-        }
-    );
-
-}
-
-
-lightRef.on(
-    "value",
-    (snapshot) => {
-
-        const value =
-            snapshot.val() === true;
-
-
-        if (lightSwitch) {
-
-            lightSwitch.checked =
-                value;
-
-        }
+        const count =
+            parseInt(
+                snapshot.val()
+            ) || 0;
 
 
         setText(
-            "lightStatus",
-            value ? "ON" : "OFF"
-        );
-
-
-        setText(
-            "currentLight",
-            value ? "ON" : "OFF"
-        );
-
-    }
-);
-
-
-// =====================================================
-// FAN
-// =====================================================
-
-const fanSwitch =
-    document.getElementById("fanSwitch");
-
-
-const fanRef =
-    database.ref("controls/fan");
-
-
-if (fanSwitch) {
-
-    fanSwitch.addEventListener(
-        "change",
-        () => {
-
-            const value =
-                fanSwitch.checked;
-
-
-            fanRef.set(value)
-                .catch((error) => {
-
-                    console.error(
-                        "Fan control error:",
-                        error
-                    );
-
-                });
-
-        }
-    );
-
-}
-
-
-fanRef.on(
-    "value",
-    (snapshot) => {
-
-        const value =
-            snapshot.val() === true;
-
-
-        if (fanSwitch) {
-
-            fanSwitch.checked =
-                value;
-
-        }
-
-
-        setText(
-            "fanStatus",
-            value ? "ON" : "OFF"
-        );
-
-
-        setText(
-            "currentFan",
-            value ? "ON" : "OFF"
-        );
-
-    }
-);
-
-
-// =====================================================
-// DOOR
-// =====================================================
-
-const doorSwitch =
-    document.getElementById("doorSwitch");
-
-
-const doorRef =
-    database.ref("controls/door");
-
-
-if (doorSwitch) {
-
-    doorSwitch.addEventListener(
-        "change",
-        () => {
-
-            const value =
-                doorSwitch.checked;
-
-
-            doorRef.set(value)
-                .catch((error) => {
-
-                    console.error(
-                        "Door control error:",
-                        error
-                    );
-
-                });
-
-        }
-    );
-
-}
-
-
-doorRef.on(
-    "value",
-    (snapshot) => {
-
-        const value =
-            snapshot.val() === true;
-
-
-        if (doorSwitch) {
-
-            doorSwitch.checked =
-                value;
-
-        }
-
-
-        setText(
-            "doorStatus",
-            value ? "OPEN" : "CLOSED"
-        );
-
-
-        setText(
-            "currentDoor",
-            value ? "OPEN" : "CLOSED"
-        );
-
-    }
-);
-
-
-// =====================================================
-// ALARM
-// =====================================================
-
-const alarmSwitch =
-    document.getElementById("alarmSwitch");
-
-
-const alarmRef =
-    database.ref("controls/alarm");
-
-
-if (alarmSwitch) {
-
-    alarmSwitch.addEventListener(
-        "change",
-        () => {
-
-            const value =
-                alarmSwitch.checked;
-
-
-            alarmRef.set(value)
-                .catch((error) => {
-
-                    console.error(
-                        "Alarm control error:",
-                        error
-                    );
-
-                });
-
-        }
-    );
-
-}
-
-
-alarmRef.on(
-    "value",
-    (snapshot) => {
-
-        const value =
-            snapshot.val() === true;
-
-
-        if (alarmSwitch) {
-
-            alarmSwitch.checked =
-                value;
-
-        }
-
-
-        setText(
-            "alarmStatus",
-            value ? "ON" : "OFF"
-        );
-
-
-        setText(
-            "currentAlarm",
-            value ? "ON" : "OFF"
+            "recordCount",
+            count
         );
 
     }
@@ -829,5 +483,5 @@ console.log(
 );
 
 console.log(
-    "Waiting for ESP32 sensor data..."
+    "Waiting for ESP32..."
 );
