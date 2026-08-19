@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+here<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -246,14 +246,14 @@
 
 
     <!-- =================================================
-         DEVICE CONTROLS
+         SENSOR MONITORING
     ================================================== -->
 
     <div class="chart-card">
 
 
         <h2>
-            🎛 Device Controls
+            🌡️ Environmental Monitoring
         </h2>
 
 
@@ -264,666 +264,112 @@
             "
         >
 
-            Control commands are sent through
-            Firebase to the ESP32.
+            Real-time data collected from the ESP32
+            sensors.
 
         </p>
 
-
-
-        <!-- =============================================
-             LIGHT
-        ============================================== -->
-
-        <div class="control-row">
-
-
-            <div class="control-info">
-
-
-                <div class="control-icon">
-                    💡
-                </div>
-
-
-                <div>
-
-                    <strong>
-                        Storage Light
-                    </strong>
-
-
-                    <small id="lightStatus">
-                        OFF
-                    </small>
-
-                </div>
-
-
-            </div>
-
-
-            <label class="switch">
-
-
-                <input
-                    type="checkbox"
-                    id="lightSwitch"
-                >
-
-
-                <span class="slider"></span>
-
-
-            </label>
-
-
-        </div>
-
-
-
-        <!-- =============================================
-             FAN
-        ============================================== -->
-
-        <div class="control-row">
-
-
-            <div class="control-info">
-
-
-                <div class="control-icon">
-                    🌀
-                </div>
-
-
-                <div>
-
-                    <strong>
-                        Ventilation Fan
-                    </strong>
-
-
-                    <small id="fanStatus">
-                        OFF
-                    </small>
-
-                </div>
-
-
-            </div>
-
-
-            <label class="switch">
-
-
-                <input
-                    type="checkbox"
-                    id="fanSwitch"
-                >
-
-
-                <span class="slider"></span>
-
-
-            </label>
-
-
-        </div>
-
-
-
-        <!-- =============================================
-             DOOR
-        ============================================== -->
-
-        <div class="control-row">
-
-
-            <div class="control-info">
-
-
-                <div class="control-icon">
-                    🚪
-                </div>
-
-
-                <div>
-
-                    <strong>
-                        Storage Door
-                    </strong>
-
-
-                    <small id="doorStatus">
-                        CLOSED
-                    </small>
-
-                </div>
-
-
-            </div>
-
-
-            <label class="switch">
-
-
-                <input
-                    type="checkbox"
-                    id="doorSwitch"
-                >
-
-
-                <span class="slider"></span>
-
-
-            </label>
-
-
-        </div>
-
-
-
-        <!-- =============================================
-             ALARM
-        ============================================== -->
-
-        <div class="control-row">
-
-
-            <div class="control-info">
-
-
-                <div class="control-icon">
-                    🚨
-                </div>
-
-
-                <div>
-
-                    <strong>
-                        Security Alarm
-                    </strong>
-
-
-                    <small id="alarmStatus">
-                        OFF
-                    </small>
-
-                </div>
-
-
-            </div>
-
-
-            <label class="switch">
-
-
-                <input
-                    type="checkbox"
-                    id="alarmSwitch"
-                >
-
-
-                <span class="slider"></span>
-
-
-            </label>
-
-
-        </div>
-
-
-    </div>
-
-
-
-    <!-- =================================================
-         CURRENT DEVICE STATE
-    ================================================== -->
-
-    <div class="chart-card">
-
-
-        <h2>
-            📊 Current ESP32 State
-        </h2>
 
 
         <div class="card-grid">
 
 
-            <div class="card">
-
-                <h3>
-                    💡 Light
-                </h3>
-
-                <h2 id="currentLight">
-                    OFF
-                </h2>
-
-            </div>
-
+            <!-- =========================================
+                 TEMPERATURE
+            ========================================== -->
 
             <div class="card">
 
                 <h3>
-                    🌀 Fan
+                    🌡️ Temperature
                 </h3>
 
-                <h2 id="currentFan">
-                    OFF
-                </h2>
+
+                <h1 id="temperature">
+                    --
+                </h1>
+
+
+                <p>
+                    Celsius (°C)
+                </p>
 
             </div>
 
+
+
+            <!-- =========================================
+                 HUMIDITY
+            ========================================== -->
 
             <div class="card">
 
                 <h3>
-                    🚪 Door
+                    💧 Humidity
                 </h3>
 
-                <h2 id="currentDoor">
-                    CLOSED
-                </h2>
+
+                <h1 id="humidity">
+                    --
+                </h1>
+
+
+                <p>
+                    Relative Humidity (%)
+                </p>
 
             </div>
 
+
+
+            <!-- =========================================
+                 MOTION
+            ========================================== -->
 
             <div class="card">
 
                 <h3>
-                    🚨 Alarm
+                    🚶 Motion
                 </h3>
 
-                <h2 id="currentAlarm">
-                    OFF
+
+                <h1 id="motion">
+                    --
+                </h1>
+
+
+                <p>
+                    PIR Motion Sensor
+                </p>
+
+            </div>
+
+
+
+            <!-- =========================================
+                 SENSOR STATUS
+            ========================================== -->
+
+            <div class="card">
+
+                <h3>
+                    📊 Sensor Status
+                </h3>
+
+
+                <h2 id="sensorStatus">
+                    --
                 </h2>
+
+
+                <p>
+                    Current condition
+                </p>
 
             </div>
 
 
         </div>
-
-
-    </div>
-
-
-
-    <!-- =================================================
-         SYSTEM INFORMATION
-    ================================================== -->
-
-    <div class="chart-card">
-
-
-        <h2>
-            ℹ️ System Information
-        </h2>
-
-
-        <div
-            style="
-            line-height:2;
-            "
-        >
-
-            <p>
-
-                <strong>
-                    Controller:
-                </strong>
-
-                ESP32
-
-            </p>
-
-
-            <p>
-
-                <strong>
-                    Database:
-                </strong>
-
-                Firebase Realtime Database
-
-            </p>
-
-
-            <p>
-
-                <strong>
-                    Sensors:
-                </strong>
-
-                None
-
-            </p>
-
-
-            <p>
-
-                <strong>
-                    SD Card:
-                </strong>
-
-                None
-
-            </p>
-
-
-            <p>
-
-                <strong>
-                    Data Source:
-                </strong>
-
-                ESP32
-
-            </p>
-
-
-            <p>
-
-                <strong>
-                    Communication:
-                </strong>
-
-                Wi-Fi
-
-            </p>
-
-        </div>
-
-
-    </div>
-
-
-
-</div>
-
-
-
-<!-- =====================================================
-     FIREBASE LIBRARIES
-===================================================== -->
-
-<script
-    src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"
-></script>
-
-
-<script
-    src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"
-></script>
-
-
-<script
-    src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"
-></script>
-
-
-
-<!-- =====================================================
-     FIREBASE CONFIG
-===================================================== -->
-
-<script src="firebase-config.js"></script>
-
-
-
-<!-- =====================================================
-     DASHBOARD JAVASCRIPT
-===================================================== -->
-
-<script src="dashboard.js"></script>
-
-
-</body>
-
-</html><!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>
-        Smart Storage Monitoring System
-    </title>
-
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
-
-</head>
-
-
-<body>
-
-
-<!-- =====================================================
-     SIDEBAR
-===================================================== -->
-
-<div class="sidebar">
-
-    <h2>
-        📦 Smart Storage
-    </h2>
-
-
-    <a
-        href="dashboard.html"
-        class="active"
-    >
-        🏠 Dashboard
-    </a>
-
-
-    <a href="history.html">
-        📋 History
-    </a>
-
-
-    <a href="alerts.html">
-        🚨 Alerts
-    </a>
-
-
-    <a href="reports.html">
-        📊 Reports
-    </a>
-
-
-    <a href="settings.html">
-        ⚙️ Settings
-    </a>
-
-
-    <a href="profile.html">
-        👤 Profile
-    </a>
-
-
-    <a href="about.html">
-        ℹ️ About
-    </a>
-
-
-    <button
-        type="button"
-        class="logout-btn"
-        id="logoutButton"
-    >
-        🚪 Logout
-    </button>
-
-</div>
-
-
-
-<!-- =====================================================
-     MAIN CONTENT
-===================================================== -->
-
-<div class="main-content">
-
-
-    <!-- =================================================
-         TOP BAR
-    ================================================== -->
-
-    <div class="top-bar">
-
-
-        <div>
-
-            <h1>
-                Dashboard
-            </h1>
-
-            <p>
-                Smart Storage ESP32 Control Panel
-            </p>
-
-        </div>
-
-
-        <div class="user-card">
-
-            Logged in as:
-
-            <b id="userEmail">
-                Loading...
-            </b>
-
-        </div>
-
-
-    </div>
-
-
-
-    <!-- =================================================
-         FIREBASE CONNECTION
-    ================================================== -->
-
-    <div
-        id="firebaseStatus"
-        class="status-card"
-    >
-
-        🔄 Connecting to Firebase...
-
-    </div>
-
-
-
-    <!-- =================================================
-         ESP32 DEVICE STATUS
-    ================================================== -->
-
-    <div class="card-grid">
-
-
-        <!-- ESP32 STATUS -->
-
-        <div class="card">
-
-            <h3>
-                📡 ESP32 Status
-            </h3>
-
-
-            <h1 id="deviceStatus">
-                OFFLINE
-            </h1>
-
-
-            <p id="deviceSource">
-                Waiting for ESP32...
-            </p>
-
-        </div>
-
-
-
-        <!-- WIFI -->
-
-        <div class="card">
-
-            <h3>
-                📶 Wi-Fi Signal
-            </h3>
-
-
-            <h1 id="wifiSignal">
-                --
-            </h1>
-
-
-            <p>
-                ESP32 connection
-            </p>
-
-        </div>
-
-
-
-        <!-- IP -->
-
-        <div class="card">
-
-            <h3>
-                🌐 ESP32 IP
-            </h3>
-
-
-            <h2 id="deviceIP">
-                --
-            </h2>
-
-
-            <p>
-                Local network address
-            </p>
-
-        </div>
-
-
-    </div>
-
-
-
-    <!-- =================================================
-         DATE AND TIME
-    ================================================== -->
-
-    <div class="status-card">
-
-
-        <h2>
-            🕐 ESP32 Date & Time
-        </h2>
-
-
-        <h1 id="deviceDateTime">
-            Waiting for ESP32...
-        </h1>
-
-
-        <p id="lastUpdate">
-            No data received yet.
-        </p>
 
 
     </div>
@@ -1171,18 +617,21 @@
 
 
         <h2>
-            📊 Current ESP32 State
+            📊 Current Device State
         </h2>
 
 
         <div class="card-grid">
 
 
+            <!-- LIGHT -->
+
             <div class="card">
 
                 <h3>
                     💡 Light
                 </h3>
+
 
                 <h2 id="currentLight">
                     OFF
@@ -1191,11 +640,15 @@
             </div>
 
 
+
+            <!-- FAN -->
+
             <div class="card">
 
                 <h3>
                     🌀 Fan
                 </h3>
+
 
                 <h2 id="currentFan">
                     OFF
@@ -1204,11 +657,15 @@
             </div>
 
 
+
+            <!-- DOOR -->
+
             <div class="card">
 
                 <h3>
                     🚪 Door
                 </h3>
+
 
                 <h2 id="currentDoor">
                     CLOSED
@@ -1217,17 +674,102 @@
             </div>
 
 
+
+            <!-- ALARM -->
+
             <div class="card">
 
                 <h3>
                     🚨 Alarm
                 </h3>
 
+
                 <h2 id="currentAlarm">
                     OFF
                 </h2>
 
             </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =================================================
+         SENSOR DATA SUMMARY
+    ================================================== -->
+
+    <div class="chart-card">
+
+
+        <h2>
+            📋 Sensor Data Summary
+        </h2>
+
+
+        <div
+            style="
+            line-height:2;
+            "
+        >
+
+
+            <p>
+
+                <strong>
+                    🌡 Temperature:
+                </strong>
+
+                <span id="summaryTemperature">
+                    --
+                </span>
+
+            </p>
+
+
+
+            <p>
+
+                <strong>
+                    💧 Humidity:
+                </strong>
+
+                <span id="summaryHumidity">
+                    --
+                </span>
+
+            </p>
+
+
+
+            <p>
+
+                <strong>
+                    🚶 Motion:
+                </strong>
+
+                <span id="summaryMotion">
+                    --
+                </span>
+
+            </p>
+
+
+
+            <p>
+
+                <strong>
+                    📊 Status:
+                </strong>
+
+                <span id="summaryStatus">
+                    --
+                </span>
+
+            </p>
 
 
         </div>
@@ -1254,6 +796,7 @@
             line-height:2;
             "
         >
+
 
             <p>
 
@@ -1283,7 +826,52 @@
                     Sensors:
                 </strong>
 
-                None
+                PIR Motion Sensor,
+                DHT Temperature & Humidity Sensor
+
+            </p>
+
+
+            <p>
+
+                <strong>
+                    Temperature Type:
+                </strong>
+
+                Float
+
+            </p>
+
+
+            <p>
+
+                <strong>
+                    Humidity Type:
+                </strong>
+
+                Float
+
+            </p>
+
+
+            <p>
+
+                <strong>
+                    Motion Type:
+                </strong>
+
+                Integer
+
+            </p>
+
+
+            <p>
+
+                <strong>
+                    Status Type:
+                </strong>
+
+                String
 
             </p>
 
@@ -1319,6 +907,7 @@
                 Wi-Fi
 
             </p>
+
 
         </div>
 
