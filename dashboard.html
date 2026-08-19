@@ -10,14 +10,658 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>
-        Smart Storage Monitoring System
-    </title>
+    <title>Smart Storage Dashboard</title>
 
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
+
+    <!-- =====================================================
+         FIREBASE
+         ===================================================== -->
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+
+    <!-- =====================================================
+         CSS
+         ===================================================== -->
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+        }
+
+
+        body {
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    #fff8fc 0%,
+                    #ffe9f5 100%
+                );
+
+            color: #5c3150;
+
+        }
+
+
+        /* =================================================
+           HEADER
+           ================================================= */
+
+        .top-header {
+
+            width: 100%;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #c90072,
+                    #df1681
+                );
+
+            color: white;
+
+            padding: 18px 30px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            box-shadow:
+                0 3px 12px
+                rgba(180, 0, 100, 0.25);
+
+        }
+
+
+        .brand {
+
+            font-size: 24px;
+
+            font-weight: 700;
+
+            letter-spacing: 0.5px;
+
+        }
+
+
+        .header-right {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 18px;
+
+            font-size: 14px;
+
+        }
+
+
+        #firebaseStatus {
+
+            font-weight: 600;
+
+        }
+
+
+        #userEmail {
+
+            opacity: 0.9;
+
+        }
+
+
+        /* =================================================
+           MAIN
+           ================================================= */
+
+        .dashboard {
+
+            width: 94%;
+
+            max-width: 1400px;
+
+            margin: 25px auto 50px auto;
+
+        }
+
+
+        /* =================================================
+           PAGE TITLE
+           ================================================= */
+
+        .page-title {
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .page-title h1 {
+
+            margin: 0;
+
+            color: #a90060;
+
+            font-size: 30px;
+
+        }
+
+
+        .page-title p {
+
+            margin:
+                7px 0 0 0;
+
+            color: #9a6685;
+
+            font-size: 14px;
+
+        }
+
+
+        /* =================================================
+           CONTROL CARD
+           ================================================= */
+
+        .control-card {
+
+            background: white;
+
+            border-radius: 12px;
+
+            padding: 20px;
+
+            margin-bottom: 22px;
+
+            box-shadow:
+                0 4px 18px
+                rgba(180, 0, 100, 0.12);
+
+            border:
+                1px solid #f4c9df;
+
+        }
+
+
+        .control-top {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+
+            flex-wrap: wrap;
+
+        }
+
+
+        .status-area {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+        }
+
+
+        .status-label {
+
+            font-weight: 700;
+
+            color: #713957;
+
+        }
+
+
+        #collectionStatus {
+
+            min-width: 90px;
+
+            text-align: center;
+
+            padding:
+                7px 15px;
+
+            border-radius: 20px;
+
+            background: #fce0ee;
+
+            color: #c0006b;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+        }
+
+
+        .button-area {
+
+            display: flex;
+
+            gap: 10px;
+
+            flex-wrap: wrap;
+
+        }
+
+
+        button {
+
+            border: none;
+
+            cursor: pointer;
+
+            border-radius: 7px;
+
+            padding:
+                10px 20px;
+
+            color: white;
+
+            font-size: 14px;
+
+            font-weight: 700;
+
+            transition:
+                0.2s ease;
+
+        }
+
+
+        #startCollection {
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #c90072,
+                    #df1681
+                );
+
+        }
+
+
+        #stopCollection {
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #a7005e,
+                    #c40d70
+                );
+
+        }
+
+
+        button:hover {
+
+            transform:
+                translateY(-1px);
+
+            box-shadow:
+                0 4px 10px
+                rgba(180, 0, 100, 0.25);
+
+        }
+
+
+        button:disabled {
+
+            opacity: 0.45;
+
+            cursor: not-allowed;
+
+            transform: none;
+
+            box-shadow: none;
+
+        }
+
+
+        /* =================================================
+           SUMMARY CARDS
+           ================================================= */
+
+        .summary-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 18px;
+
+            margin-bottom: 25px;
+
+        }
+
+
+        .summary-card {
+
+            background: white;
+
+            border-radius: 10px;
+
+            padding: 18px;
+
+            border:
+                1px solid #f2c6dc;
+
+            box-shadow:
+                0 4px 14px
+                rgba(180, 0, 100, 0.10);
+
+        }
+
+
+        .summary-card .label {
+
+            font-size: 13px;
+
+            color: #9b6b86;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        .summary-card .value {
+
+            font-size: 23px;
+
+            font-weight: 700;
+
+            color: #b50066;
+
+        }
+
+
+        /* =================================================
+           DATA LOG CARD
+           ================================================= */
+
+        .logs-card {
+
+            background: white;
+
+            border-radius: 10px;
+
+            box-shadow:
+                0 5px 20px
+                rgba(180, 0, 100, 0.12);
+
+            overflow: hidden;
+
+            border:
+                1px solid #f1c6dc;
+
+        }
+
+
+        .logs-title {
+
+            padding:
+                18px 20px;
+
+            color: #a90060;
+
+            font-size: 20px;
+
+            font-weight: 700;
+
+            border-bottom:
+                1px solid #f1d3e2;
+
+        }
+
+
+        /* =================================================
+           TABLE
+           ================================================= */
+
+        .table-container {
+
+            width: 100%;
+
+            overflow-x: auto;
+
+        }
+
+
+        table {
+
+            width: 100%;
+
+            border-collapse: collapse;
+
+            min-width: 650px;
+
+        }
+
+
+        thead {
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #d91a7e,
+                    #dc2a89
+                );
+
+            color: white;
+
+        }
+
+
+        th {
+
+            padding:
+                12px 15px;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            text-align: center;
+
+        }
+
+
+        td {
+
+            padding:
+                9px 15px;
+
+            text-align: center;
+
+            font-size: 13px;
+
+            color: #68445a;
+
+            border-bottom:
+                1px solid #f4dce8;
+
+        }
+
+
+        tbody tr:nth-child(even) {
+
+            background:
+                #fff0f7;
+
+        }
+
+
+        tbody tr:nth-child(odd) {
+
+            background:
+                #ffffff;
+
+        }
+
+
+        tbody tr:hover {
+
+            background:
+                #ffe2f0;
+
+        }
+
+
+        /* =================================================
+           EMPTY TABLE
+           ================================================= */
+
+        .empty-row td {
+
+            padding: 30px;
+
+            color: #a47b93;
+
+            font-style: italic;
+
+        }
+
+
+        /* =================================================
+           FOOTER INFORMATION
+           ================================================= */
+
+        .footer-info {
+
+            margin-top: 14px;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            flex-wrap: wrap;
+
+            color: #9a6a85;
+
+            font-size: 12px;
+
+        }
+
+
+        /* =================================================
+           MOBILE
+           ================================================= */
+
+        @media (
+            max-width: 900px
+        ) {
+
+            .summary-grid {
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+
+            }
+
+        }
+
+
+        @media (
+            max-width: 600px
+        ) {
+
+            .top-header {
+
+                padding:
+                    15px;
+
+            }
+
+
+            .header-right {
+
+                flex-direction:
+                    column;
+
+                align-items:
+                    flex-end;
+
+                gap: 5px;
+
+            }
+
+
+            .dashboard {
+
+                width: 96%;
+
+            }
+
+
+            .summary-grid {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+
+            .control-top {
+
+                align-items:
+                    flex-start;
+
+            }
+
+
+            .button-area {
+
+                width: 100%;
+
+            }
+
+
+            button {
+
+                flex: 1;
+
+            }
+
+
+            .page-title h1 {
+
+                font-size: 24px;
+
+            }
+
+        }
+
+    </style>
 
 </head>
 
@@ -25,621 +669,324 @@
 <body>
 
 
-<!-- =====================================================
-     SIDEBAR
-===================================================== -->
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
 
-<div class="sidebar">
+    <header class="top-header">
 
-    <h2>
-        📦 Smart Storage
-    </h2>
-
-
-    <a
-        href="dashboard.html"
-        class="active"
-    >
-        🏠 Dashboard
-    </a>
+        <div class="brand">
+            Smart Storage
+        </div>
 
 
-    <a href="history.html">
-        📋 History
-    </a>
+        <div class="header-right">
+
+            <span id="firebaseStatus">
+                🔴 Connecting...
+            </span>
+
+            <span id="userEmail">
+                Not logged in
+            </span>
+
+            <button
+                id="logoutButton"
+                type="button"
+            >
+                Logout
+            </button>
+
+        </div>
+
+    </header>
 
 
-    <a href="alerts.html">
-        🚨 Alerts
-    </a>
+    <!-- =====================================================
+         DASHBOARD
+         ===================================================== -->
+
+    <main class="dashboard">
 
 
-    <a href="reports.html">
-        📊 Reports
-    </a>
+        <!-- =================================================
+             TITLE
+             ================================================= -->
 
-
-    <a href="settings.html">
-        ⚙️ Settings
-    </a>
-
-
-    <a href="profile.html">
-        👤 Profile
-    </a>
-
-
-    <a href="about.html">
-        ℹ️ About
-    </a>
-
-
-    <button
-        type="button"
-        class="logout-btn"
-        id="logoutButton"
-    >
-        🚪 Logout
-    </button>
-
-</div>
-
-
-
-<!-- =====================================================
-     MAIN CONTENT
-===================================================== -->
-
-<div class="main-content">
-
-
-    <!-- =================================================
-         TOP BAR
-    ================================================== -->
-
-    <div class="top-bar">
-
-        <div>
+        <div class="page-title">
 
             <h1>
-                Dashboard
+                Smart Storage Dashboard
             </h1>
 
             <p>
-                Smart Storage Data Collection System
+                Monitor and control realtime ESP32 data collection.
             </p>
 
         </div>
 
 
-        <div class="user-card">
+        <!-- =================================================
+             CONTROL
+             ================================================= -->
 
-            Logged in as:
+        <section class="control-card">
 
-            <b id="userEmail">
-                Loading...
-            </b>
+            <div class="control-top">
 
-        </div>
 
-    </div>
+                <div class="status-area">
 
+                    <span class="status-label">
+                        Collection Status:
+                    </span>
 
+                    <span id="collectionStatus">
+                        STOPPED
+                    </span>
 
-    <!-- =================================================
-         FIREBASE CONNECTION
-    ================================================== -->
+                </div>
 
-    <div
-        id="firebaseStatus"
-        class="status-card"
-    >
 
-        🔄 Connecting to Firebase...
+                <div class="button-area">
 
-    </div>
+                    <button
+                        id="startCollection"
+                        type="button"
+                    >
+                        Start Collection
+                    </button>
 
 
+                    <button
+                        id="stopCollection"
+                        type="button"
+                        disabled
+                    >
+                        Stop Collection
+                    </button>
 
-    <!-- =================================================
-         ESP32 STATUS
-    ================================================== -->
-
-    <div class="card-grid">
-
-
-        <!-- ESP32 -->
-
-        <div class="card">
-
-            <h3>
-                📡 ESP32 Status
-            </h3>
-
-
-            <h1 id="deviceStatus">
-                OFFLINE
-            </h1>
-
-
-            <p id="deviceSource">
-                Waiting for ESP32...
-            </p>
-
-        </div>
-
-
-
-        <!-- COLLECTION STATUS -->
-
-        <div class="card">
-
-            <h3>
-                📥 Collection Status
-            </h3>
-
-
-            <h1 id="collectionStatus">
-                STOPPED
-            </h1>
-
-
-            <p>
-                Data collection
-            </p>
-
-        </div>
-
-
-
-        <!-- RECORD COUNT -->
-
-        <div class="card">
-
-            <h3>
-                📊 Records Collected
-            </h3>
-
-
-            <h1 id="recordCount">
-                0
-            </h1>
-
-
-            <p>
-                Total records
-            </p>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- =================================================
-         START / STOP COLLECTION
-    ================================================== -->
-
-    <div class="chart-card">
-
-
-        <h2>
-            🎛 Data Collection Control
-        </h2>
-
-
-        <p
-            style="
-            color:#666;
-            margin-bottom:25px;
-            "
-        >
-
-            Start or stop the collection of
-            integer, float, and string data
-            from the ESP32.
-
-        </p>
-
-
-        <div
-            style="
-            display:flex;
-            gap:15px;
-            flex-wrap:wrap;
-            "
-        >
-
-
-            <!-- START -->
-
-            <button
-                id="startCollection"
-                type="button"
-                style="
-                padding:15px 25px;
-                border:none;
-                border-radius:8px;
-                background:#28a745;
-                color:white;
-                font-size:16px;
-                font-weight:bold;
-                cursor:pointer;
-                "
-            >
-
-                ▶ Start Collection
-
-            </button>
-
-
-
-            <!-- STOP -->
-
-            <button
-                id="stopCollection"
-                type="button"
-                style="
-                padding:15px 25px;
-                border:none;
-                border-radius:8px;
-                background:#dc3545;
-                color:white;
-                font-size:16px;
-                font-weight:bold;
-                cursor:pointer;
-                "
-            >
-
-                ⏹ Stop Collection
-
-            </button>
-
-
-        </div>
-
-
-    </div>
-
-
-
-    <!-- =================================================
-         DATA TYPES
-    ================================================== -->
-
-    <div class="chart-card">
-
-
-        <h2>
-            🧮 Collected Data Types
-        </h2>
-
-
-        <p
-            style="
-            color:#666;
-            margin-bottom:25px;
-            "
-        >
-
-            Data received from the ESP32 using
-            different programming data types.
-
-        </p>
-
-
-        <div class="card-grid">
-
-
-            <!-- =========================================
-                 INT
-            ========================================== -->
-
-            <div class="card">
-
-                <h3>
-                    🔢 Integer
-                </h3>
-
-
-                <h1 id="intValue">
-                    --
-                </h1>
-
-
-                <p>
-                    Data Type:
-                    <strong>int</strong>
-                </p>
+                </div>
 
             </div>
 
+        </section>
 
 
-            <!-- =========================================
-                 FLOAT
-            ========================================== -->
+        <!-- =================================================
+             SUMMARY
+             ================================================= -->
 
-            <div class="card">
-
-                <h3>
-                    🔢 Decimal
-                </h3>
+        <section class="summary-grid">
 
 
-                <h1 id="floatValue">
-                    --
-                </h1>
+            <div class="summary-card">
 
+                <div class="label">
+                    Collection
+                </div>
 
-                <p>
-                    Data Type:
-                    <strong>float</strong>
-                </p>
-
-            </div>
-
-
-
-            <!-- =========================================
-                 STRING
-            ========================================== -->
-
-            <div class="card">
-
-                <h3>
-                    🔤 Text
-                </h3>
-
-
-                <h2 id="stringValue">
-                    --
-                </h2>
-
-
-                <p>
-                    Data Type:
-                    <strong>String</strong>
-                </p>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- =================================================
-         LAST UPDATE
-    ================================================== -->
-
-    <div class="status-card">
-
-
-        <h2>
-            🕐 Collection Information
-        </h2>
-
-
-        <h1 id="lastUpdate">
-            No data received yet.
-        </h1>
-
-
-        <p>
-            Last data update
-        </p>
-
-
-    </div>
-
-
-
-    <!-- =================================================
-         DATA SUMMARY
-    ================================================== -->
-
-    <div class="chart-card">
-
-
-        <h2>
-            📋 Data Summary
-        </h2>
-
-
-        <div
-            style="
-            line-height:2;
-            "
-        >
-
-
-            <p>
-
-                <strong>
-                    Integer:
-                </strong>
-
-                <span id="summaryInt">
-                    --
-                </span>
-
-            </p>
-
-
-            <p>
-
-                <strong>
-                    Float:
-                </strong>
-
-                <span id="summaryFloat">
-                    --
-                </span>
-
-            </p>
-
-
-            <p>
-
-                <strong>
-                    String:
-                </strong>
-
-                <span id="summaryString">
-                    --
-                </span>
-
-            </p>
-
-
-            <p>
-
-                <strong>
-                    Collection:
-                </strong>
-
-                <span id="summaryCollection">
+                <div
+                    class="value"
+                    id="summaryCollection"
+                >
                     STOPPED
-                </span>
+                </div>
 
-            </p>
+            </div>
 
+
+            <div class="summary-card">
+
+                <div class="label">
+                    Records
+                </div>
+
+                <div
+                    class="value"
+                    id="summaryRecords"
+                >
+                    0
+                </div>
+
+            </div>
+
+
+            <div class="summary-card">
+
+                <div class="label">
+                    Device
+                </div>
+
+                <div
+                    class="value"
+                    id="deviceStatus"
+                >
+                    OFFLINE
+                </div>
+
+            </div>
+
+
+            <div class="summary-card">
+
+                <div class="label">
+                    Last Update
+                </div>
+
+                <div
+                    class="value"
+                    id="lastUpdate"
+                    style="font-size:14px;"
+                >
+                    --
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             REALTIME DATA LOGS
+             ================================================= -->
+
+        <section class="logs-card">
+
+
+            <div class="logs-title">
+
+                Realtime Data Logs
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table id="dataLogs">
+
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th>
+                                Time
+                            </th>
+
+                            <th>
+                                Float
+                            </th>
+
+                            <th>
+                                Integer
+                            </th>
+
+                            <th>
+                                String
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="dataLogBody">
+
+                        <tr class="empty-row">
+
+                            <td colspan="5">
+                                Waiting for Firebase data...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+
+                </table>
+
+            </div>
+
+
+        </section>
+
+
+        <!-- =================================================
+             FOOTER INFO
+             ================================================= -->
+
+        <div class="footer-info">
+
+            <span>
+                Total records:
+                <strong id="recordCount">0</strong>
+            </span>
+
+
+            <span>
+                ESP32:
+                <strong id="deviceSource">
+                    Waiting for data
+                </strong>
+            </span>
 
         </div>
 
-    </div>
+
+    </main>
 
 
+    <!-- =====================================================
+         FIREBASE CONFIG + DASHBOARD
+         ===================================================== -->
 
-    <!-- =================================================
-         SYSTEM INFORMATION
-    ================================================== -->
+    <script>
 
-    <div class="chart-card">
+        // ====================================================
+        // REPLACE THESE WITH YOUR FIREBASE PROJECT VALUES
+        // ====================================================
 
+        const firebaseConfig = {
 
-        <h2>
-            ℹ️ System Information
-        </h2>
+            apiKey:
+                "YOUR_FIREBASE_API_KEY",
 
+            authDomain:
+                "YOUR_PROJECT.firebaseapp.com",
 
-        <div
-            style="
-            line-height:2;
-            "
-        >
+            databaseURL:
+                "https://YOUR_PROJECT-default-rtdb.REGION.firebasedatabase.app",
 
+            projectId:
+                "YOUR_PROJECT_ID",
 
-            <p>
+            storageBucket:
+                "YOUR_PROJECT.firebasestorage.app",
 
-                <strong>
-                    Controller:
-                </strong>
+            messagingSenderId:
+                "YOUR_MESSAGING_SENDER_ID",
 
-                ESP32
+            appId:
+                "YOUR_FIREBASE_APP_ID"
 
-            </p>
-
-
-            <p>
-
-                <strong>
-                    Database:
-                </strong>
-
-                Firebase Realtime Database
-
-            </p>
+        };
 
 
-            <p>
+        // Initialize Firebase
 
-                <strong>
-                    Data Types:
-                </strong>
+        firebase.initializeApp(
+            firebaseConfig
+        );
 
-                int, float, String
-
-            </p>
+    </script>
 
 
-            <p>
-
-                <strong>
-                    Communication:
-                </strong>
-
-                Wi-Fi
-
-            </p>
-
-
-            <p>
-
-                <strong>
-                    Collection Interval:
-                </strong>
-
-                5 seconds
-
-            </p>
-
-
-            <p>
-
-                <strong>
-                    Sensors:
-                </strong>
-
-                Not connected
-
-            </p>
-
-
-        </div>
-
-    </div>
-
-
-</div>
-
-
-
-<!-- =====================================================
-     FIREBASE LIBRARIES
-===================================================== -->
-
-<script
-    src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"
-></script>
-
-
-<script
-    src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"
-></script>
-
-
-<script
-    src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"
-></script>
-
-
-
-<!-- =====================================================
-     FIREBASE CONFIG
-===================================================== -->
-
-<script src="firebase-config.js"></script>
-
-
-
-<!-- =====================================================
-     DASHBOARD JAVASCRIPT
-===================================================== -->
-
-<script src="dashboard.js"></script>
+    <script src="dashboard.js"></script>
 
 
 </body>
