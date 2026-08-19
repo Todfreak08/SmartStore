@@ -1,1200 +1,576 @@
-// ============================================================
-// SMART STORAGE MONITORING SYSTEM
+// =====================================================
 // DASHBOARD.JS
-//
-// FIREBASE STRUCTURE:
-//
-// smartStorage
-// ├── commands
-// │   ├── light
-// │   ├── fan
-// │   ├── door
-// │   └── alarm
-// │
-// ├── esp32
-// │   ├── online
-// │   ├── ip
-// │   ├── wifi
-// │   ├── timestamp
-// │   ├── light
-// │   ├── fan
-// │   ├── door
-// │   └── alarm
-// │
-// ├── history
-// └── alerts
-//
-// ============================================================
+// SMART STORAGE MONITORING SYSTEM
+// =====================================================
 
 
-// ============================================================
-// GLOBAL VARIABLES
-// ============================================================
+// =====================================================
+// CHECK FIREBASE
+// =====================================================
 
-let previousESP32Data = null;
+if (typeof firebase === "undefined") {
 
-let firstESP32Read = true;
+    console.error("Firebase library was not loaded.");
 
-let lastSavedTimestamp = null;
+}
 
 
-// ============================================================
-// WAIT FOR PAGE
-// ============================================================
+// =====================================================
+// FIREBASE DATABASE
+// =====================================================
 
-document.addEventListener("DOMContentLoaded", function () {
+const database = firebase.database();
 
-    console.log("=================================");
-    console.log("SMART STORAGE DASHBOARD STARTED");
-    console.log("=================================");
 
-    startDashboard();
+// =====================================================
+// DOM ELEMENT HELPER
+// =====================================================
+
+function setText(id, value) {
+
+    const element = document.getElementById(id);
+
+    if (element) {
+        element.textContent = value;
+    }
+
+}
+
+
+// =====================================================
+// FIREBASE CONNECTION STATUS
+// =====================================================
+
+const connectedRef = database.ref(".info/connected");
+
+
+connectedRef.on("value", (snapshot) => {
+
+    const firebaseStatus =
+        document.getElementById("firebaseStatus");
+
+
+    if (!firebaseStatus) {
+        return;
+    }
+
+
+    if (snapshot.val() === true) {
+
+        firebaseStatus.textContent =
+            "🟢 Firebase Connected";
+
+    } else {
+
+        firebaseStatus.textContent =
+            "🔴 Firebase Disconnected";
+
+    }
 
 });
 
 
-// ============================================================
-// START DASHBOARD
-// ============================================================
+// =====================================================
+// USER LOGIN
+// =====================================================
 
-function startDashboard() {
+firebase.auth().onAuthStateChanged((user) => {
 
-    // --------------------------------------------------------
-    // CHECK FIREBASE
-    // --------------------------------------------------------
+    if (user) {
 
-    if (typeof firebase === "undefined") {
-
-        console.error("Firebase library not loaded.");
-
-        showFirebaseStatus(
-            "❌ Firebase library not loaded",
-            "error"
+        setText(
+            "userEmail",
+            user.email || "User"
         );
 
-        return;
-    }
-
-
-    // --------------------------------------------------------
-    // CHECK DATABASE
-    // --------------------------------------------------------
-
-    if (typeof database === "undefined") {
-
-        console.error("Firebase database is not available.");
-
-        showFirebaseStatus(
-            "❌ Firebase database not available",
-            "error"
+        console.log(
+            "Logged in as:",
+            user.email
         );
 
-        return;
+    } else {
+
+        setText(
+            "userEmail",
+            "Not logged in"
+        );
+
+        console.log(
+            "No user logged in."
+        );
+
     }
 
+});
 
-    console.log("Firebase database ready.");
 
-    showFirebaseStatus(
-        "🟢 Firebase Connected",
-        "connected"
+// =====================================================
+// LOGOUT
+// =====================================================
+
+const logoutButton =
+    document.getElementById("logoutButton");
+
+
+if (logoutButton) {
+
+    logoutButton.addEventListener(
+        "click",
+        async () => {
+
+            try {
+
+                await firebase.auth().signOut();
+
+                window.location.href =
+                    "index.html";
+
+            } catch (error) {
+
+                console.error(
+                    "Logout error:",
+                    error
+                );
+
+                alert(
+                    "Unable to logout."
+                );
+
+            }
+
+        }
     );
 
-
-    // ========================================================
-    // AUTHENTICATION
-    // ========================================================
-
-    if (typeof auth !== "undefined") {
-
-        auth.onAuthStateChanged(function (user) {
-
-            const userEmail =
-                document.getElementById("userEmail");
+}
 
 
-            if (user) {
+// =====================================================
+// ESP32 SENSOR DATA
+// =====================================================
+//
+// Firebase:
+//
+// sensor/
+//     motion
+//     temperature
+//     humidity
+//     status
+//
+// =====================================================
 
-                if (userEmail) {
-
-                    userEmail.textContent =
-                        user.email || "User";
-
-                }
-
-                console.log(
-                    "Logged in:",
-                    user.email
-                );
-
-            }
-
-            else {
-
-                if (userEmail) {
-
-                    userEmail.textContent =
-                        "Not logged in";
-
-                }
-
-                console.log(
-                    "No authenticated user."
-                );
-
-            }
-
-        });
-
-    }
+const sensorRef =
+    database.ref("sensor");
 
 
-    // ========================================================
-    // LOGOUT
-    // ========================================================
+sensorRef.on(
+    "value",
+    (snapshot) => {
 
-    const logoutButton =
-        document.getElementById("logoutButton");
-
-
-    if (logoutButton) {
-
-        logoutButton.addEventListener(
-            "click",
-            function () {
-
-                if (
-                    typeof auth !== "undefined"
-                ) {
-
-                    auth.signOut()
-                        .then(function () {
-
-                            window.location.href =
-                                "index.html";
-
-                        })
-                        .catch(function (error) {
-
-                            console.error(
-                                "Logout error:",
-                                error
-                            );
-
-                        });
-
-                }
-
-            }
-        );
-
-    }
+        const data =
+            snapshot.val();
 
 
-    // ========================================================
-    // ESP32 REFERENCE
-    // ========================================================
-
-    const esp32Ref =
-        database.ref("smartStorage/esp32");
-
-
-    console.log(
-        "Listening to:",
-        "smartStorage/esp32"
-    );
-
-
-    // ========================================================
-    // REAL-TIME ESP32 DATA
-    // ========================================================
-
-    esp32Ref.on(
-
-        "value",
-
-        function (snapshot) {
+        if (!data) {
 
             console.log(
-                "================================="
+                "No sensor data found."
             );
 
-            console.log(
-                "ESP32 DATA RECEIVED"
+            setText(
+                "temperature",
+                "--"
             );
 
-            console.log(
-                snapshot.val()
+            setText(
+                "humidity",
+                "--"
             );
 
-            console.log(
-                "================================="
+            setText(
+                "motion",
+                "--"
             );
 
-
-            // ------------------------------------------------
-            // NO DATA
-            // ------------------------------------------------
-
-            if (!snapshot.exists()) {
-
-                console.warn(
-                    "No smartStorage/esp32 data."
-                );
-
-                setOfflineState();
-
-                return;
-
-            }
-
-
-            const data =
-                snapshot.val();
-
-
-            // ------------------------------------------------
-            // UPDATE DASHBOARD
-            // ------------------------------------------------
-
-            updateDashboard(data);
-
-
-            // ------------------------------------------------
-            // SAVE ACTIVITY
-            // ------------------------------------------------
-
-            saveActivity(data);
-
-        },
-
-        function (error) {
-
-            console.error(
-                "Firebase read error:",
-                error
+            setText(
+                "sensorStatus",
+                "--"
             );
 
+            setText(
+                "summaryTemperature",
+                "--"
+            );
 
-            showFirebaseStatus(
-                "❌ Firebase read error",
-                "error"
+            setText(
+                "summaryHumidity",
+                "--"
+            );
+
+            setText(
+                "summaryMotion",
+                "--"
+            );
+
+            setText(
+                "summaryStatus",
+                "--"
+            );
+
+            return;
+
+        }
+
+
+        // =================================================
+        // MOTION
+        // INT
+        // =================================================
+
+        const motion =
+            Number(data.motion);
+
+
+        if (motion === 1) {
+
+            setText(
+                "motion",
+                "Detected"
+            );
+
+            setText(
+                "summaryMotion",
+                "Motion Detected"
+            );
+
+        } else {
+
+            setText(
+                "motion",
+                "No Motion"
+            );
+
+            setText(
+                "summaryMotion",
+                "No Motion"
             );
 
         }
 
-    );
+
+        // =================================================
+        // TEMPERATURE
+        // FLOAT
+        // =================================================
+
+        if (
+            data.temperature !== undefined &&
+            data.temperature !== null
+        ) {
+
+            const temperature =
+                Number(data.temperature);
 
 
-    // ========================================================
-    // DEVICE CONTROL SWITCHES
-    // ========================================================
+            if (!isNaN(temperature)) {
 
-    setupSwitch(
-        "lightSwitch",
-        "light"
-    );
+                const temperatureText =
+                    temperature.toFixed(2) +
+                    " °C";
 
 
-    setupSwitch(
-        "fanSwitch",
-        "fan"
-    );
+                setText(
+                    "temperature",
+                    temperatureText
+                );
 
 
-    setupSwitch(
-        "doorSwitch",
-        "door"
-    );
+                setText(
+                    "summaryTemperature",
+                    temperatureText
+                );
+
+            }
+
+        }
 
 
-    setupSwitch(
-        "alarmSwitch",
-        "alarm"
-    );
+        // =================================================
+        // HUMIDITY
+        // FLOAT
+        // =================================================
+
+        if (
+            data.humidity !== undefined &&
+            data.humidity !== null
+        ) {
+
+            const humidity =
+                Number(data.humidity);
 
 
-    // ========================================================
-    // LOAD COMMANDS
-    // ========================================================
+            if (!isNaN(humidity)) {
 
-    loadCommands();
-
-}
+                const humidityText =
+                    humidity.toFixed(2) +
+                    " %";
 
 
-// ============================================================
-// UPDATE DASHBOARD
-// ============================================================
-
-function updateDashboard(data) {
-
-    console.log(
-        "Updating dashboard:",
-        data
-    );
+                setText(
+                    "humidity",
+                    humidityText
+                );
 
 
-    // ========================================================
-    // ONLINE
-    // ========================================================
+                setText(
+                    "summaryHumidity",
+                    humidityText
+                );
 
-    const online =
-        convertBoolean(data.online);
+            }
 
-
-    setText(
-        "deviceStatus",
-        online ? "ONLINE" : "OFFLINE"
-    );
+        }
 
 
-    const deviceStatus =
-        document.getElementById("deviceStatus");
+        // =================================================
+        // STATUS
+        // STRING
+        // =================================================
+
+        if (
+            data.status !== undefined &&
+            data.status !== null
+        ) {
+
+            const status =
+                String(data.status);
 
 
-    if (deviceStatus) {
-
-        deviceStatus.style.color =
-            online
-                ? "#28a745"
-                : "#dc3545";
-
-    }
+            setText(
+                "sensorStatus",
+                status
+            );
 
 
-    setText(
-        "deviceSource",
-        online
-            ? "ESP32 connected"
-            : "ESP32 offline"
-    );
+            setText(
+                "summaryStatus",
+                status
+            );
+
+        }
 
 
-    // ========================================================
-    // WIFI
-    // ========================================================
+        // =================================================
+        // UPDATE LAST DATA RECEIVED
+        // =================================================
 
-    if (
-        data.wifi !== undefined &&
-        data.wifi !== null &&
-        data.wifi !== ""
-    ) {
+        const now =
+            new Date();
+
 
         setText(
-            "wifiSignal",
-            formatWifi(data.wifi)
+            "lastUpdate",
+            "Last data received: " +
+            now.toLocaleString()
         );
 
-    }
 
-    else {
+        // =================================================
+        // ESP32 ONLINE
+        // =================================================
 
         setText(
-            "wifiSignal",
-            "--"
-        );
-
-    }
-
-
-    // ========================================================
-    // IP
-    // ========================================================
-
-    setText(
-        "deviceIP",
-        data.ip || "--"
-    );
-
-
-    // ========================================================
-    // TIMESTAMP
-    // ========================================================
-
-    updateTimestamp(
-        data.timestamp
-    );
-
-
-    // ========================================================
-    // LIGHT
-    // ========================================================
-
-    updateLight(
-        convertBoolean(data.light)
-    );
-
-
-    // ========================================================
-    // FAN
-    // ========================================================
-
-    updateFan(
-        convertBoolean(data.fan)
-    );
-
-
-    // ========================================================
-    // DOOR
-    // ========================================================
-
-    updateDoor(
-        convertBoolean(data.door)
-    );
-
-
-    // ========================================================
-    // ALARM
-    // ========================================================
-
-    updateAlarm(
-        convertBoolean(data.alarm)
-    );
-
-}
-
-
-// ============================================================
-// SAVE ACTIVITY
-//
-// Every meaningful ESP32 change is stored in:
-//
-// smartStorage/history
-//
-// ============================================================
-
-function saveActivity(data) {
-
-    if (!data) {
-
-        return;
-
-    }
-
-
-    const timestamp =
-        getTimestampValue(
-            data.timestamp
+            "deviceStatus",
+            "ONLINE"
         );
 
 
-    // --------------------------------------------------------
-    // Prevent duplicate saves
-    // --------------------------------------------------------
+        setText(
+            "deviceSource",
+            "Receiving data from ESP32"
+        );
 
-    if (
-        timestamp &&
-        timestamp === lastSavedTimestamp
-    ) {
 
         console.log(
-            "Same timestamp. Activity already saved."
-        );
-
-        return;
-
-    }
-
-
-    // --------------------------------------------------------
-    // First reading
-    //
-    // Save it because this is the first known ESP32 state.
-    // --------------------------------------------------------
-
-    if (firstESP32Read) {
-
-        firstESP32Read = false;
-
-        saveHistoryRecord(
-            data,
-            "ESP32 connected"
-        );
-
-        previousESP32Data =
-            createCopy(data);
-
-        lastSavedTimestamp =
-            timestamp;
-
-        return;
-
-    }
-
-
-    // --------------------------------------------------------
-    // Check if something changed
-    // --------------------------------------------------------
-
-    const changes =
-        detectChanges(
-            previousESP32Data,
+            "Sensor data:",
             data
         );
 
+    },
+    (error) => {
 
-    if (changes.length === 0) {
-
-        console.log(
-            "No activity change detected."
+        console.error(
+            "Sensor data error:",
+            error
         );
-
-        previousESP32Data =
-            createCopy(data);
-
-        return;
 
     }
+);
 
 
-    // --------------------------------------------------------
-    // Save every detected activity
-    // --------------------------------------------------------
+// =====================================================
+// DEVICE INFORMATION
+// =====================================================
+//
+// Firebase:
+//
+// device/
+//     status
+//     wifiSignal
+//     ip
+//     dateTime
+//
+// =====================================================
 
-    changes.forEach(function (change) {
-
-        saveHistoryRecord(
-            data,
-            change
-        );
+const deviceRef =
+    database.ref("device");
 
 
-        // ----------------------------------------------------
-        // Create alert when necessary
-        // ----------------------------------------------------
+deviceRef.on(
+    "value",
+    (snapshot) => {
+
+        const data =
+            snapshot.val();
+
+
+        if (!data) {
+
+            console.log(
+                "No device information found."
+            );
+
+            return;
+
+        }
+
+
+        // =================================================
+        // DEVICE STATUS
+        // =================================================
 
         if (
-            change === "Alarm turned ON" ||
-            change === "Door opened"
+            data.status !== undefined &&
+            data.status !== null
         ) {
 
-            saveAlert(
-                data,
-                change
+            setText(
+                "deviceStatus",
+                String(data.status)
             );
 
         }
 
-    });
 
-
-    previousESP32Data =
-        createCopy(data);
-
-
-    lastSavedTimestamp =
-        timestamp;
-
-}
-
-
-// ============================================================
-// DETECT CHANGES
-// ============================================================
-
-function detectChanges(
-    oldData,
-    newData
-) {
-
-    const changes = [];
-
-
-    if (!oldData) {
-
-        return changes;
-
-    }
-
-
-    // --------------------------------------------------------
-    // ONLINE
-    // --------------------------------------------------------
-
-    if (
-        convertBoolean(oldData.online) !==
-        convertBoolean(newData.online)
-    ) {
-
-        changes.push(
-            newData.online
-                ? "ESP32 came ONLINE"
-                : "ESP32 went OFFLINE"
-        );
-
-    }
-
-
-    // --------------------------------------------------------
-    // LIGHT
-    // --------------------------------------------------------
-
-    if (
-        convertBoolean(oldData.light) !==
-        convertBoolean(newData.light)
-    ) {
-
-        changes.push(
-            convertBoolean(newData.light)
-                ? "Light turned ON"
-                : "Light turned OFF"
-        );
-
-    }
-
-
-    // --------------------------------------------------------
-    // FAN
-    // --------------------------------------------------------
-
-    if (
-        convertBoolean(oldData.fan) !==
-        convertBoolean(newData.fan)
-    ) {
-
-        changes.push(
-            convertBoolean(newData.fan)
-                ? "Fan turned ON"
-                : "Fan turned OFF"
-        );
-
-    }
-
-
-    // --------------------------------------------------------
-    // DOOR
-    // --------------------------------------------------------
-
-    if (
-        convertBoolean(oldData.door) !==
-        convertBoolean(newData.door)
-    ) {
-
-        changes.push(
-            convertBoolean(newData.door)
-                ? "Door opened"
-                : "Door closed"
-        );
-
-    }
-
-
-    // --------------------------------------------------------
-    // ALARM
-    // --------------------------------------------------------
-
-    if (
-        convertBoolean(oldData.alarm) !==
-        convertBoolean(newData.alarm)
-    ) {
-
-        changes.push(
-            convertBoolean(newData.alarm)
-                ? "Alarm turned ON"
-                : "Alarm turned OFF"
-        );
-
-    }
-
-
-    // --------------------------------------------------------
-    // IP CHANGE
-    // --------------------------------------------------------
-
-    if (
-        oldData.ip !== newData.ip &&
-        newData.ip
-    ) {
-
-        changes.push(
-            "ESP32 IP changed to " +
-            newData.ip
-        );
-
-    }
-
-
-    return changes;
-
-}
-
-
-// ============================================================
-// SAVE HISTORY RECORD
-// ============================================================
-
-function saveHistoryRecord(
-    data,
-    activity
-) {
-
-    const historyRef =
-        database.ref(
-            "smartStorage/history"
-        );
-
-
-    const record =
-        {
-
-            activity: activity,
-
-            timestamp:
-                getTimestampForFirebase(
-                    data.timestamp
-                ),
-
-            timestampRaw:
-                data.timestamp || "",
-
-            online:
-                convertBoolean(
-                    data.online
-                ),
-
-            ip:
-                data.ip || "",
-
-            wifi:
-                data.wifi || "",
-
-            light:
-                convertBoolean(
-                    data.light
-                ),
-
-            fan:
-                convertBoolean(
-                    data.fan
-                ),
-
-            door:
-                convertBoolean(
-                    data.door
-                ),
-
-            alarm:
-                convertBoolean(
-                    data.alarm
-                ),
-
-            source:
-                "ESP32",
-
-            createdAt:
-                firebase.database.ServerValue.TIMESTAMP
-
-        };
-
-
-    historyRef
-        .push(record)
-        .then(function () {
-
-            console.log(
-                "History saved:",
-                activity
+        // =================================================
+        // WIFI SIGNAL
+        // =================================================
+
+        if (
+            data.wifiSignal !== undefined &&
+            data.wifiSignal !== null
+        ) {
+
+            setText(
+                "wifiSignal",
+                String(data.wifiSignal)
             );
 
-        })
-        .catch(function (error) {
+        }
 
-            console.error(
-                "History save failed:",
-                error
+
+        // =================================================
+        // ESP32 IP
+        // =================================================
+
+        if (
+            data.ip !== undefined &&
+            data.ip !== null
+        ) {
+
+            setText(
+                "deviceIP",
+                String(data.ip)
             );
 
-        });
-
-}
+        }
 
 
-// ============================================================
-// SAVE ALERT
-// ============================================================
+        // =================================================
+        // ESP32 DATE/TIME
+        // =================================================
 
-function saveAlert(
-    data,
-    message
-) {
+        if (
+            data.dateTime !== undefined &&
+            data.dateTime !== null
+        ) {
 
-    const alertRef =
-        database.ref(
-            "smartStorage/alerts"
-        );
-
-
-    const alert =
-        {
-
-            message:
-                message,
-
-            timestamp:
-                getTimestampForFirebase(
-                    data.timestamp
-                ),
-
-            online:
-                convertBoolean(
-                    data.online
-                ),
-
-            ip:
-                data.ip || "",
-
-            wifi:
-                data.wifi || "",
-
-            light:
-                convertBoolean(
-                    data.light
-                ),
-
-            fan:
-                convertBoolean(
-                    data.fan
-                ),
-
-            door:
-                convertBoolean(
-                    data.door
-                ),
-
-            alarm:
-                convertBoolean(
-                    data.alarm
-                ),
-
-            source:
-                "ESP32",
-
-            createdAt:
-                firebase.database.ServerValue.TIMESTAMP
-
-        };
-
-
-    alertRef
-        .push(alert)
-        .then(function () {
-
-            console.log(
-                "Alert saved:",
-                message
+            setText(
+                "deviceDateTime",
+                String(data.dateTime)
             );
 
-        })
-        .catch(function (error) {
-
-            console.error(
-                "Alert save failed:",
-                error
-            );
-
-        });
-
-}
+        }
 
 
-// ============================================================
-// TIMESTAMP DISPLAY
-// ============================================================
-
-function updateTimestamp(timestamp) {
-
-    const dateTimeElement =
-        document.getElementById(
-            "deviceDateTime"
+        console.log(
+            "Device data:",
+            data
         );
 
+    },
+    (error) => {
 
-    const lastUpdateElement =
-        document.getElementById(
-            "lastUpdate"
+        console.error(
+            "Device data error:",
+            error
         );
-
-
-    if (
-        timestamp === undefined ||
-        timestamp === null ||
-        timestamp === ""
-    ) {
-
-        setText(
-            "deviceDateTime",
-            "Waiting for ESP32..."
-        );
-
-
-        setText(
-            "lastUpdate",
-            "No timestamp received yet."
-        );
-
-
-        return;
 
     }
+);
 
 
-    const date =
-        convertTimestampToDate(
-            timestamp
-        );
+// =====================================================
+// DEVICE CONTROLS
+// =====================================================
+//
+// Firebase:
+//
+// controls/
+//     light
+//     fan
+//     door
+//     alarm
+//
+// =====================================================
 
 
-    if (!date) {
-
-        setText(
-            "deviceDateTime",
-            String(timestamp)
-        );
-
-
-        setText(
-            "lastUpdate",
-            "ESP32 timestamp"
-        );
-
-
-        return;
-
-    }
-
-
-    const formattedDate =
-        date.toLocaleString(
-            "en-PH",
-            {
-
-                timeZone:
-                    "Asia/Manila",
-
-                year:
-                    "numeric",
-
-                month:
-                    "long",
-
-                day:
-                    "numeric",
-
-                hour:
-                    "2-digit",
-
-                minute:
-                    "2-digit",
-
-                second:
-                    "2-digit",
-
-                hour12:
-                    true
-
-            }
-        );
-
-
-    setText(
-        "deviceDateTime",
-        formattedDate
-    );
-
-
-    setText(
-        "lastUpdate",
-        "Last ESP32 update: " +
-        formattedDate
-    );
-
-}
-
-
-// ============================================================
+// =====================================================
 // LIGHT
-// ============================================================
+// =====================================================
 
-function updateLight(state) {
-
-    const status =
-        state ? "ON" : "OFF";
+const lightSwitch =
+    document.getElementById("lightSwitch");
 
 
-    setText(
-        "lightStatus",
-        status
-    );
+const lightRef =
+    database.ref("controls/light");
 
 
-    setText(
-        "currentLight",
-        status
-    );
+if (lightSwitch) {
 
-
-    setSwitch(
-        "lightSwitch",
-        state
-    );
-
-}
-
-
-// ============================================================
-// FAN
-// ============================================================
-
-function updateFan(state) {
-
-    const status =
-        state ? "ON" : "OFF";
-
-
-    setText(
-        "fanStatus",
-        status
-    );
-
-
-    setText(
-        "currentFan",
-        status
-    );
-
-
-    setSwitch(
-        "fanSwitch",
-        state
-    );
-
-}
-
-
-// ============================================================
-// DOOR
-// ============================================================
-
-function updateDoor(state) {
-
-    const status =
-        state ? "OPEN" : "CLOSED";
-
-
-    setText(
-        "doorStatus",
-        status
-    );
-
-
-    setText(
-        "currentDoor",
-        status
-    );
-
-
-    setSwitch(
-        "doorSwitch",
-        state
-    );
-
-}
-
-
-// ============================================================
-// ALARM
-// ============================================================
-
-function updateAlarm(state) {
-
-    const status =
-        state ? "ON" : "OFF";
-
-
-    setText(
-        "alarmStatus",
-        status
-    );
-
-
-    setText(
-        "currentAlarm",
-        status
-    );
-
-
-    setSwitch(
-        "alarmSwitch",
-        state
-    );
-
-}
-
-
-// ============================================================
-// DEVICE CONTROL
-// ============================================================
-
-function setupSwitch(
-    elementID,
-    commandName
-) {
-
-    const switchElement =
-        document.getElementById(
-            elementID
-        );
-
-
-    if (!switchElement) {
-
-        console.warn(
-            "Switch not found:",
-            elementID
-        );
-
-        return;
-
-    }
-
-
-    switchElement.addEventListener(
+    lightSwitch.addEventListener(
         "change",
-        function () {
+        () => {
 
-            const state =
-                switchElement.checked;
-
-
-            console.log(
-                "Sending command:",
-                commandName,
-                state
-            );
+            const value =
+                lightSwitch.checked;
 
 
-            database
-                .ref(
-                    "smartStorage/commands/" +
-                    commandName
-                )
-                .set(state)
-
-                .then(function () {
-
-                    console.log(
-                        "Command sent successfully:",
-                        commandName,
-                        state
-                    );
-
-                })
-
-                .catch(function (error) {
+            lightRef.set(value)
+                .catch((error) => {
 
                     console.error(
-                        "Command failed:",
+                        "Light control error:",
                         error
                     );
 
@@ -1206,93 +582,68 @@ function setupSwitch(
 }
 
 
-// ============================================================
-// LOAD COMMANDS
-// ============================================================
+lightRef.on(
+    "value",
+    (snapshot) => {
 
-function loadCommands() {
+        const value =
+            snapshot.val() === true;
 
-    const commandsRef =
-        database.ref(
-            "smartStorage/commands"
+
+        if (lightSwitch) {
+
+            lightSwitch.checked =
+                value;
+
+        }
+
+
+        setText(
+            "lightStatus",
+            value ? "ON" : "OFF"
         );
 
 
-    commandsRef.on(
-        "value",
-        function (snapshot) {
+        setText(
+            "currentLight",
+            value ? "ON" : "OFF"
+        );
 
-            if (!snapshot.exists()) {
-
-                return;
-
-            }
+    }
+);
 
 
-            const commands =
-                snapshot.val();
+// =====================================================
+// FAN
+// =====================================================
+
+const fanSwitch =
+    document.getElementById("fanSwitch");
 
 
-            console.log(
-                "Commands received:",
-                commands
-            );
+const fanRef =
+    database.ref("controls/fan");
 
 
-            if (
-                commands.light !== undefined
-            ) {
+if (fanSwitch) {
 
-                setSwitch(
-                    "lightSwitch",
-                    convertBoolean(
-                        commands.light
-                    )
-                );
+    fanSwitch.addEventListener(
+        "change",
+        () => {
 
-            }
+            const value =
+                fanSwitch.checked;
 
 
-            if (
-                commands.fan !== undefined
-            ) {
+            fanRef.set(value)
+                .catch((error) => {
 
-                setSwitch(
-                    "fanSwitch",
-                    convertBoolean(
-                        commands.fan
-                    )
-                );
+                    console.error(
+                        "Fan control error:",
+                        error
+                    );
 
-            }
-
-
-            if (
-                commands.door !== undefined
-            ) {
-
-                setSwitch(
-                    "doorSwitch",
-                    convertBoolean(
-                        commands.door
-                    )
-                );
-
-            }
-
-
-            if (
-                commands.alarm !== undefined
-            ) {
-
-                setSwitch(
-                    "alarmSwitch",
-                    convertBoolean(
-                        commands.alarm
-                    )
-                );
-
-            }
+                });
 
         }
     );
@@ -1300,374 +651,183 @@ function loadCommands() {
 }
 
 
-// ============================================================
-// BOOLEAN CONVERTER
-// ============================================================
+fanRef.on(
+    "value",
+    (snapshot) => {
 
-function convertBoolean(value) {
-
-    if (
-        value === true ||
-        value === 1 ||
-        value === "1" ||
-        value === "true" ||
-        value === "TRUE" ||
-        value === "on" ||
-        value === "ON" ||
-        value === "open" ||
-        value === "OPEN"
-    ) {
-
-        return true;
-
-    }
+        const value =
+            snapshot.val() === true;
 
 
-    return false;
+        if (fanSwitch) {
 
-}
-
-
-// ============================================================
-// TIMESTAMP CONVERTER
-// ============================================================
-
-function convertTimestampToDate(
-    timestamp
-) {
-
-    if (
-        timestamp === undefined ||
-        timestamp === null ||
-        timestamp === ""
-    ) {
-
-        return null;
-
-    }
-
-
-    // Number
-    if (
-        typeof timestamp === "number"
-    ) {
-
-        // Seconds -> milliseconds
-        if (
-            timestamp < 100000000000
-        ) {
-
-            timestamp =
-                timestamp * 1000;
+            fanSwitch.checked =
+                value;
 
         }
 
 
-        const date =
-            new Date(timestamp);
+        setText(
+            "fanStatus",
+            value ? "ON" : "OFF"
+        );
 
 
-        return isNaN(
-            date.getTime()
-        )
-            ? null
-            : date;
+        setText(
+            "currentFan",
+            value ? "ON" : "OFF"
+        );
 
     }
+);
 
 
-    // String
-    const stringValue =
-        String(timestamp);
+// =====================================================
+// DOOR
+// =====================================================
+
+const doorSwitch =
+    document.getElementById("doorSwitch");
 
 
-    // Numeric string
-    if (
-        !isNaN(stringValue)
-    ) {
-
-        let number =
-            Number(stringValue);
+const doorRef =
+    database.ref("controls/door");
 
 
-        if (
-            number < 100000000000
-        ) {
+if (doorSwitch) {
 
-            number =
-                number * 1000;
+    doorSwitch.addEventListener(
+        "change",
+        () => {
+
+            const value =
+                doorSwitch.checked;
+
+
+            doorRef.set(value)
+                .catch((error) => {
+
+                    console.error(
+                        "Door control error:",
+                        error
+                    );
+
+                });
+
+        }
+    );
+
+}
+
+
+doorRef.on(
+    "value",
+    (snapshot) => {
+
+        const value =
+            snapshot.val() === true;
+
+
+        if (doorSwitch) {
+
+            doorSwitch.checked =
+                value;
 
         }
 
 
-        const date =
-            new Date(number);
-
-
-        return isNaN(
-            date.getTime()
-        )
-            ? null
-            : date;
-
-    }
-
-
-    // Date string
-    const date =
-        new Date(stringValue);
-
-
-    return isNaN(
-        date.getTime()
-    )
-        ? null
-        : date;
-
-}
-
-
-// ============================================================
-// GET TIMESTAMP VALUE
-// ============================================================
-
-function getTimestampValue(
-    timestamp
-) {
-
-    if (
-        timestamp === undefined ||
-        timestamp === null ||
-        timestamp === ""
-    ) {
-
-        return null;
-
-    }
-
-
-    const date =
-        convertTimestampToDate(
-            timestamp
+        setText(
+            "doorStatus",
+            value ? "OPEN" : "CLOSED"
         );
 
 
-    if (!date) {
-
-        return String(timestamp);
+        setText(
+            "currentDoor",
+            value ? "OPEN" : "CLOSED"
+        );
 
     }
+);
 
 
-    return date.getTime();
+// =====================================================
+// ALARM
+// =====================================================
+
+const alarmSwitch =
+    document.getElementById("alarmSwitch");
+
+
+const alarmRef =
+    database.ref("controls/alarm");
+
+
+if (alarmSwitch) {
+
+    alarmSwitch.addEventListener(
+        "change",
+        () => {
+
+            const value =
+                alarmSwitch.checked;
+
+
+            alarmRef.set(value)
+                .catch((error) => {
+
+                    console.error(
+                        "Alarm control error:",
+                        error
+                    );
+
+                });
+
+        }
+    );
 
 }
 
 
-// ============================================================
-// GET FIREBASE TIMESTAMP
-// ============================================================
+alarmRef.on(
+    "value",
+    (snapshot) => {
 
-function getTimestampForFirebase(
-    timestamp
-) {
+        const value =
+            snapshot.val() === true;
 
-    const converted =
-        getTimestampValue(
-            timestamp
+
+        if (alarmSwitch) {
+
+            alarmSwitch.checked =
+                value;
+
+        }
+
+
+        setText(
+            "alarmStatus",
+            value ? "ON" : "OFF"
         );
 
 
-    if (converted) {
-
-        return converted;
-
-    }
-
-
-    return firebase.database.ServerValue.TIMESTAMP;
-
-}
-
-
-// ============================================================
-// WIFI FORMAT
-// ============================================================
-
-function formatWifi(value) {
-
-    if (
-        value === undefined ||
-        value === null ||
-        value === ""
-    ) {
-
-        return "--";
-
-    }
-
-
-    const number =
-        Number(value);
-
-
-    if (!isNaN(number)) {
-
-        return number + " dBm";
-
-    }
-
-
-    return String(value);
-
-}
-
-
-// ============================================================
-// CREATE COPY
-// ============================================================
-
-function createCopy(data) {
-
-    return JSON.parse(
-        JSON.stringify(data)
-    );
-
-}
-
-
-// ============================================================
-// OFFLINE STATE
-// ============================================================
-
-function setOfflineState() {
-
-    setText(
-        "deviceStatus",
-        "OFFLINE"
-    );
-
-
-    setText(
-        "deviceSource",
-        "Waiting for ESP32..."
-    );
-
-
-    setText(
-        "wifiSignal",
-        "--"
-    );
-
-
-    setText(
-        "deviceIP",
-        "--"
-    );
-
-
-    setText(
-        "deviceDateTime",
-        "Waiting for ESP32..."
-    );
-
-
-    setText(
-        "lastUpdate",
-        "No ESP32 data received yet."
-    );
-
-}
-
-
-// ============================================================
-// SET SWITCH
-// ============================================================
-
-function setSwitch(
-    elementID,
-    state
-) {
-
-    const element =
-        document.getElementById(
-            elementID
+        setText(
+            "currentAlarm",
+            value ? "ON" : "OFF"
         );
 
-
-    if (element) {
-
-        element.checked =
-            Boolean(state);
-
     }
-
-}
-
-
-// ============================================================
-// SET TEXT
-// ============================================================
-
-function setText(
-    elementID,
-    value
-) {
-
-    const element =
-        document.getElementById(
-            elementID
-        );
+);
 
 
-    if (element) {
+// =====================================================
+// INITIAL MESSAGE
+// =====================================================
 
-        element.textContent =
-            value;
+console.log(
+    "Smart Storage Dashboard loaded."
+);
 
-    }
-
-}
-
-
-// ============================================================
-// FIREBASE STATUS
-// ============================================================
-
-function showFirebaseStatus(
-    message,
-    type
-) {
-
-    const element =
-        document.getElementById(
-            "firebaseStatus"
-        );
-
-
-    if (!element) {
-
-        return;
-
-    }
-
-
-    element.textContent =
-        message;
-
-
-    if (type === "error") {
-
-        element.style.color =
-            "#dc3545";
-
-    }
-
-    else {
-
-        element.style.color =
-            "#28a745";
-
-    }
-
-}
+console.log(
+    "Waiting for ESP32 sensor data..."
+);
