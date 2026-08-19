@@ -1,493 +1,947 @@
-```css
-/* =========================================================
+/* ============================================================
    SMART STORAGE MONITORING SYSTEM
-   ALIGNED CSS
-   Designed for the current HTML structure
-   ========================================================= */
+   COMPLETE WEBSITE CSS
+   Compatible with current SmartStore HTML
+   ============================================================ */
 
 
-/* =========================
+/* ============================================================
    RESET
-   ========================= */
+   ============================================================ */
 
 * {
     box-sizing: border-box;
-}
-
-html,
-body {
     margin: 0;
     padding: 0;
-    width: 100%;
-    min-height: 100%;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 body {
-    font-family: Arial, Helvetica, sans-serif;
-    background: #f4f6f8;
-    color: #222;
-    font-size: 16px;
+    font-family:
+        "Segoe UI",
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background: #f4f7f6;
+    color: #1f2937;
+
+    min-height: 100vh;
+    line-height: 1.5;
+}
+
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+a {
+    text-decoration: none;
 }
 
 
-/* =========================
-   MAIN PAGE
-   ========================= */
-
-body > * {
-    max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-
-/* =========================
+/* ============================================================
    HEADER
-   ========================= */
+   ============================================================ */
 
-header {
+.top-header {
     width: 100%;
-    max-width: none;
+    min-height: 70px;
+
     background: #ffffff;
-    border-bottom: 1px solid #ddd;
-    padding: 15px 25px;
+
+    border-bottom: 1px solid #e5e7eb;
 
     display: flex;
     align-items: center;
     justify-content: space-between;
 
+    padding: 12px 30px;
+
     position: sticky;
     top: 0;
+
     z-index: 1000;
+
+    box-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 
-/* =========================
-   HEADER TITLE
-   ========================= */
+/* ============================================================
+   BRAND
+   ============================================================ */
 
-header h1,
-header h2 {
-    margin: 0;
-    color: #111827;
-}
+.brand {
+    color: #14532d;
 
-header p {
-    margin: 3px 0 0;
-    color: #6b7280;
-}
+    font-size: 22px;
 
-
-/* =========================
-   LOGO
-   ========================= */
-
-header img {
-    max-width: 55px;
-    max-height: 55px;
-    object-fit: contain;
-}
-
-
-/* =========================
-   NAVIGATION
-   ========================= */
-
-nav {
-    width: 100%;
-    max-width: none;
-
-    background: #1f2937;
-    padding: 0 20px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    overflow-x: auto;
-}
-
-nav a {
-    display: inline-block;
-
-    color: #ffffff;
-    text-decoration: none;
-
-    padding: 14px 18px;
-
-    font-size: 14px;
-    font-weight: 600;
+    font-weight: 750;
 
     white-space: nowrap;
-
-    transition: 0.2s;
-}
-
-nav a:hover {
-    background: #374151;
-}
-
-nav a.active {
-    background: #374151;
-    border-bottom: 3px solid #22c55e;
 }
 
 
-/* =========================
-   MAIN
-   ========================= */
+/* ============================================================
+   HEADER RIGHT
+   ============================================================ */
 
-main {
-    width: 100%;
-    max-width: 1200px;
+.header-right {
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+
+    flex-wrap: wrap;
+}
+
+#firebaseStatus {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    color: #15803d;
+
+    font-size: 14px;
+
+    font-weight: 600;
+}
+
+#firebaseStatus::first-letter {
+    font-size: 12px;
+}
+
+#userEmail {
+    color: #4b5563;
+
+    font-size: 14px;
+
+    max-width: 300px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
+
+#logoutButton {
+    background: #ffffff;
+
+    color: #374151;
+
+    border: 1px solid #9ca3af;
+
+    border-radius: 8px;
+
+    padding: 8px 15px;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    transition: all 0.2s ease;
+}
+
+#logoutButton:hover {
+    background: #dc2626;
+
+    border-color: #dc2626;
+
+    color: #ffffff;
+}
+
+
+/* ============================================================
+   MAIN DASHBOARD
+   ============================================================ */
+
+.dashboard {
+    width: min(1400px, 94%);
 
     margin: 0 auto;
 
-    padding: 25px 20px 40px;
+    padding: 35px 0 50px;
 }
 
 
-/* =========================
+/* ============================================================
    PAGE TITLE
-   ========================= */
+   ============================================================ */
 
-h1 {
-    margin: 10px 0 8px;
+.page-title {
+    margin-bottom: 25px;
+}
 
-    font-size: 32px;
-    line-height: 1.2;
-
+.page-title h1 {
     color: #111827;
+
+    font-size: 34px;
+
+    font-weight: 750;
+
+    margin-bottom: 7px;
 }
 
-h2 {
-    margin-top: 25px;
-    margin-bottom: 12px;
+.page-title p {
+    color: #6b7280;
 
-    font-size: 22px;
-    color: #1f2937;
-}
-
-h3 {
-    margin-top: 18px;
-    color: #374151;
-}
-
-p {
-    margin: 8px 0;
-    line-height: 1.5;
+    font-size: 15px;
 }
 
 
-/* =========================
-   FIREBASE STATUS
-   ========================= */
+/* ============================================================
+   COLLECTION CONTROL CARD
+   ============================================================ */
 
-.firebase-status {
-    display: inline-flex;
+.control-card {
+    background: #ffffff;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 16px;
+
+    padding: 22px;
+
+    margin-bottom: 22px;
+
+    box-shadow:
+        0 5px 18px rgba(0, 0, 0, 0.05);
+}
+
+.control-top {
+    display: flex;
+
     align-items: center;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    flex-wrap: wrap;
+}
+
+
+/* ============================================================
+   COLLECTION STATUS
+   ============================================================ */
+
+.status-area {
+    display: flex;
+
+    align-items: center;
+
     gap: 7px;
 
-    margin: 5px 0 20px;
+    font-size: 16px;
+}
 
+.status-label {
     color: #374151;
+
+    font-weight: 600;
 }
-
-.status-dot {
-    width: 13px;
-    height: 13px;
-
-    display: inline-block;
-
-    background: #22c55e;
-    border-radius: 50%;
-}
-
-
-/* =========================
-   COLLECTION STATUS
-   ========================= */
 
 #collectionStatus {
-    font-weight: 700;
-}
+    font-weight: 750;
 
-.status-running {
-    color: #16a34a;
-}
-
-.status-stopped {
     color: #dc2626;
+
+    background: #fee2e2;
+
+    padding: 5px 12px;
+
+    border-radius: 20px;
+
+    font-size: 13px;
+}
+
+#collectionStatus.running,
+#collectionStatus.RUNNING {
+    color: #166534;
+
+    background: #dcfce7;
 }
 
 
-/* =========================
-   BUTTONS
-   ========================= */
+/* ============================================================
+   BUTTON AREA
+   ============================================================ */
+
+.button-area {
+    display: flex;
+
+    gap: 10px;
+
+    flex-wrap: wrap;
+}
+
+
+/* ============================================================
+   GENERAL BUTTON
+   ============================================================ */
 
 button {
-    border: 1px solid #cbd5e1;
+    border: none;
 
-    background: #ffffff;
-    color: #1f2937;
+    border-radius: 9px;
 
-    padding: 9px 15px;
-
-    border-radius: 6px;
+    padding: 10px 17px;
 
     font-size: 14px;
-    cursor: pointer;
 
-    transition: 0.2s;
+    font-weight: 650;
+
+    transition:
+        background 0.2s ease,
+        transform 0.15s ease,
+        box-shadow 0.2s ease;
 }
 
-button:hover {
-    background: #f1f5f9;
+button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+button:active:not(:disabled) {
+    transform: translateY(0);
 }
 
 button:disabled {
     opacity: 0.45;
+
     cursor: not-allowed;
 }
 
 
-/* Start button */
+/* ============================================================
+   START BUTTON
+   ============================================================ */
 
 #startCollection {
-    background: #16a34a;
-    border-color: #16a34a;
+    background: #198754;
+
     color: white;
+
+    box-shadow:
+        0 3px 8px rgba(25, 135, 84, 0.2);
 }
 
-#startCollection:hover {
-    background: #15803d;
+#startCollection:hover:not(:disabled) {
+    background: #146c43;
 }
 
 
-/* Stop button */
+/* ============================================================
+   STOP BUTTON
+   ============================================================ */
 
 #stopCollection {
-    background: #dc2626;
-    border-color: #dc2626;
+    background: #dc3545;
+
     color: white;
+
+    box-shadow:
+        0 3px 8px rgba(220, 53, 69, 0.15);
 }
 
-#stopCollection:hover {
-    background: #b91c1c;
-}
-
-
-/* Logout */
-
-#logoutBtn,
-.logout-btn {
-    background: white;
-    color: #374151;
-    border: 1px solid #9ca3af;
-
-    padding: 7px 13px;
-
-    border-radius: 5px;
-}
-
-#logoutBtn:hover,
-.logout-btn:hover {
-    background: #f3f4f6;
+#stopCollection:hover:not(:disabled) {
+    background: #bb2d3b;
 }
 
 
-/* =========================
-   DASHBOARD SUMMARY
-   ========================= */
+/* ============================================================
+   SUMMARY GRID
+   ============================================================ */
 
-.dashboard-summary {
+.summary-grid {
     display: grid;
 
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
 
-    gap: 15px;
+    gap: 18px;
 
-    margin: 20px 0;
+    margin-bottom: 25px;
 }
 
 
-/* =========================
-   CARDS
-   ========================= */
+/* ============================================================
+   SUMMARY CARD
+   ============================================================ */
 
-.card {
+.summary-card {
     background: #ffffff;
 
     border: 1px solid #e5e7eb;
 
-    border-radius: 10px;
+    border-radius: 16px;
 
-    padding: 18px;
+    padding: 21px;
 
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    min-height: 125px;
+
+    box-shadow:
+        0 5px 18px rgba(0, 0, 0, 0.04);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-.card-title {
+.summary-card:hover {
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+
+/* ============================================================
+   SUMMARY LABEL
+   ============================================================ */
+
+.summary-card .label {
     color: #6b7280;
 
     font-size: 13px;
 
-    margin-bottom: 5px;
+    font-weight: 600;
+
+    margin-bottom: 8px;
 }
 
-.card-value {
-    font-size: 25px;
+
+/* ============================================================
+   SUMMARY VALUE
+   ============================================================ */
+
+.summary-card .value {
+    color: #111827;
+
+    font-size: 27px;
+
+    font-weight: 750;
+
+    word-break: break-word;
+}
+
+
+/* COLLECTION VALUE */
+
+#summaryCollection {
+    color: #dc2626;
+}
+
+
+/* RECORD COUNT */
+
+#summaryRecords {
+    color: #2563eb;
+}
+
+
+/* DEVICE */
+
+#deviceStatus {
+    color: #dc2626;
+}
+
+
+/* ONLINE DEVICE */
+
+#deviceStatus.online,
+#deviceStatus.ONLINE {
+    color: #198754;
+}
+
+
+/* ============================================================
+   LAST UPDATE
+   ============================================================ */
+
+#lastUpdate {
+    color: #374151;
+
+    font-size: 14px !important;
+
+    line-height: 1.4;
+}
+
+
+/* ============================================================
+   LOGS CARD
+   ============================================================ */
+
+.logs-card {
+    background: #ffffff;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 16px;
+
+    padding: 22px;
+
+    box-shadow:
+        0 5px 18px rgba(0, 0, 0, 0.04);
+
+    overflow: hidden;
+}
+
+
+/* ============================================================
+   LOG TITLE
+   ============================================================ */
+
+.logs-title {
+    font-size: 20px;
+
+    font-weight: 750;
+
+    color: #111827;
+
+    margin-bottom: 17px;
+}
+
+
+/* ============================================================
+   TABLE CONTAINER
+   ============================================================ */
+
+.table-container {
+    width: 100%;
+
+    overflow-x: auto;
+
+    border-radius: 10px;
+
+    border: 1px solid #e5e7eb;
+}
+
+
+/* ============================================================
+   DATA TABLE
+   ============================================================ */
+
+#dataLogs {
+    width: 100%;
+
+    min-width: 700px;
+
+    border-collapse: collapse;
+
+    background: white;
+}
+
+
+/* ============================================================
+   TABLE HEADER
+   ============================================================ */
+
+#dataLogs thead th {
+    background: #f0fdf4;
+
+    color: #166534;
+
+    font-size: 13px;
+
+    font-weight: 750;
+
+    text-align: left;
+
+    padding: 13px 15px;
+
+    border-bottom: 2px solid #bbf7d0;
+
+    white-space: nowrap;
+}
+
+
+/* ============================================================
+   TABLE BODY
+   ============================================================ */
+
+#dataLogs tbody td {
+    color: #374151;
+
+    font-size: 13px;
+
+    padding: 13px 15px;
+
+    border-bottom: 1px solid #e5e7eb;
+
+    white-space: nowrap;
+}
+
+#dataLogs tbody tr:hover {
+    background: #f8fafc;
+}
+
+#dataLogs tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* ============================================================
+   EMPTY TABLE
+   ============================================================ */
+
+.empty-row td {
+    text-align: center !important;
+
+    color: #9ca3af !important;
+
+    padding: 35px !important;
+
+    font-style: italic;
+}
+
+
+/* ============================================================
+   DATA TYPES
+   ============================================================ */
+
+.float-value {
+    color: #2563eb;
 
     font-weight: 700;
+}
 
+.integer-value {
+    color: #7c3aed;
+
+    font-weight: 700;
+}
+
+.string-value {
+    color: #059669;
+
+    font-family: Consolas, monospace;
+
+    font-weight: 600;
+}
+
+
+/* ============================================================
+   FOOTER INFO
+   ============================================================ */
+
+.footer-info {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-top: 18px;
+
+    padding: 15px 18px;
+
+    background: #ffffff;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 12px;
+
+    color: #6b7280;
+
+    font-size: 13px;
+
+    flex-wrap: wrap;
+}
+
+.footer-info strong {
     color: #111827;
 }
 
 
-/* =========================
-   COLLECTION AREA
-   ========================= */
+/* ============================================================
+   GENERAL PAGE SUPPORT
+   Reports / History / Alerts / About / Profile / Settings
+   ============================================================ */
 
-.collection {
+main:not(.dashboard) {
+    width: min(1400px, 94%);
+
+    margin: 0 auto;
+
+    padding: 30px 0 50px;
+}
+
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+
+nav {
+    width: 100%;
+
+    background: #14532d;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    overflow-x: auto;
+
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+nav a {
+    color: #ffffff;
+
+    padding: 14px 18px;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+
+    transition: 0.2s ease;
+}
+
+nav a:hover {
+    background: #166534;
+}
+
+nav a.active {
     background: #ffffff;
 
-    border: 1px solid #e5e7eb;
-
-    border-radius: 10px;
-
-    padding: 18px;
-
-    margin: 15px 0 20px;
-
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.collection-title {
-    font-size: 18px;
-    font-weight: 700;
-
-    margin-bottom: 10px;
+    color: #14532d;
 }
 
 
-/* =========================
-   REALTIME LOG SECTION
-   ========================= */
+/* ============================================================
+   GENERAL CARDS
+   ============================================================ */
 
+.card,
 .logs,
 .data-section,
 .history-section,
-.report-section {
+.report-section,
+.about,
+.settings-card,
+.profile-card {
     background: #ffffff;
 
     border: 1px solid #e5e7eb;
 
-    border-radius: 10px;
+    border-radius: 16px;
 
-    padding: 18px;
+    padding: 22px;
 
-    margin-top: 20px;
+    margin-bottom: 20px;
 
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    box-shadow:
+        0 5px 18px rgba(0, 0, 0, 0.04);
+}
+
+
+/* ============================================================
+   REPORT CARDS
+   ============================================================ */
+
+.report-cards {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 18px;
+}
+
+.report-card {
+    background: #ffffff;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 15px;
+
+    padding: 22px;
+
+    box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.04);
+
+    transition: 0.2s ease;
+}
+
+.report-card:hover {
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+
+/* ============================================================
+   HISTORY
+   ============================================================ */
+
+.history-table {
+    width: 100%;
 
     overflow-x: auto;
 }
 
+.history-table table {
+    width: 100%;
 
-/* =========================
-   TABLE
-   ========================= */
+    min-width: 750px;
+
+    border-collapse: collapse;
+}
+
+
+/* ============================================================
+   FILTERS
+   ============================================================ */
+
+.filters {
+    display: flex;
+
+    gap: 10px;
+
+    flex-wrap: wrap;
+
+    margin-bottom: 18px;
+}
+
+input,
+select,
+textarea {
+    padding: 10px 12px;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 8px;
+
+    background: white;
+
+    color: #1f2937;
+
+    outline: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #198754;
+
+    box-shadow:
+        0 0 0 3px rgba(25, 135, 84, 0.12);
+}
+
+
+/* ============================================================
+   GENERAL TABLE
+   ============================================================ */
 
 table {
     width: 100%;
 
     border-collapse: collapse;
-
-    margin-top: 10px;
-
-    background: #ffffff;
 }
 
-th {
-    background: #f1f5f9;
+table th {
+    background: #f0fdf4;
 
-    color: #1f2937;
+    color: #166534;
 
-    font-weight: 700;
+    padding: 12px;
 
     text-align: center;
 
-    padding: 11px 12px;
-
-    border-bottom: 2px solid #d1d5db;
-
-    white-space: nowrap;
+    border-bottom: 2px solid #bbf7d0;
 }
 
-td {
-    padding: 10px 12px;
+table td {
+    padding: 11px 12px;
 
     text-align: center;
 
     border-bottom: 1px solid #e5e7eb;
 
     color: #374151;
-
-    white-space: nowrap;
 }
 
-tbody tr:hover {
+table tbody tr:hover {
     background: #f8fafc;
 }
 
-tbody tr:last-child td {
-    border-bottom: none;
+
+/* ============================================================
+   ALERTS
+   ============================================================ */
+
+.alert {
+    padding: 15px 18px;
+
+    border-radius: 10px;
+
+    margin-bottom: 12px;
+}
+
+.alert-success {
+    background: #dcfce7;
+
+    color: #166534;
+}
+
+.alert-warning {
+    background: #fef3c7;
+
+    color: #92400e;
+}
+
+.alert-danger {
+    background: #fee2e2;
+
+    color: #991b1b;
+}
+
+.alert-info {
+    background: #dbeafe;
+
+    color: #1e40af;
 }
 
 
-/* =========================
-   DATA VALUES
-   ========================= */
-
-.float-value {
-    font-weight: 600;
-    color: #2563eb;
-}
-
-.integer-value {
-    font-weight: 600;
-    color: #7c3aed;
-}
-
-.string-value {
-    color: #059669;
-    font-family: monospace;
-}
-
-
-/* =========================
-   ONLINE / OFFLINE
-   ========================= */
-
-.online {
-    color: #16a34a;
-    font-weight: 700;
-}
-
-.offline {
-    color: #dc2626;
-    font-weight: 700;
-}
-
-
-/* =========================
-   STATUS BADGES
-   ========================= */
+/* ============================================================
+   BADGES
+   ============================================================ */
 
 .badge {
-    display: inline-block;
+    display: inline-flex;
 
-    padding: 4px 9px;
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 5px 10px;
 
     border-radius: 20px;
 
@@ -498,209 +952,154 @@ tbody tr:last-child td {
 
 .normal {
     background: #dcfce7;
-    color: #15803d;
+
+    color: #166534;
 }
 
 .warning {
     background: #fef3c7;
-    color: #b45309;
+
+    color: #92400e;
 }
 
 .danger {
     background: #fee2e2;
-    color: #b91c1c;
+
+    color: #991b1b;
+}
+
+.online {
+    color: #15803d;
+
+    font-weight: 750;
+}
+
+.offline {
+    color: #dc2626;
+
+    font-weight: 750;
 }
 
 
-/* =========================
-   REPORTS
-   ========================= */
-
-.report-cards {
-    display: grid;
-
-    grid-template-columns: repeat(3, 1fr);
-
-    gap: 15px;
-
-    margin-top: 20px;
-}
-
-.report-card {
-    background: #ffffff;
-
-    border: 1px solid #e5e7eb;
-
-    border-radius: 10px;
-
-    padding: 20px;
-
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.report-card h3 {
-    margin-top: 0;
-}
-
-.report-card strong {
-    font-size: 28px;
-    color: #2563eb;
-}
-
-
-/* =========================
-   HISTORY
-   ========================= */
-
-.history-table {
-    width: 100%;
-
-    overflow-x: auto;
-}
-
-.history-table table {
-    min-width: 800px;
-}
-
-
-/* =========================
-   FILTERS
-   ========================= */
-
-.filters {
-    display: flex;
-
-    gap: 10px;
-
-    flex-wrap: wrap;
-
-    margin-bottom: 15px;
-}
-
-input,
-select {
-    padding: 9px 11px;
-
-    border: 1px solid #cbd5e1;
-
-    border-radius: 6px;
-
-    background: #ffffff;
-
-    color: #1f2937;
-
-    outline: none;
-}
-
-input:focus,
-select:focus {
-    border-color: #2563eb;
-
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-}
-
-
-/* =========================
+/* ============================================================
    ABOUT
-   ========================= */
+   ============================================================ */
 
 .about {
-    background: #ffffff;
-
-    border: 1px solid #e5e7eb;
-
-    border-radius: 10px;
-
-    padding: 25px;
-
-    margin-top: 20px;
-
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    line-height: 1.7;
 }
 
 .about h2 {
-    margin-top: 0;
+    color: #14532d;
+
+    margin-bottom: 10px;
 }
 
 .about p {
     color: #4b5563;
-
-    line-height: 1.7;
 }
 
 
-/* =========================
-   FOOTER
-   ========================= */
+/* ============================================================
+   PROFILE
+   ============================================================ */
 
-footer {
-    width: 100%;
-    max-width: none;
+.profile-card {
+    max-width: 750px;
 
-    background: #1f2937;
+    margin: 0 auto;
+}
 
-    color: #d1d5db;
-
+.profile-header {
     text-align: center;
 
-    padding: 18px 15px;
+    padding-bottom: 20px;
 
-    margin-top: 30px;
+    margin-bottom: 20px;
 
-    font-size: 13px;
-}
-
-footer p {
-    margin: 0;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 
-/* =========================
-   LOGIN PAGE
-   ========================= */
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+
+.settings-card {
+    max-width: 850px;
+
+    margin: 0 auto;
+}
+
+.setting-row {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 16px 0;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.setting-row:last-child {
+    border-bottom: none;
+}
+
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
 
 .login-page {
     min-height: 100vh;
 
     display: flex;
 
-    justify-content: center;
     align-items: center;
+
+    justify-content: center;
 
     padding: 20px;
 
-    background: #f4f6f8;
+    background:
+        linear-gradient(
+            135deg,
+            #14532d,
+            #198754
+        );
 }
 
 .login-container {
     width: 100%;
-    max-width: 400px;
+
+    max-width: 430px;
 }
 
 .login-box {
     background: #ffffff;
 
-    padding: 30px;
+    padding: 35px;
 
-    border-radius: 12px;
+    border-radius: 20px;
 
-    border: 1px solid #e5e7eb;
-
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.2);
 }
 
 .login-box h1 {
     text-align: center;
 
-    font-size: 25px;
+    color: #14532d;
 
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 .login-box input {
     width: 100%;
 
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 
     padding: 12px;
 }
@@ -708,164 +1107,283 @@ footer p {
 .login-box button {
     width: 100%;
 
-    background: #2563eb;
+    background: #198754;
 
     color: white;
 
-    border-color: #2563eb;
+    border: none;
 
-    padding: 11px;
+    padding: 12px;
 }
 
 .login-box button:hover {
-    background: #1d4ed8;
+    background: #146c43;
 }
 
 
-/* =========================
-   MOBILE
-   ========================= */
+/* ============================================================
+   FOOTER
+   ============================================================ */
 
-@media (max-width: 800px) {
+footer {
+    width: 100%;
 
-    body {
-        font-size: 15px;
+    background: #14532d;
+
+    color: #d1fae5;
+
+    text-align: center;
+
+    padding: 20px;
+
+    margin-top: 30px;
+
+    font-size: 13px;
+}
+
+
+/* ============================================================
+   MOBILE / TABLET
+   ============================================================ */
+
+@media (max-width: 1000px) {
+
+    .summary-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
     }
 
-    header {
-        padding: 12px 15px;
+    .report-cards {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+}
+
+
+@media (max-width: 700px) {
+
+    .top-header {
+        padding: 12px 16px;
+
+        align-items: flex-start;
     }
 
-    main {
-        padding: 18px 14px 30px;
+    .brand {
+        font-size: 18px;
     }
 
-    h1 {
+    .header-right {
+        justify-content: flex-end;
+
+        gap: 7px;
+    }
+
+    #firebaseStatus {
+        font-size: 12px;
+    }
+
+    #userEmail {
+        display: none;
+    }
+
+    #logoutButton {
+        padding: 7px 11px;
+
+        font-size: 12px;
+    }
+
+    .dashboard {
+        width: 94%;
+
+        padding: 25px 0 35px;
+    }
+
+    .page-title h1 {
         font-size: 27px;
     }
 
-    h2 {
-        font-size: 20px;
+    .control-top {
+        align-items: stretch;
+
+        flex-direction: column;
     }
 
-    .dashboard-summary {
-        grid-template-columns: repeat(2, 1fr);
+    .button-area {
+        width: 100%;
+    }
+
+    .button-area button {
+        flex: 1;
+    }
+
+    .summary-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+
+        gap: 12px;
+    }
+
+    .summary-card {
+        padding: 16px;
+
+        min-height: 110px;
+    }
+
+    .summary-card .value {
+        font-size: 22px;
+    }
+
+    .logs-card {
+        padding: 15px;
+    }
+
+    .footer-info {
+        flex-direction: column;
+
+        align-items: flex-start;
+    }
+
+    nav {
+        justify-content: flex-start;
+    }
+
+    nav a {
+        padding: 12px 14px;
+
+        font-size: 13px;
     }
 
     .report-cards {
         grid-template-columns: 1fr;
     }
-
-    nav {
-        justify-content: flex-start;
-
-        padding: 0 5px;
-    }
-
-    nav a {
-        padding: 12px 13px;
-
-        font-size: 13px;
-    }
-
-    .logs,
-    .data-section,
-    .history-section,
-    .report-section,
-    .about {
-        padding: 14px;
-    }
-
-    table {
-        min-width: 650px;
-    }
 }
 
-
-/* =========================
-   SMALL PHONE
-   ========================= */
 
 @media (max-width: 480px) {
 
-    header {
+    .top-header {
+        min-height: 60px;
+
         padding: 10px 12px;
     }
 
-    main {
-        padding: 15px 10px 25px;
+    .brand {
+        font-size: 16px;
     }
 
-    h1 {
-        font-size: 24px;
+    #firebaseStatus {
+        display: none;
     }
 
-    .dashboard-summary {
-        grid-template-columns: 1fr 1fr;
-
-        gap: 8px;
+    .page-title h1 {
+        font-size: 23px;
     }
 
-    .card {
-        padding: 13px 10px;
-    }
-
-    .card-value {
-        font-size: 20px;
-    }
-
-    button {
-        padding: 8px 11px;
-
+    .page-title p {
         font-size: 13px;
     }
 
-    nav a {
-        padding: 11px 10px;
-
-        font-size: 12px;
+    .control-card {
+        padding: 16px;
     }
 
-    th,
-    td {
-        padding: 8px;
+    .status-area {
+        align-items: flex-start;
 
-        font-size: 12px;
+        flex-direction: column;
+
+        gap: 5px;
     }
 
-    footer {
+    .button-area {
+        flex-direction: column;
+    }
+
+    .button-area button {
+        width: 100%;
+    }
+
+    .summary-grid {
+        grid-template-columns: 1fr 1fr;
+
+        gap: 9px;
+    }
+
+    .summary-card {
+        padding: 13px;
+
+        min-height: 100px;
+    }
+
+    .summary-card .label {
         font-size: 11px;
+    }
+
+    .summary-card .value {
+        font-size: 19px;
+    }
+
+    .logs-title {
+        font-size: 17px;
+    }
+
+    #dataLogs {
+        min-width: 650px;
+    }
+
+    .footer-info {
+        font-size: 12px;
     }
 }
 
 
-/* =========================
-   PRINT REPORT
-   ========================= */
+/* ============================================================
+   VERY SMALL PHONES
+   ============================================================ */
+
+@media (max-width: 350px) {
+
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .brand {
+        font-size: 15px;
+    }
+
+    #logoutButton {
+        padding: 6px 9px;
+    }
+}
+
+
+/* ============================================================
+   PRINT
+   ============================================================ */
 
 @media print {
 
+    .top-header,
     nav,
-    header,
-    footer,
-    button {
+    button,
+    .control-card {
         display: none !important;
+    }
+
+    .dashboard {
+        width: 100%;
+
+        padding: 0;
     }
 
     body {
         background: white;
     }
 
-    main {
-        max-width: 100%;
-        padding: 0;
-    }
-
-    .logs,
-    .report-section,
-    .history-section {
+    .summary-card,
+    .logs-card {
         box-shadow: none;
-        border: 1px solid #999;
+
+        border: 1px solid #ccc;
     }
 }
-```
