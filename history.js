@@ -11,23 +11,14 @@
 auth.onAuthStateChanged(function(user) {
 
     if (!user) {
-
         window.location.href = "index.html";
-
         return;
-
     }
 
-
-    const email =
-        document.getElementById("userEmail");
-
+    const email = document.getElementById("userEmail");
 
     if (email) {
-
-        email.textContent =
-            user.email;
-
+        email.textContent = user.email;
     }
 
 });
@@ -40,7 +31,6 @@ auth.onAuthStateChanged(function(user) {
 
 const logoutButton =
     document.getElementById("logoutButton");
-
 
 if (logoutButton) {
 
@@ -88,29 +78,188 @@ const firebaseStatus =
 
 
 // =====================================================
-// HISTORY REFERENCE
-// =====================================================
-//
-// IMPORTANT:
-//
-// ESP32 writes:
-//
-// smartStorage/history
-//
-// NOT:
-//
-// History
-//
-// NOT:
-//
-// SmartStorage/history
-//
+// FIREBASE HISTORY REFERENCE
 // =====================================================
 
 const historyRef =
     database.ref(
         "smartStorage/history"
     );
+
+
+
+// =====================================================
+// TIMESTAMP → DATE
+// =====================================================
+
+function convertTimestampToDate(timestamp) {
+
+    if (
+        timestamp === undefined ||
+        timestamp === null ||
+        timestamp === ""
+    ) {
+        return null;
+    }
+
+    let value = Number(timestamp);
+
+    if (isNaN(value)) {
+        return null;
+    }
+
+    // Firebase timestamp in seconds
+    if (value < 100000000000) {
+        value = value * 1000;
+    }
+
+    const date = new Date(value);
+
+    if (isNaN(date.getTime())) {
+        return null;
+    }
+
+    return date;
+}
+
+
+
+// =====================================================
+// FORMAT DATE
+// Philippines: Asia/Manila
+// =====================================================
+
+function formatDate(timestamp) {
+
+    const date =
+        convertTimestampToDate(timestamp);
+
+    if (!date) {
+        return "-";
+    }
+
+    return date.toLocaleDateString(
+        "en-PH",
+        {
+            timeZone: "Asia/Manila",
+            year: "numeric",
+            month: "short",
+            day: "numeric"
+        }
+    );
+
+}
+
+
+
+// =====================================================
+// FORMAT TIME
+// Philippines: Asia/Manila
+// =====================================================
+
+function formatTime(timestamp) {
+
+    const date =
+        convertTimestampToDate(timestamp);
+
+    if (!date) {
+        return "-";
+    }
+
+    return date.toLocaleTimeString(
+        "en-PH",
+        {
+            timeZone: "Asia/Manila",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true
+        }
+    );
+
+}
+
+
+
+// =====================================================
+// FORMAT MOTION
+// =====================================================
+
+function formatMotion(value) {
+
+    if (
+        value === true ||
+        value === 1 ||
+        value === "1" ||
+        value === "true" ||
+        value === "TRUE"
+    ) {
+        return "Motion Detected";
+    }
+
+    if (
+        value === false ||
+        value === 0 ||
+        value === "0" ||
+        value === "false" ||
+        value === "FALSE"
+    ) {
+        return "No Motion";
+    }
+
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
+        return "-";
+    }
+
+    return String(value);
+
+}
+
+
+
+// =====================================================
+// FORMAT STATUS
+// =====================================================
+
+function formatStatus(data) {
+
+    // If ESP32 sends status directly
+    if (
+        data.status !== undefined &&
+        data.status !== null &&
+        data.status !== ""
+    ) {
+        return String(data.status);
+    }
+
+    // Otherwise use online field
+    if (
+        data.online === true ||
+        data.online === 1 ||
+        data.online === "true" ||
+        data.online === "TRUE" ||
+        data.online === "1"
+    ) {
+        return "ONLINE";
+    }
+
+    if (
+        data.online === false ||
+        data.online === 0 ||
+        data.online === "false" ||
+        data.online === "FALSE" ||
+        data.online === "0"
+    ) {
+        return "OFFLINE";
+    }
+
+    return "-";
+
+}
 
 
 
@@ -154,6 +303,10 @@ historyRef.on(
 
 
         if (!tbody) {
+
+            console.error(
+                "historyBody not found."
+            );
 
             return;
 
@@ -203,17 +356,13 @@ historyRef.on(
 
         snapshot.forEach(function(child) {
 
-            const data =
-                child.val();
-
-
             records.push({
 
                 key:
                     child.key,
 
                 data:
-                    data
+                    child.val()
 
             });
 
@@ -236,7 +385,7 @@ historyRef.on(
         records.forEach(function(record) {
 
             const data =
-                record.data;
+                record.data || {};
 
 
             const row =
@@ -245,67 +394,110 @@ historyRef.on(
                 );
 
 
-            const date =
-                data.date ||
-                "-";
 
-
-            const time =
-                data.time ||
-                "-";
-
+            // -------------------------------------------------
+            // TIMESTAMP
+            // -------------------------------------------------
 
             const timestamp =
                 data.timestamp ||
-                "-";
+                data.timestampRaw ||
+                data.createdAt ||
+                null;
 
 
-            const temperature =
-                data.temperature !== undefined
-                    ? Number(
-                        data.temperature
-                    ).toFixed(1) + " °C"
-                    : "-";
+
+            // -------------------------------------------------
+            // DATE
+            // -------------------------------------------------
+
+            const date =
+                data.date ||
+                formatDate(timestamp);
 
 
-            const humidity =
-                data.humidity !== undefined
-                    ? Number(
-                        data.humidity
-                    ).toFixed(1) + " %"
-                    : "-";
+
+            // -------------------------------------------------
+            // TIME
+            // -------------------------------------------------
+
+            const time =
+                data.time ||
+                formatTime(timestamp);
 
 
-            let motion =
-                data.motion;
 
+            // -------------------------------------------------
+            // TEMPERATURE
+            // -------------------------------------------------
 
-            if (motion === true) {
+            let temperature = "-";
 
-                motion =
-                    "Motion Detected";
+            if (
+                data.temperature !== undefined &&
+                data.temperature !== null &&
+                data.temperature !== ""
+            ) {
+
+                const temp =
+                    Number(data.temperature);
+
+                temperature =
+                    isNaN(temp)
+                        ? String(data.temperature)
+                        : temp.toFixed(1) + " °C";
 
             }
 
-            else if (motion === false) {
 
-                motion =
-                    "No Motion";
+
+            // -------------------------------------------------
+            // HUMIDITY
+            // -------------------------------------------------
+
+            let humidity = "-";
+
+            if (
+                data.humidity !== undefined &&
+                data.humidity !== null &&
+                data.humidity !== ""
+            ) {
+
+                const hum =
+                    Number(data.humidity);
+
+                humidity =
+                    isNaN(hum)
+                        ? String(data.humidity)
+                        : hum.toFixed(1) + " %";
 
             }
 
-            else {
 
-                motion =
-                    motion || "-";
 
-            }
+            // -------------------------------------------------
+            // MOTION
+            // -------------------------------------------------
 
+            const motion =
+                formatMotion(
+                    data.motion
+                );
+
+
+
+            // -------------------------------------------------
+            // STATUS
+            // -------------------------------------------------
 
             const status =
-                data.status ||
-                "-";
+                formatStatus(data);
 
+
+
+            // -------------------------------------------------
+            // SOURCE
+            // -------------------------------------------------
 
             const source =
                 data.source ||
@@ -313,27 +505,57 @@ historyRef.on(
 
 
 
+            // -------------------------------------------------
+            // CREATE ROW
+            // -------------------------------------------------
+
             row.innerHTML = `
 
-                <td>${escapeHTML(date)}</td>
+                <td>
+                    ${escapeHTML(date)}
+                </td>
 
-                <td>${escapeHTML(time)}</td>
+                <td>
+                    ${escapeHTML(time)}
+                </td>
 
-                <td>${escapeHTML(timestamp)}</td>
+                <td>
+                    ${escapeHTML(
+                        timestamp || "-"
+                    )}
+                </td>
 
-                <td>${escapeHTML(temperature)}</td>
+                <td>
+                    ${escapeHTML(
+                        temperature
+                    )}
+                </td>
 
-                <td>${escapeHTML(humidity)}</td>
+                <td>
+                    ${escapeHTML(
+                        humidity
+                    )}
+                </td>
 
-                <td>${escapeHTML(motion)}</td>
+                <td>
+                    ${escapeHTML(
+                        motion
+                    )}
+                </td>
 
                 <td>
                     <strong>
-                        ${escapeHTML(status)}
+                        ${escapeHTML(
+                            status
+                        )}
                     </strong>
                 </td>
 
-                <td>${escapeHTML(source)}</td>
+                <td>
+                    ${escapeHTML(
+                        source
+                    )}
+                </td>
 
             `;
 
@@ -421,21 +643,10 @@ if (searchInput) {
                         .toLowerCase();
 
 
-                if (
+                row.style.display =
                     text.includes(filter)
-                ) {
-
-                    row.style.display =
-                        "";
-
-                }
-
-                else {
-
-                    row.style.display =
-                        "none";
-
-                }
+                        ? ""
+                        : "none";
 
             });
 
@@ -454,12 +665,12 @@ if (searchInput) {
 function escapeHTML(value) {
 
     const div =
-        document.createElement("div");
-
+        document.createElement(
+            "div"
+        );
 
     div.textContent =
-        value;
-
+        String(value);
 
     return div.innerHTML;
 
