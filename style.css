@@ -1,6 +1,6 @@
 /* ==========================================
    SMART STORAGE MONITORING SYSTEM
-   COMPLETE STYLE.CSS
+   ALIGNED DASHBOARD STYLE
    ORIGINAL BLUE THEME PRESERVED
 ========================================== */
 
@@ -19,6 +19,13 @@
 body {
     background: #edf2f7;
     color: #222;
+    min-height: 100vh;
+}
+
+button,
+input,
+select {
+    font-family: inherit;
 }
 
 
@@ -42,6 +49,7 @@ body {
 
 .login-container {
     width: 420px;
+    max-width: 90%;
     background: #fff;
     border-radius: 15px;
     padding: 35px;
@@ -57,6 +65,7 @@ body {
 .logo-group {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 20px;
     margin-bottom: 20px;
 }
@@ -79,7 +88,7 @@ body {
 
 
 /* ==========================================
-   INPUT
+   INPUTS
 ========================================== */
 
 .input-group {
@@ -90,6 +99,7 @@ body {
     display: block;
     margin-bottom: 8px;
     font-weight: bold;
+    color: #333;
 }
 
 .input-group input,
@@ -116,8 +126,21 @@ body {
 
 
 /* ==========================================
-   LOGIN BUTTON
+   BUTTONS
 ========================================== */
+
+button {
+    transition: .3s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+}
+
+.login-btn,
+.save-btn {
+    cursor: pointer;
+}
 
 .login-btn {
     width: 100%;
@@ -130,10 +153,6 @@ body {
     border-radius: 8px;
 
     font-size: 16px;
-
-    cursor: pointer;
-
-    transition: .3s;
 }
 
 .login-btn:hover {
@@ -152,11 +171,11 @@ body {
     top: 0;
 
     width: 250px;
-    height: 100%;
+    height: 100vh;
 
     background: #0b2447;
 
-    overflow: auto;
+    overflow-y: auto;
 
     z-index: 1000;
 }
@@ -181,7 +200,7 @@ body {
 
     padding: 15px 20px;
 
-    transition: .3s;
+    transition: .3s ease;
 }
 
 .sidebar a:hover {
@@ -207,11 +226,9 @@ body {
     padding: 12px;
 
     background: #dc3545;
-
     color: white;
 
     border: none;
-
     border-radius: 8px;
 
     cursor: pointer;
@@ -230,6 +247,8 @@ body {
     margin-left: 250px;
 
     padding: 30px;
+
+    min-height: 100vh;
 }
 
 
@@ -241,7 +260,6 @@ body {
     display: flex;
 
     justify-content: space-between;
-
     align-items: center;
 
     margin-bottom: 30px;
@@ -249,6 +267,7 @@ body {
 
 .top-bar h1 {
     color: #0b2447;
+    font-size: 30px;
 }
 
 .user-card {
@@ -260,6 +279,28 @@ body {
 
     box-shadow:
         0 5px 12px rgba(0, 0, 0, .1);
+}
+
+
+/* ==========================================
+   STANDARD DASHBOARD CARD
+========================================== */
+
+.card,
+.status-card,
+.chart-card,
+.table-card,
+.alert-box,
+.report-card,
+.settings-card,
+.profile-card,
+.about-card {
+    background: white;
+
+    border-radius: 15px;
+
+    box-shadow:
+        0 5px 12px rgba(0, 0, 0, .12);
 }
 
 
@@ -279,14 +320,7 @@ body {
 }
 
 .card {
-    background: white;
-
     padding: 20px;
-
-    border-radius: 15px;
-
-    box-shadow:
-        0 5px 12px rgba(0, 0, 0, .12);
 
     text-align: center;
 }
@@ -315,14 +349,7 @@ body {
 ========================================== */
 
 .status-card {
-    background: white;
-
     padding: 25px;
-
-    border-radius: 15px;
-
-    box-shadow:
-        0 5px 12px rgba(0, 0, 0, .12);
 
     text-align: center;
 
@@ -341,14 +368,7 @@ body {
 ========================================== */
 
 .chart-card {
-    background: white;
-
     padding: 25px;
-
-    border-radius: 15px;
-
-    box-shadow:
-        0 5px 12px rgba(0, 0, 0, .12);
 
     margin-bottom: 30px;
 }
@@ -371,7 +391,6 @@ body {
 ========================================== */
 
 .manual-form {
-
     margin-top: 20px;
 
     display: grid;
@@ -388,7 +407,6 @@ body {
 
 .manual-form input,
 .manual-form select {
-
     width: 100%;
 
     padding: 12px;
@@ -404,7 +422,6 @@ body {
 
 .manual-form input:focus,
 .manual-form select:focus {
-
     outline: none;
 
     border-color: #576cbc;
@@ -414,12 +431,10 @@ body {
 }
 
 .manual-form .login-btn {
-
     grid-column: 1 / -1;
 }
 
 #manualMessage {
-
     grid-column: 1 / -1;
 
     text-align: center;
@@ -431,15 +446,13 @@ body {
 
 
 /* ==========================================
-   DEVICE CONTROL SECTION
+   DEVICE CONTROL
 ========================================== */
 
 .control-row {
-
     display: flex;
 
     justify-content: space-between;
-
     align-items: center;
 
     padding: 16px 18px;
@@ -452,24 +465,17 @@ body {
 
     border-radius: 12px;
 
-    transition: .3s;
+    transition: .3s ease;
 }
 
 .control-row:hover {
-
     background: #f1f5f9;
 
     box-shadow:
         0 4px 10px rgba(0, 0, 0, .08);
 }
 
-
-/* ==========================================
-   CONTROL INFORMATION
-========================================== */
-
 .control-info {
-
     display: flex;
 
     align-items: center;
@@ -478,7 +484,6 @@ body {
 }
 
 .control-icon {
-
     width: 45px;
     height: 45px;
 
@@ -498,7 +503,6 @@ body {
 }
 
 .control-info strong {
-
     display: block;
 
     font-size: 16px;
@@ -507,7 +511,6 @@ body {
 }
 
 .control-info small {
-
     display: block;
 
     font-size: 13px;
@@ -521,11 +524,10 @@ body {
 
 
 /* ==========================================
-   REAL PHYSICAL TOGGLE SWITCH
+   TOGGLE SWITCH
 ========================================== */
 
 .switch {
-
     position: relative;
 
     display: inline-block;
@@ -536,11 +538,7 @@ body {
     flex-shrink: 0;
 }
 
-
-/* Hide checkbox */
-
 .switch input {
-
     opacity: 0;
 
     width: 0;
@@ -549,11 +547,7 @@ body {
     position: absolute;
 }
 
-
-/* Switch body */
-
 .slider {
-
     position: absolute;
 
     cursor: pointer;
@@ -576,11 +570,7 @@ body {
     transition: .25s;
 }
 
-
-/* Switch knob */
-
 .slider::before {
-
     content: "";
 
     position: absolute;
@@ -603,13 +593,7 @@ body {
     transition: .25s;
 }
 
-
-/* ==========================================
-   SWITCH ON
-========================================== */
-
 .switch input:checked + .slider {
-
     background: #28a745;
 
     border-color: #218838;
@@ -620,27 +604,14 @@ body {
 }
 
 .switch input:checked + .slider::before {
-
     transform: translateX(32px);
 }
 
-
-/* ==========================================
-   SWITCH PRESS EFFECT
-========================================== */
-
 .slider:active::before {
-
     width: 31px;
 }
 
-
-/* ==========================================
-   SWITCH FOCUS
-========================================== */
-
 .switch input:focus-visible + .slider {
-
     outline: 3px solid
         rgba(87, 108, 188, .30);
 
@@ -653,39 +624,31 @@ body {
 ========================================== */
 
 #firebaseStatus {
-
     color: #f59e0b;
 }
 
 .firebase-connected {
-
     color: #28a745 !important;
 }
 
 .firebase-error {
-
     color: #dc3545 !important;
 }
 
 
 /* ==========================================
-   TABLE
+   TABLE CARD
 ========================================== */
 
 .table-card {
-
-    background: white;
-
     padding: 20px;
 
-    border-radius: 15px;
+    margin-bottom: 30px;
 
-    box-shadow:
-        0 5px 12px rgba(0, 0, 0, .12);
+    overflow-x: auto;
 }
 
 .table-card input {
-
     width: 100%;
 
     padding: 12px;
@@ -698,23 +661,22 @@ body {
 }
 
 table {
-
     width: 100%;
 
     border-collapse: collapse;
 }
 
 table th {
-
     background: #0b2447;
 
     color: white;
 
     padding: 12px;
+
+    text-align: center;
 }
 
 table td {
-
     text-align: center;
 
     padding: 12px;
@@ -722,8 +684,11 @@ table td {
     border-bottom: 1px solid #ddd;
 }
 
-.empty-message {
+table tbody tr:hover {
+    background: #f5f8fc;
+}
 
+.empty-message {
     text-align: center;
 
     color: #777;
@@ -735,35 +700,101 @@ table td {
 
 
 /* ==========================================
+   HISTORY TABLE
+========================================== */
+
+#historyTable {
+    min-width: 800px;
+}
+
+#historyTable th {
+    background: #0b2447;
+
+    color: white;
+
+    padding: 14px 12px;
+
+    text-align: center;
+
+    white-space: nowrap;
+}
+
+#historyTable td {
+    padding: 13px 12px;
+
+    border-bottom: 1px solid #e0e0e0;
+
+    text-align: center;
+
+    white-space: nowrap;
+}
+
+#historyTable tbody tr:hover {
+    background: #f5f8fc;
+}
+
+
+/* ==========================================
+   HISTORY STATUS
+========================================== */
+
+.history-on,
+.history-off,
+.history-warning,
+.history-danger {
+    display: inline-block;
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    font-weight: bold;
+}
+
+.history-on {
+    background: #d4edda;
+
+    color: #155724;
+}
+
+.history-off {
+    background: #eeeeee;
+
+    color: #666;
+}
+
+.history-warning {
+    background: #fff3cd;
+
+    color: #856404;
+}
+
+.history-danger {
+    background: #f8d7da;
+
+    color: #721c24;
+}
+
+
+/* ==========================================
    ALERTS
 ========================================== */
 
 .alert-box {
-
-    background: white;
-
     padding: 20px;
-
-    border-radius: 15px;
-
-    box-shadow:
-        0 5px 12px rgba(0, 0, 0, .12);
 
     margin-bottom: 20px;
 }
 
 .alert-normal {
-
     border-left: 6px solid #28a745;
 }
 
 .alert-warning {
-
     border-left: 6px solid #ffc107;
 }
 
 .alert-danger {
-
     border-left: 6px solid #dc3545;
 }
 
@@ -773,15 +804,7 @@ table td {
 ========================================== */
 
 .report-card {
-
-    background: white;
-
     padding: 25px;
-
-    border-radius: 15px;
-
-    box-shadow:
-        0 5px 12px rgba(0, 0, 0, .12);
 
     margin-bottom: 25px;
 }
@@ -792,25 +815,15 @@ table td {
 ========================================== */
 
 .settings-card {
-
-    background: white;
-
     padding: 25px;
-
-    border-radius: 15px;
-
-    box-shadow:
-        0 5px 12px rgba(0, 0, 0, .12);
 
     max-width: 700px;
 }
 
 .settings-card label {
-
     display: block;
 
     margin-top: 15px;
-
     margin-bottom: 8px;
 
     font-weight: bold;
@@ -818,7 +831,6 @@ table td {
 
 .settings-card input,
 .settings-card select {
-
     width: 100%;
 
     padding: 12px;
@@ -829,7 +841,6 @@ table td {
 }
 
 .save-btn {
-
     margin-top: 20px;
 
     padding: 12px 25px;
@@ -845,28 +856,27 @@ table td {
     cursor: pointer;
 }
 
+.save-btn:hover {
+    background: #19376d;
+}
+
 
 /* ==========================================
    PROFILE
 ========================================== */
 
 .profile-card {
-
-    background: white;
-
     padding: 30px;
-
-    border-radius: 15px;
-
-    box-shadow:
-        0 5px 12px rgba(0, 0, 0, .12);
 
     text-align: center;
 }
 
 .profile-card img {
-
     width: 130px;
+
+    height: 130px;
+
+    object-fit: cover;
 
     border-radius: 50%;
 
@@ -879,122 +889,126 @@ table td {
 ========================================== */
 
 .about-card {
-
-    background: white;
-
     padding: 30px;
-
-    border-radius: 15px;
-
-    box-shadow:
-        0 5px 12px rgba(0, 0, 0, .12);
 
     line-height: 1.8;
 }
 
 
 /* ==========================================
-   BUTTONS
+   TABLET
 ========================================== */
 
-button {
-
-    transition: .3s;
-}
-
-button:hover {
-
-    transform: translateY(-2px);
-}
-
-
-/* ==========================================
-   TABLET RESPONSIVE
-========================================== */
-
-@media(max-width: 900px) {
+@media (max-width: 900px) {
 
     .sidebar {
+        position: relative;
 
         width: 100%;
-
-        position: relative;
 
         height: auto;
     }
 
     .main-content {
-
         margin-left: 0;
+
+        padding: 25px;
     }
 
     .card-grid {
-
-        grid-template-columns: 1fr;
+        grid-template-columns:
+            repeat(2, 1fr);
     }
 
     .top-bar {
-
         flex-direction: column;
+
+        align-items: flex-start;
 
         gap: 15px;
     }
 
+    .user-card {
+        width: 100%;
+    }
 }
 
 
 /* ==========================================
-   MOBILE RESPONSIVE
+   MOBILE
 ========================================== */
 
-@media(max-width: 600px) {
+@media (max-width: 600px) {
 
     .main-content {
+        margin-left: 0;
 
+        padding: 15px;
+    }
+
+    .top-bar h1 {
+        font-size: 24px;
+    }
+
+    .card-grid {
+        grid-template-columns: 1fr;
+
+        gap: 15px;
+    }
+
+    .card {
         padding: 18px;
     }
 
-    .manual-form {
+    .card h1 {
+        font-size: 30px;
+    }
 
+    .manual-form {
         grid-template-columns: 1fr;
+
+        gap: 15px;
     }
 
     .manual-form .login-btn {
-
         grid-column: auto;
     }
 
     .control-row {
-
         padding: 14px;
-    }
-
-    .control-info {
 
         gap: 10px;
     }
 
-    .control-icon {
+    .control-info {
+        gap: 10px;
 
+        min-width: 0;
+    }
+
+    .control-icon {
         width: 40px;
         height: 40px;
 
         font-size: 20px;
+
+        flex-shrink: 0;
     }
 
     .control-info strong {
-
         font-size: 15px;
     }
 
-    .switch {
+    .control-info small {
+        font-size: 11px;
+    }
 
+    .switch {
         width: 62px;
         height: 34px;
     }
 
     .slider::before {
-
         width: 26px;
         height: 26px;
 
@@ -1003,150 +1017,68 @@ button:hover {
     }
 
     .switch input:checked + .slider::before {
-
         transform: translateX(28px);
     }
-     /* =========================================================
-   HISTORY TABLE
-========================================================= */
 
-#historyTable th {
-
-    background: #0b2447;
-
-    color: white;
-
-    padding: 14px 12px;
-
-    text-align: center;
-
-    white-space: nowrap;
-
-}
-
-
-#historyTable td {
-
-    padding: 13px 12px;
-
-    border-bottom: 1px solid #e0e0e0;
-
-    text-align: center;
-
-    white-space: nowrap;
-
-}
-
-
-#historyTable tbody tr:hover {
-
-    background: #f5f8fc;
-
-}
-
-
-/* =========================================================
-   HISTORY STATUS
-========================================================= */
-
-.history-on {
-
-    display: inline-block;
-
-    padding: 5px 10px;
-
-    border-radius: 20px;
-
-    background: #d4edda;
-
-    color: #155724;
-
-    font-weight: bold;
-
-}
-
-
-.history-off {
-
-    display: inline-block;
-
-    padding: 5px 10px;
-
-    border-radius: 20px;
-
-    background: #eeeeee;
-
-    color: #666;
-
-    font-weight: bold;
-
-}
-
-
-.history-warning {
-
-    display: inline-block;
-
-    padding: 5px 10px;
-
-    border-radius: 20px;
-
-    background: #fff3cd;
-
-    color: #856404;
-
-    font-weight: bold;
-
-}
-
-
-.history-danger {
-
-    display: inline-block;
-
-    padding: 5px 10px;
-
-    border-radius: 20px;
-
-    background: #f8d7da;
-
-    color: #721c24;
-
-    font-weight: bold;
-
-}
-
-
-/* =========================================================
-   MOBILE HISTORY
-========================================================= */
-
-@media (max-width: 768px) {
-
-    .main-content {
-
-        margin-left: 0;
-
-        padding: 15px;
-
+    .chart-card,
+    .status-card,
+    .table-card,
+    .report-card,
+    .settings-card,
+    .about-card {
+        padding: 18px;
     }
 
+    .table-card {
+        overflow-x: auto;
+    }
 
     #historyTable {
-
         min-width: 1100px;
-
     }
-
 
     #historyTable th,
     #historyTable td {
-
         font-size: 13px;
 
         padding: 10px;
+    }
+}
 
+
+/* ==========================================
+   VERY SMALL DEVICES
+========================================== */
+
+@media (max-width: 400px) {
+
+    .main-content {
+        padding: 12px;
     }
 
-}
+    .control-row {
+        align-items: center;
+    }
+
+    .control-info strong {
+        font-size: 14px;
+    }
+
+    .control-info small {
+        font-size: 10px;
+    }
+
+    .switch {
+        width: 58px;
+        height: 32px;
+    }
+
+    .slider::before {
+        width: 24px;
+        height: 24px;
+    }
+
+    .switch input:checked + .slider::before {
+        transform: translateX(26px);
+    }
 }
