@@ -1,187 +1,647 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Smart Storage Monitoring System</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #f4f4f4;
-        }
+    <title>
+        Smart Storage Monitoring System
+    </title>
 
-        h1 {
-            text-align: center;
-        }
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 
-        .dashboard {
-            max-width: 900px;
-            margin: 30px auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-        }
-
-        .card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        .card h2 {
-            margin-bottom: 15px;
-        }
-
-        .value {
-            font-size: 32px;
-            font-weight: bold;
-        }
-
-        #motionValue {
-            color: #333;
-        }
-
-        #temperatureValue {
-            color: #e67e22;
-        }
-
-        #statusValue {
-            color: #27ae60;
-        }
-    </style>
 </head>
+
 
 <body>
 
-    <h1>SMART STORAGE MONITORING SYSTEM</h1>
 
-    <div class="dashboard">
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
 
-        <!-- INT -->
-        <div class="card">
-            <h2>Motion</h2>
-            <div class="value" id="motionValue">0</div>
+<div class="sidebar">
+
+    <h2>
+        📦 Smart Storage
+    </h2>
+
+
+    <a
+        href="dashboard.html"
+        class="active"
+    >
+        🏠 Dashboard
+    </a>
+
+
+    <a href="history.html">
+        📋 History
+    </a>
+
+
+    <a href="alerts.html">
+        🚨 Alerts
+    </a>
+
+
+    <a href="reports.html">
+        📊 Reports
+    </a>
+
+
+    <a href="settings.html">
+        ⚙️ Settings
+    </a>
+
+
+    <a href="profile.html">
+        👤 Profile
+    </a>
+
+
+    <a href="about.html">
+        ℹ️ About
+    </a>
+
+
+    <button
+        type="button"
+        class="logout-btn"
+        id="logoutButton"
+    >
+        🚪 Logout
+    </button>
+
+</div>
+
+
+
+<!-- =====================================================
+     MAIN CONTENT
+===================================================== -->
+
+<div class="main-content">
+
+
+    <!-- =================================================
+         TOP BAR
+    ================================================== -->
+
+    <div class="top-bar">
+
+        <div>
+
+            <h1>
+                Dashboard
+            </h1>
+
+            <p>
+                Smart Storage Data Collection System
+            </p>
+
         </div>
 
-        <!-- FLOAT -->
-        <div class="card">
-            <h2>Temperature</h2>
-            <div class="value">
-                <span id="temperatureValue">0.00</span> °C
-            </div>
-        </div>
 
-        <!-- STRING -->
-        <div class="card">
-            <h2>Status</h2>
-            <div class="value" id="statusValue">Normal</div>
+        <div class="user-card">
+
+            Logged in as:
+
+            <b id="userEmail">
+                Loading...
+            </b>
+
         </div>
 
     </div>
 
-    <script type="module">
-
-        // Firebase SDK
-        import {
-            initializeApp
-        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-        import {
-            getDatabase,
-            ref,
-            onValue
-        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 
-        // ==================================================
-        // FIREBASE CONFIG
-        // ==================================================
+    <!-- =================================================
+         FIREBASE CONNECTION
+    ================================================== -->
 
-        const firebaseConfig = {
+    <div
+        id="firebaseStatus"
+        class="status-card"
+    >
 
-            apiKey: "YOUR_API_KEY",
+        🔄 Connecting to Firebase...
 
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-
-            databaseURL: "YOUR_DATABASE_URL",
-
-            projectId: "YOUR_PROJECT_ID",
-
-            storageBucket: "YOUR_PROJECT.firebasestorage.app",
-
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-
-            appId: "YOUR_APP_ID"
-
-        };
+    </div>
 
 
-        // ==================================================
-        // INITIALIZE FIREBASE
-        // ==================================================
 
-        const app = initializeApp(firebaseConfig);
+    <!-- =================================================
+         ESP32 STATUS
+    ================================================== -->
 
-        const database = getDatabase(app);
-
-
-        // ==================================================
-        // FIREBASE PATH
-        // ==================================================
-
-        const sensorRef = ref(database, "sensor");
+    <div class="card-grid">
 
 
-        // ==================================================
-        // READ DATA
-        // ==================================================
+        <!-- ESP32 -->
 
-        onValue(sensorRef, (snapshot) => {
+        <div class="card">
 
-            const data = snapshot.val();
-
-            if (!data) {
-                return;
-            }
+            <h3>
+                📡 ESP32 Status
+            </h3>
 
 
-            // INT
-            if (data.motion !== undefined) {
-
-                document.getElementById("motionValue").textContent =
-                    data.motion;
-
-            }
+            <h1 id="deviceStatus">
+                OFFLINE
+            </h1>
 
 
-            // FLOAT
-            if (data.temperature !== undefined) {
+            <p id="deviceSource">
+                Waiting for ESP32...
+            </p>
 
-                document.getElementById("temperatureValue").textContent =
-                    Number(data.temperature).toFixed(2);
-
-            }
+        </div>
 
 
-            // STRING
-            if (data.status !== undefined) {
 
-                document.getElementById("statusValue").textContent =
-                    data.status;
+        <!-- COLLECTION STATUS -->
 
-            }
+        <div class="card">
 
-        });
+            <h3>
+                📥 Collection Status
+            </h3>
 
-    </script>
+
+            <h1 id="collectionStatus">
+                STOPPED
+            </h1>
+
+
+            <p>
+                Data collection
+            </p>
+
+        </div>
+
+
+
+        <!-- RECORD COUNT -->
+
+        <div class="card">
+
+            <h3>
+                📊 Records Collected
+            </h3>
+
+
+            <h1 id="recordCount">
+                0
+            </h1>
+
+
+            <p>
+                Total records
+            </p>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         START / STOP COLLECTION
+    ================================================== -->
+
+    <div class="chart-card">
+
+
+        <h2>
+            🎛 Data Collection Control
+        </h2>
+
+
+        <p
+            style="
+            color:#666;
+            margin-bottom:25px;
+            "
+        >
+
+            Start or stop the collection of
+            integer, float, and string data
+            from the ESP32.
+
+        </p>
+
+
+        <div
+            style="
+            display:flex;
+            gap:15px;
+            flex-wrap:wrap;
+            "
+        >
+
+
+            <!-- START -->
+
+            <button
+                id="startCollection"
+                type="button"
+                style="
+                padding:15px 25px;
+                border:none;
+                border-radius:8px;
+                background:#28a745;
+                color:white;
+                font-size:16px;
+                font-weight:bold;
+                cursor:pointer;
+                "
+            >
+
+                ▶ Start Collection
+
+            </button>
+
+
+
+            <!-- STOP -->
+
+            <button
+                id="stopCollection"
+                type="button"
+                style="
+                padding:15px 25px;
+                border:none;
+                border-radius:8px;
+                background:#dc3545;
+                color:white;
+                font-size:16px;
+                font-weight:bold;
+                cursor:pointer;
+                "
+            >
+
+                ⏹ Stop Collection
+
+            </button>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =================================================
+         DATA TYPES
+    ================================================== -->
+
+    <div class="chart-card">
+
+
+        <h2>
+            🧮 Collected Data Types
+        </h2>
+
+
+        <p
+            style="
+            color:#666;
+            margin-bottom:25px;
+            "
+        >
+
+            Data received from the ESP32 using
+            different programming data types.
+
+        </p>
+
+
+        <div class="card-grid">
+
+
+            <!-- =========================================
+                 INT
+            ========================================== -->
+
+            <div class="card">
+
+                <h3>
+                    🔢 Integer
+                </h3>
+
+
+                <h1 id="intValue">
+                    --
+                </h1>
+
+
+                <p>
+                    Data Type:
+                    <strong>int</strong>
+                </p>
+
+            </div>
+
+
+
+            <!-- =========================================
+                 FLOAT
+            ========================================== -->
+
+            <div class="card">
+
+                <h3>
+                    🔢 Decimal
+                </h3>
+
+
+                <h1 id="floatValue">
+                    --
+                </h1>
+
+
+                <p>
+                    Data Type:
+                    <strong>float</strong>
+                </p>
+
+            </div>
+
+
+
+            <!-- =========================================
+                 STRING
+            ========================================== -->
+
+            <div class="card">
+
+                <h3>
+                    🔤 Text
+                </h3>
+
+
+                <h2 id="stringValue">
+                    --
+                </h2>
+
+
+                <p>
+                    Data Type:
+                    <strong>String</strong>
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         LAST UPDATE
+    ================================================== -->
+
+    <div class="status-card">
+
+
+        <h2>
+            🕐 Collection Information
+        </h2>
+
+
+        <h1 id="lastUpdate">
+            No data received yet.
+        </h1>
+
+
+        <p>
+            Last data update
+        </p>
+
+
+    </div>
+
+
+
+    <!-- =================================================
+         DATA SUMMARY
+    ================================================== -->
+
+    <div class="chart-card">
+
+
+        <h2>
+            📋 Data Summary
+        </h2>
+
+
+        <div
+            style="
+            line-height:2;
+            "
+        >
+
+
+            <p>
+
+                <strong>
+                    Integer:
+                </strong>
+
+                <span id="summaryInt">
+                    --
+                </span>
+
+            </p>
+
+
+            <p>
+
+                <strong>
+                    Float:
+                </strong>
+
+                <span id="summaryFloat">
+                    --
+                </span>
+
+            </p>
+
+
+            <p>
+
+                <strong>
+                    String:
+                </strong>
+
+                <span id="summaryString">
+                    --
+                </span>
+
+            </p>
+
+
+            <p>
+
+                <strong>
+                    Collection:
+                </strong>
+
+                <span id="summaryCollection">
+                    STOPPED
+                </span>
+
+            </p>
+
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         SYSTEM INFORMATION
+    ================================================== -->
+
+    <div class="chart-card">
+
+
+        <h2>
+            ℹ️ System Information
+        </h2>
+
+
+        <div
+            style="
+            line-height:2;
+            "
+        >
+
+
+            <p>
+
+                <strong>
+                    Controller:
+                </strong>
+
+                ESP32
+
+            </p>
+
+
+            <p>
+
+                <strong>
+                    Database:
+                </strong>
+
+                Firebase Realtime Database
+
+            </p>
+
+
+            <p>
+
+                <strong>
+                    Data Types:
+                </strong>
+
+                int, float, String
+
+            </p>
+
+
+            <p>
+
+                <strong>
+                    Communication:
+                </strong>
+
+                Wi-Fi
+
+            </p>
+
+
+            <p>
+
+                <strong>
+                    Collection Interval:
+                </strong>
+
+                5 seconds
+
+            </p>
+
+
+            <p>
+
+                <strong>
+                    Sensors:
+                </strong>
+
+                Not connected
+
+            </p>
+
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+
+<!-- =====================================================
+     FIREBASE LIBRARIES
+===================================================== -->
+
+<script
+    src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"
+></script>
+
+
+<script
+    src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"
+></script>
+
+
+<script
+    src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"
+></script>
+
+
+
+<!-- =====================================================
+     FIREBASE CONFIG
+===================================================== -->
+
+<script src="firebase-config.js"></script>
+
+
+
+<!-- =====================================================
+     DASHBOARD JAVASCRIPT
+===================================================== -->
+
+<script src="dashboard.js"></script>
+
 
 </body>
+
 </html>
-```
