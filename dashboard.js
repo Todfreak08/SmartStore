@@ -5,452 +5,68 @@
 
 
 // ============================================================
-// FIREBASE
+// FIREBASE DATABASE
 // ============================================================
 
-const database = firebase.database();
+const database =
+    firebase.database();
 
 
 // ============================================================
-// FIREBASE REFERENCES
+// REFERENCES
 // ============================================================
 
 const collectionRef =
-    database.ref("collection/enabled");
+    database.ref(
+        "collection/enabled"
+    );
+
 
 const dataRef =
-    database.ref("collection/data");
+    database.ref(
+        "collection/data"
+    );
+
 
 const recordCountRef =
-    database.ref("collection/recordCount");
+    database.ref(
+        "collection/recordCount"
+    );
 
 
 // ============================================================
-// HELPER
+// ELEMENT HELPER
 // ============================================================
+
+function getElement(id) {
+
+    return document.getElementById(id);
+
+}
+
 
 function setText(id, value) {
 
     const element =
-        document.getElementById(id);
+        getElement(id);
 
     if (element) {
-        element.textContent = value;
+
+        element.textContent =
+            value;
+
     }
 
 }
 
 
 // ============================================================
-// FIREBASE CONNECTION STATUS
-// ============================================================
-
-database.ref(".info/connected").on(
-    "value",
-    function(snapshot) {
-
-        if (snapshot.val() === true) {
-
-            setText(
-                "firebaseStatus",
-                "🟢 Firebase Connected"
-            );
-
-        } else {
-
-            setText(
-                "firebaseStatus",
-                "🔴 Firebase Disconnected"
-            );
-
-        }
-
-    }
-);
-
-
-// ============================================================
-// LOGIN
-// ============================================================
-
-firebase.auth().onAuthStateChanged(
-    function(user) {
-
-        if (user) {
-
-            setText(
-                "userEmail",
-                user.email
-            );
-
-        } else {
-
-            setText(
-                "userEmail",
-                "Not logged in"
-            );
-
-        }
-
-    }
-);
-
-
-// ============================================================
-// LOGOUT
-// ============================================================
-
-const logoutButton =
-    document.getElementById("logoutButton");
-
-if (logoutButton) {
-
-    logoutButton.addEventListener(
-        "click",
-        function() {
-
-            firebase.auth()
-                .signOut()
-                .then(function() {
-
-                    window.location.href =
-                        "index.html";
-
-                })
-                .catch(function(error) {
-
-                    console.error(
-                        "Logout error:",
-                        error
-                    );
-
-                    alert(
-                        "Logout failed: " +
-                        error.message
-                    );
-
-                });
-
-        }
-    );
-
-}
-
-
-// ============================================================
-// START COLLECTION
-// ============================================================
-
-const startButton =
-    document.getElementById("startCollection");
-
-if (startButton) {
-
-    startButton.addEventListener(
-        "click",
-        function() {
-
-            console.log(
-                "START COLLECTION clicked"
-            );
-
-
-            collectionRef
-                .set(true)
-                .then(function() {
-
-                    console.log(
-                        "Collection started"
-                    );
-
-                })
-                .catch(function(error) {
-
-                    console.error(
-                        "Start error:",
-                        error
-                    );
-
-                    alert(
-                        "Unable to start collection:\n" +
-                        error.message
-                    );
-
-                });
-
-        }
-    );
-
-}
-
-
-// ============================================================
-// STOP COLLECTION
-// ============================================================
-
-const stopButton =
-    document.getElementById("stopCollection");
-
-if (stopButton) {
-
-    stopButton.addEventListener(
-        "click",
-        function() {
-
-            console.log(
-                "STOP COLLECTION clicked"
-            );
-
-
-            collectionRef
-                .set(false)
-                .then(function() {
-
-                    console.log(
-                        "Collection stopped"
-                    );
-
-                })
-                .catch(function(error) {
-
-                    console.error(
-                        "Stop error:",
-                        error
-                    );
-
-                    alert(
-                        "Unable to stop collection:\n" +
-                        error.message
-                    );
-
-                });
-
-        }
-    );
-
-}
-
-
-// ============================================================
-// COLLECTION STATUS
-// ============================================================
-
-collectionRef.on(
-    "value",
-    function(snapshot) {
-
-        const running =
-            snapshot.val() === true;
-
-
-        console.log(
-            "Collection status:",
-            running
-        );
-
-
-        if (running) {
-
-            setText(
-                "collectionStatus",
-                "RUNNING"
-            );
-
-            setText(
-                "summaryCollection",
-                "RUNNING"
-            );
-
-
-            // Optional button appearance
-
-            if (startButton) {
-
-                startButton.disabled =
-                    true;
-
-            }
-
-
-            if (stopButton) {
-
-                stopButton.disabled =
-                    false;
-
-            }
-
-        } else {
-
-            setText(
-                "collectionStatus",
-                "STOPPED"
-            );
-
-            setText(
-                "summaryCollection",
-                "STOPPED"
-            );
-
-
-            if (startButton) {
-
-                startButton.disabled =
-                    false;
-
-            }
-
-
-            if (stopButton) {
-
-                stopButton.disabled =
-                    true;
-
-            }
-
-        }
-
-    }
-);
-
-
-// ============================================================
-// RECORD COUNT
-// ============================================================
-
-recordCountRef.on(
-    "value",
-    function(snapshot) {
-
-        const count =
-            parseInt(snapshot.val()) || 0;
-
-
-        setText(
-            "recordCount",
-            count
-        );
-
-
-        setText(
-            "summaryRecords",
-            count
-        );
-
-    }
-);
-
-
-// ============================================================
-// FORMAT DATE
-// ============================================================
-
-function formatDate(timestamp) {
-
-    if (!timestamp) {
-
-        return "-";
-
-    }
-
-
-    const date =
-        new Date(timestamp);
-
-
-    if (isNaN(date.getTime())) {
-
-        return "-";
-
-    }
-
-
-    const year =
-        date.getFullYear();
-
-
-    const month =
-        String(
-            date.getMonth() + 1
-        ).padStart(2, "0");
-
-
-    const day =
-        String(
-            date.getDate()
-        ).padStart(2, "0");
-
-
-    return (
-        year +
-        "-" +
-        month +
-        "-" +
-        day
-    );
-
-}
-
-
-// ============================================================
-// FORMAT TIME
-// ============================================================
-
-function formatTime(timestamp) {
-
-    if (!timestamp) {
-
-        return "-";
-
-    }
-
-
-    const date =
-        new Date(timestamp);
-
-
-    if (isNaN(date.getTime())) {
-
-        return "-";
-
-    }
-
-
-    const hours =
-        String(
-            date.getHours()
-        ).padStart(2, "0");
-
-
-    const minutes =
-        String(
-            date.getMinutes()
-        ).padStart(2, "0");
-
-
-    const seconds =
-        String(
-            date.getSeconds()
-        ).padStart(2, "0");
-
-
-    return (
-        hours +
-        "-" +
-        minutes +
-        "-" +
-        seconds
-    );
-
-}
-
-
-// ============================================================
-// ESCAPE HTML
+// HTML SECURITY
 // ============================================================
 
 function escapeHTML(value) {
 
-    return String(value)
+    return String(value ?? "")
         .replace(
             /&/g,
             "&amp;"
@@ -476,162 +92,706 @@ function escapeHTML(value) {
 
 
 // ============================================================
-// GET LOG TABLE
+// FIREBASE CONNECTION
 // ============================================================
 
-function getLogTableBody() {
+database
+    .ref(".info/connected")
+    .on(
+        "value",
+        function(snapshot) {
 
-    // First try the ID
+            if (
+                snapshot.val() === true
+            ) {
 
-    let tbody =
-        document.getElementById(
-            "dataLogBody"
-        );
+                setText(
+                    "firebaseStatus",
+                    "🟢 Firebase Connected"
+                );
+
+            } else {
+
+                setText(
+                    "firebaseStatus",
+                    "🔴 Firebase Disconnected"
+                );
+
+            }
+
+        }
+    );
 
 
-    if (tbody) {
+// ============================================================
+// LOGIN
+// ============================================================
 
-        return tbody;
+firebase
+    .auth()
+    .onAuthStateChanged(
+        function(user) {
 
-    }
+            if (user) {
+
+                setText(
+                    "userEmail",
+                    user.email
+                );
+
+            } else {
+
+                setText(
+                    "userEmail",
+                    "Not logged in"
+                );
+
+            }
+
+        }
+    );
 
 
-    // Otherwise find the first tbody
+// ============================================================
+// LOGOUT
+// ============================================================
 
-    tbody =
-        document.querySelector(
-            "#dataLogs tbody"
-        );
+const logoutButton =
+    getElement(
+        "logoutButton"
+    );
 
 
-    return tbody;
+if (logoutButton) {
+
+    logoutButton.addEventListener(
+        "click",
+        async function() {
+
+            try {
+
+                await firebase
+                    .auth()
+                    .signOut();
+
+
+                window.location.href =
+                    "index.html";
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Logout error:",
+                    error
+                );
+
+
+                alert(
+                    "Logout failed: " +
+                    error.message
+                );
+
+            }
+
+        }
+    );
 
 }
 
 
 // ============================================================
-// CREATE ONE TABLE ROW
+// START COLLECTION
 // ============================================================
 
-function createLogRow(
-    recordKey,
-    record
-) {
-
-    const timestamp =
-        record.timestamp ||
-        record.time ||
-        null;
+const startButton =
+    getElement(
+        "startCollection"
+    );
 
 
-    let dateValue =
-        record.date || "";
+if (startButton) {
+
+    startButton.addEventListener(
+        "click",
+        async function() {
+
+            console.log(
+                "Start Collection clicked"
+            );
 
 
-    let timeValue =
-        record.time || "";
+            try {
+
+                await collectionRef.set(
+                    true
+                );
 
 
-    // If ESP32 provides timestamp,
-    // convert it automatically.
+                console.log(
+                    "Collection started"
+                );
 
-    if (timestamp) {
+            }
 
-        dateValue =
-            formatDate(timestamp);
+            catch (error) {
 
-        timeValue =
-            formatTime(timestamp);
+                console.error(
+                    "Start error:",
+                    error
+                );
+
+
+                alert(
+                    "Unable to start collection:\n\n" +
+                    error.message
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+// ============================================================
+// STOP COLLECTION
+// ============================================================
+
+const stopButton =
+    getElement(
+        "stopCollection"
+    );
+
+
+if (stopButton) {
+
+    stopButton.addEventListener(
+        "click",
+        async function() {
+
+            console.log(
+                "Stop Collection clicked"
+            );
+
+
+            try {
+
+                await collectionRef.set(
+                    false
+                );
+
+
+                console.log(
+                    "Collection stopped"
+                );
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Stop error:",
+                    error
+                );
+
+
+                alert(
+                    "Unable to stop collection:\n\n" +
+                    error.message
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+// ============================================================
+// COLLECTION STATUS
+// ============================================================
+
+collectionRef.on(
+    "value",
+    function(snapshot) {
+
+        const running =
+            snapshot.val() === true;
+
+
+        const status =
+            running
+                ? "RUNNING"
+                : "STOPPED";
+
+
+        setText(
+            "collectionStatus",
+            status
+        );
+
+
+        setText(
+            "summaryCollection",
+            status
+        );
+
+
+        if (startButton) {
+
+            startButton.disabled =
+                running;
+
+        }
+
+
+        if (stopButton) {
+
+            stopButton.disabled =
+                !running;
+
+        }
+
+
+        console.log(
+            "Collection:",
+            status
+        );
+
+    },
+    function(error) {
+
+        console.error(
+            "Collection status error:",
+            error
+        );
+
+    }
+);
+
+
+// ============================================================
+// RECORD COUNT
+// ============================================================
+
+recordCountRef.on(
+    "value",
+    function(snapshot) {
+
+        const count =
+            Number(
+                snapshot.val()
+            ) || 0;
+
+
+        setText(
+            "recordCount",
+            count
+        );
+
+
+        setText(
+            "summaryRecords",
+            count
+        );
+
+    }
+);
+
+
+// ============================================================
+// FORMAT DATE
+// ============================================================
+
+function formatDate(timestamp) {
+
+    if (!timestamp) {
+
+        return "--";
 
     }
 
 
-    // Firebase key can also be
-    // something like 17-17-26.
+    const date =
+        new Date(
+            Number(timestamp)
+        );
 
-    if (!timeValue) {
 
-        timeValue =
+    if (
+        isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return "--";
+
+    }
+
+
+    const year =
+        date.getFullYear();
+
+
+    const month =
+        String(
+            date.getMonth() + 1
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    const day =
+        String(
+            date.getDate()
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    return (
+        year +
+        "-" +
+        month +
+        "-" +
+        day
+    );
+
+}
+
+
+// ============================================================
+// FORMAT TIME
+// ============================================================
+
+function formatTime(timestamp) {
+
+    if (!timestamp) {
+
+        return "--";
+
+    }
+
+
+    const date =
+        new Date(
+            Number(timestamp)
+        );
+
+
+    if (
+        isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return "--";
+
+    }
+
+
+    const hours =
+        String(
+            date.getHours()
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    const minutes =
+        String(
+            date.getMinutes()
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    const seconds =
+        String(
+            date.getSeconds()
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    // Match your screenshot:
+    // 17-17-26
+
+    return (
+        hours +
+        "-" +
+        minutes +
+        "-" +
+        seconds
+    );
+
+}
+
+
+// ============================================================
+// FORMAT FLOAT
+// ============================================================
+
+function formatFloat(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+
+        return "--";
+
+    }
+
+
+    const number =
+        Number(value);
+
+
+    if (
+        isNaN(number)
+    ) {
+
+        return escapeHTML(
+            value
+        );
+
+    }
+
+
+    return number.toFixed(2);
+
+}
+
+
+// ============================================================
+// FORMAT INTEGER
+// ============================================================
+
+function formatInteger(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+
+        return "--";
+
+    }
+
+
+    return escapeHTML(
+        value
+    );
+
+}
+
+
+// ============================================================
+// FORMAT STRING
+// ============================================================
+
+function formatString(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "--";
+
+    }
+
+
+    return escapeHTML(
+        value
+    );
+
+}
+
+
+// ============================================================
+// CREATE TABLE ROW
+// ============================================================
+
+function createRow(
+    recordKey,
+    record
+) {
+
+    const row =
+        document.createElement(
+            "tr"
+        );
+
+
+    // --------------------------------------------------------
+    // DATE
+    // --------------------------------------------------------
+
+    let date =
+        record.date || "";
+
+
+    // --------------------------------------------------------
+    // TIME
+    // --------------------------------------------------------
+
+    let time =
+        record.time || "";
+
+
+    // --------------------------------------------------------
+    // TIMESTAMP
+    // --------------------------------------------------------
+
+    if (
+        record.timestamp
+    ) {
+
+        date =
+            formatDate(
+                record.timestamp
+            );
+
+
+        time =
+            formatTime(
+                record.timestamp
+            );
+
+    }
+
+
+    // --------------------------------------------------------
+    // IF NO TIME EXISTS
+    // USE FIREBASE CHILD KEY
+    // --------------------------------------------------------
+
+    if (
+        !time
+    ) {
+
+        time =
             recordKey;
 
     }
 
 
+    // --------------------------------------------------------
+    // VALUES
+    // --------------------------------------------------------
+
     const floatValue =
-        record.float !== undefined
-            ? record.float
-            : "";
+        formatFloat(
+            record.float
+        );
 
 
     const intValue =
-        record.int !== undefined
-            ? record.int
-            : "";
+        formatInteger(
+            record.int
+        );
 
 
     const stringValue =
-        record.string !== undefined
-            ? record.string
-            : "";
+        formatString(
+            record.string
+        );
 
 
-    const tr =
-        document.createElement("tr");
+    // --------------------------------------------------------
+    // HTML
+    // --------------------------------------------------------
 
-
-    tr.setAttribute(
-        "data-record-key",
-        recordKey
-    );
-
-
-    tr.innerHTML = `
+    row.innerHTML = `
 
         <td>
-            ${escapeHTML(dateValue)}
+            ${escapeHTML(date)}
         </td>
 
         <td>
-            ${escapeHTML(timeValue)}
+            ${escapeHTML(time)}
         </td>
 
         <td>
-            ${escapeHTML(
-                Number(floatValue)
-                    .toFixed(2)
-            )}
+            ${floatValue}
         </td>
 
         <td>
-            ${escapeHTML(intValue)}
+            ${intValue}
         </td>
 
         <td>
-            ${escapeHTML(stringValue)}
+            ${stringValue}
         </td>
 
     `;
 
 
-    return tr;
+    return row;
 
 }
 
 
 // ============================================================
-// DISPLAY ALL LOGS
+// SORT RECORDS
 // ============================================================
 
-function displayLogs(snapshot) {
+function sortRecords(records) {
 
-    const tbody =
-        getLogTableBody();
+    return records.sort(
+        function(a, b) {
+
+            const timeA =
+                Number(
+                    a.value.timestamp
+                ) || 0;
 
 
-    if (!tbody) {
+            const timeB =
+                Number(
+                    b.value.timestamp
+                ) || 0;
+
+
+            return timeB - timeA;
+
+        }
+    );
+
+}
+
+
+// ============================================================
+// DISPLAY DATA
+// ============================================================
+
+function displayData(
+    snapshot
+) {
+
+    const tableBody =
+        getElement(
+            "dataLogBody"
+        );
+
+
+    if (!tableBody) {
 
         console.error(
-            "Cannot find data log table body."
+            "dataLogBody not found."
         );
 
         return;
@@ -639,23 +799,14 @@ function displayLogs(snapshot) {
     }
 
 
-    // Clear current table
-
-    tbody.innerHTML = "";
-
-
     const records = [];
 
 
     snapshot.forEach(
-        function(childSnapshot) {
-
-            const key =
-                childSnapshot.key;
-
+        function(child) {
 
             const value =
-                childSnapshot.val();
+                child.val();
 
 
             if (!value) {
@@ -667,9 +818,11 @@ function displayLogs(snapshot) {
 
             records.push({
 
-                key: key,
+                key:
+                    child.key,
 
-                value: value
+                value:
+                    value
 
             });
 
@@ -677,24 +830,75 @@ function displayLogs(snapshot) {
     );
 
 
-    // Newest records first
+    // --------------------------------------------------------
+    // SORT NEWEST FIRST
+    // --------------------------------------------------------
 
-    records.reverse();
+    sortRecords(
+        records
+    );
 
 
-    // Create rows
+    // --------------------------------------------------------
+    // CLEAR TABLE
+    // --------------------------------------------------------
+
+    tableBody.innerHTML = "";
+
+
+    // --------------------------------------------------------
+    // EMPTY
+    // --------------------------------------------------------
+
+    if (
+        records.length === 0
+    ) {
+
+        tableBody.innerHTML = `
+
+            <tr class="empty-row">
+
+                <td colspan="5">
+                    No realtime data available.
+                </td>
+
+            </tr>
+
+        `;
+
+
+        setText(
+            "deviceStatus",
+            "OFFLINE"
+        );
+
+
+        setText(
+            "deviceSource",
+            "Waiting for ESP32"
+        );
+
+
+        return;
+
+    }
+
+
+    // --------------------------------------------------------
+    // CREATE ROWS
+    // --------------------------------------------------------
 
     records.forEach(
         function(item) {
 
             const row =
-                createLogRow(
+                createRow(
                     item.key,
                     item.value
                 );
 
 
-            tbody.appendChild(
+            tableBody.appendChild(
                 row
             );
 
@@ -702,7 +906,31 @@ function displayLogs(snapshot) {
     );
 
 
-    // Update count
+    // --------------------------------------------------------
+    // UPDATE STATUS
+    // --------------------------------------------------------
+
+    setText(
+        "deviceStatus",
+        "ONLINE"
+    );
+
+
+    setText(
+        "deviceSource",
+        "ESP32 data received"
+    );
+
+
+    setText(
+        "lastUpdate",
+        new Date().toLocaleTimeString()
+    );
+
+
+    // --------------------------------------------------------
+    // UPDATE RECORD COUNT
+    // --------------------------------------------------------
 
     setText(
         "recordCount",
@@ -715,28 +943,11 @@ function displayLogs(snapshot) {
         records.length
     );
 
-
-    // Device online if records exist
-
-    if (records.length > 0) {
-
-        setText(
-            "deviceStatus",
-            "ONLINE"
-        );
-
-        setText(
-            "deviceSource",
-            "ESP32 data received"
-        );
-
-    }
-
 }
 
 
 // ============================================================
-// REALTIME LOG LISTENER
+// REALTIME FIREBASE DATA
 // ============================================================
 
 dataRef.on(
@@ -744,28 +955,48 @@ dataRef.on(
     function(snapshot) {
 
         console.log(
-            "Realtime data updated:",
+            "Realtime data:",
             snapshot.val()
         );
 
 
-        displayLogs(
+        displayData(
             snapshot
-        );
-
-
-        setText(
-            "lastUpdate",
-            new Date().toLocaleString()
         );
 
     },
     function(error) {
 
         console.error(
-            "Realtime data error:",
+            "Database error:",
             error
         );
+
+
+        const tableBody =
+            getElement(
+                "dataLogBody"
+            );
+
+
+        if (tableBody) {
+
+            tableBody.innerHTML = `
+
+                <tr class="empty-row">
+
+                    <td colspan="5">
+                        Firebase error:
+                        ${escapeHTML(
+                            error.message
+                        )}
+                    </td>
+
+                </tr>
+
+            `;
+
+        }
 
     }
 );
@@ -780,7 +1011,7 @@ dataRef.on(
     function(snapshot) {
 
         console.log(
-            "New record:",
+            "New Firebase record:",
             snapshot.key,
             snapshot.val()
         );
@@ -790,17 +1021,56 @@ dataRef.on(
 
 
 // ============================================================
-// PAGE LOADED
+// DEVICE STATUS
+// ============================================================
+
+const deviceStatusRef =
+    database.ref(
+        "device/status"
+    );
+
+
+deviceStatusRef.on(
+    "value",
+    function(snapshot) {
+
+        const status =
+            snapshot.val();
+
+
+        if (
+            status
+        ) {
+
+            setText(
+                "deviceStatus",
+                String(
+                    status
+                ).toUpperCase()
+            );
+
+        }
+
+    }
+);
+
+
+// ============================================================
+// INITIALIZATION
 // ============================================================
 
 console.log(
-    "================================="
+    "=========================================="
 );
 
 console.log(
-    "SMART STORAGE DASHBOARD READY"
+    "SMART STORAGE DASHBOARD"
 );
 
 console.log(
-    "================================="
+    "Dashboard JavaScript loaded successfully."
+);
+
+console.log(
+    "=========================================="
 );
