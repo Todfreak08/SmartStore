@@ -1,9 +1,41 @@
 // ============================================================
 // SMART STORAGE MONITORING SYSTEM
 // DASHBOARD.JS
-// Reads exactly:
-// smartStorage/esp32
+//
+// FIREBASE STRUCTURE:
+//
+// smartStorage
+// ├── commands
+// │   ├── light
+// │   ├── fan
+// │   ├── door
+// │   └── alarm
+// │
+// ├── esp32
+// │   ├── online
+// │   ├── ip
+// │   ├── wifi
+// │   ├── timestamp
+// │   ├── light
+// │   ├── fan
+// │   ├── door
+// │   └── alarm
+// │
+// ├── history
+// └── alerts
+//
 // ============================================================
+
+
+// ============================================================
+// GLOBAL VARIABLES
+// ============================================================
+
+let previousESP32Data = null;
+
+let firstESP32Read = true;
+
+let lastSavedTimestamp = null;
 
 
 // ============================================================
@@ -12,7 +44,9 @@
 
 document.addEventListener("DOMContentLoaded", function () {
 
-    console.log("Dashboard JavaScript started.");
+    console.log("=================================");
+    console.log("SMART STORAGE DASHBOARD STARTED");
+    console.log("=================================");
 
     startDashboard();
 
@@ -25,7 +59,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function startDashboard() {
 
-    // Make sure Firebase exists
+    // --------------------------------------------------------
+    // CHECK FIREBASE
+    // --------------------------------------------------------
+
     if (typeof firebase === "undefined") {
 
         console.error("Firebase library not loaded.");
@@ -36,11 +73,13 @@ function startDashboard() {
         );
 
         return;
-
     }
 
 
-    // Make sure database exists
+    // --------------------------------------------------------
+    // CHECK DATABASE
+    // --------------------------------------------------------
+
     if (typeof database === "undefined") {
 
         console.error("Firebase database is not available.");
@@ -51,11 +90,10 @@ function startDashboard() {
         );
 
         return;
-
     }
 
 
-    console.log("Firebase initialized.");
+    console.log("Firebase database ready.");
 
     showFirebaseStatus(
         "🟢 Firebase Connected",
@@ -63,9 +101,9 @@ function startDashboard() {
     );
 
 
-    // --------------------------------------------------------
-    // LOGIN USER
-    // --------------------------------------------------------
+    // ========================================================
+    // AUTHENTICATION
+    // ========================================================
 
     if (typeof auth !== "undefined") {
 
@@ -89,7 +127,9 @@ function startDashboard() {
                     user.email
                 );
 
-            } else {
+            }
+
+            else {
 
                 if (userEmail) {
 
@@ -109,9 +149,9 @@ function startDashboard() {
     }
 
 
-    // --------------------------------------------------------
+    // ========================================================
     // LOGOUT
-    // --------------------------------------------------------
+    // ========================================================
 
     const logoutButton =
         document.getElementById("logoutButton");
@@ -123,7 +163,9 @@ function startDashboard() {
             "click",
             function () {
 
-                if (typeof auth !== "undefined") {
+                if (
+                    typeof auth !== "undefined"
+                ) {
 
                     auth.signOut()
                         .then(function () {
@@ -149,38 +191,55 @@ function startDashboard() {
     }
 
 
-    // --------------------------------------------------------
-    // IMPORTANT:
-    // EXACT FIREBASE PATH
-    //
-    // smartStorage/esp32
-    // --------------------------------------------------------
+    // ========================================================
+    // ESP32 REFERENCE
+    // ========================================================
 
     const esp32Ref =
         database.ref("smartStorage/esp32");
 
 
-    // --------------------------------------------------------
+    console.log(
+        "Listening to:",
+        "smartStorage/esp32"
+    );
+
+
+    // ========================================================
     // REAL-TIME ESP32 DATA
-    // --------------------------------------------------------
+    // ========================================================
 
     esp32Ref.on(
+
         "value",
+
         function (snapshot) {
 
             console.log(
-                "ESP32 Firebase data received:"
+                "================================="
+            );
+
+            console.log(
+                "ESP32 DATA RECEIVED"
             );
 
             console.log(
                 snapshot.val()
             );
 
+            console.log(
+                "================================="
+            );
+
+
+            // ------------------------------------------------
+            // NO DATA
+            // ------------------------------------------------
 
             if (!snapshot.exists()) {
 
                 console.warn(
-                    "smartStorage/esp32 does not exist."
+                    "No smartStorage/esp32 data."
                 );
 
                 setOfflineState();
@@ -194,7 +253,18 @@ function startDashboard() {
                 snapshot.val();
 
 
+            // ------------------------------------------------
+            // UPDATE DASHBOARD
+            // ------------------------------------------------
+
             updateDashboard(data);
+
+
+            // ------------------------------------------------
+            // SAVE ACTIVITY
+            // ------------------------------------------------
+
+            saveActivity(data);
 
         },
 
@@ -212,27 +282,31 @@ function startDashboard() {
             );
 
         }
+
     );
 
 
-    // --------------------------------------------------------
-    // DEVICE CONTROL LISTENERS
-    // --------------------------------------------------------
+    // ========================================================
+    // DEVICE CONTROL SWITCHES
+    // ========================================================
 
     setupSwitch(
         "lightSwitch",
         "light"
     );
 
+
     setupSwitch(
         "fanSwitch",
         "fan"
     );
 
+
     setupSwitch(
         "doorSwitch",
         "door"
     );
+
 
     setupSwitch(
         "alarmSwitch",
@@ -240,9 +314,9 @@ function startDashboard() {
     );
 
 
-    // --------------------------------------------------------
-    // INITIAL COMMAND VALUES
-    // --------------------------------------------------------
+    // ========================================================
+    // LOAD COMMANDS
+    // ========================================================
 
     loadCommands();
 
@@ -256,95 +330,82 @@ function startDashboard() {
 function updateDashboard(data) {
 
     console.log(
-        "Updating dashboard with:",
+        "Updating dashboard:",
         data
     );
 
 
     // ========================================================
-    // ONLINE STATUS
+    // ONLINE
     // ========================================================
 
     const online =
         convertBoolean(data.online);
 
 
+    setText(
+        "deviceStatus",
+        online ? "ONLINE" : "OFFLINE"
+    );
+
+
     const deviceStatus =
         document.getElementById("deviceStatus");
 
 
-    const deviceSource =
-        document.getElementById("deviceSource");
-
-
     if (deviceStatus) {
 
-        deviceStatus.textContent =
-            online ? "ONLINE" : "OFFLINE";
-
         deviceStatus.style.color =
-            online ? "#28a745" : "#dc3545";
-
-    }
-
-
-    if (deviceSource) {
-
-        deviceSource.textContent =
             online
-                ? "ESP32 connected"
-                : "ESP32 offline";
+                ? "#28a745"
+                : "#dc3545";
 
     }
+
+
+    setText(
+        "deviceSource",
+        online
+            ? "ESP32 connected"
+            : "ESP32 offline"
+    );
 
 
     // ========================================================
     // WIFI
     // ========================================================
 
-    const wifi =
-        data.wifi;
+    if (
+        data.wifi !== undefined &&
+        data.wifi !== null &&
+        data.wifi !== ""
+    ) {
 
+        setText(
+            "wifiSignal",
+            formatWifi(data.wifi)
+        );
 
-    const wifiElement =
-        document.getElementById("wifiSignal");
+    }
 
+    else {
 
-    if (wifiElement) {
-
-        if (
-            wifi !== undefined &&
-            wifi !== null &&
-            wifi !== ""
-        ) {
-
-            wifiElement.textContent =
-                formatWifi(wifi);
-
-        } else {
-
-            wifiElement.textContent =
-                "--";
-
-        }
+        setText(
+            "wifiSignal",
+            "--"
+        );
 
     }
 
 
     // ========================================================
-    // IP ADDRESS
+    // IP
     // ========================================================
 
-    const ipElement =
-        document.getElementById("deviceIP");
-
-
-    if (ipElement) {
-
-        ipElement.textContent =
-            data.ip || "--";
-
-    }
+    setText(
+        "deviceIP",
+        data.ip || "--"
+    );
 
 
     // ========================================================
@@ -360,50 +421,485 @@ function updateDashboard(data) {
     // LIGHT
     // ========================================================
 
-    const light =
-        convertBoolean(data.light);
-
-
-    updateLight(light);
+    updateLight(
+        convertBoolean(data.light)
+    );
 
 
     // ========================================================
     // FAN
     // ========================================================
 
-    const fan =
-        convertBoolean(data.fan);
-
-
-    updateFan(fan);
+    updateFan(
+        convertBoolean(data.fan)
+    );
 
 
     // ========================================================
     // DOOR
     // ========================================================
 
-    const door =
-        convertBoolean(data.door);
-
-
-    updateDoor(door);
+    updateDoor(
+        convertBoolean(data.door)
+    );
 
 
     // ========================================================
     // ALARM
     // ========================================================
 
-    const alarm =
-        convertBoolean(data.alarm);
-
-
-    updateAlarm(alarm);
+    updateAlarm(
+        convertBoolean(data.alarm)
+    );
 
 }
 
 
 // ============================================================
-// TIMESTAMP
+// SAVE ACTIVITY
+//
+// Every meaningful ESP32 change is stored in:
+//
+// smartStorage/history
+//
+// ============================================================
+
+function saveActivity(data) {
+
+    if (!data) {
+
+        return;
+
+    }
+
+
+    const timestamp =
+        getTimestampValue(
+            data.timestamp
+        );
+
+
+    // --------------------------------------------------------
+    // Prevent duplicate saves
+    // --------------------------------------------------------
+
+    if (
+        timestamp &&
+        timestamp === lastSavedTimestamp
+    ) {
+
+        console.log(
+            "Same timestamp. Activity already saved."
+        );
+
+        return;
+
+    }
+
+
+    // --------------------------------------------------------
+    // First reading
+    //
+    // Save it because this is the first known ESP32 state.
+    // --------------------------------------------------------
+
+    if (firstESP32Read) {
+
+        firstESP32Read = false;
+
+        saveHistoryRecord(
+            data,
+            "ESP32 connected"
+        );
+
+        previousESP32Data =
+            createCopy(data);
+
+        lastSavedTimestamp =
+            timestamp;
+
+        return;
+
+    }
+
+
+    // --------------------------------------------------------
+    // Check if something changed
+    // --------------------------------------------------------
+
+    const changes =
+        detectChanges(
+            previousESP32Data,
+            data
+        );
+
+
+    if (changes.length === 0) {
+
+        console.log(
+            "No activity change detected."
+        );
+
+        previousESP32Data =
+            createCopy(data);
+
+        return;
+
+    }
+
+
+    // --------------------------------------------------------
+    // Save every detected activity
+    // --------------------------------------------------------
+
+    changes.forEach(function (change) {
+
+        saveHistoryRecord(
+            data,
+            change
+        );
+
+
+        // ----------------------------------------------------
+        // Create alert when necessary
+        // ----------------------------------------------------
+
+        if (
+            change === "Alarm turned ON" ||
+            change === "Door opened"
+        ) {
+
+            saveAlert(
+                data,
+                change
+            );
+
+        }
+
+    });
+
+
+    previousESP32Data =
+        createCopy(data);
+
+
+    lastSavedTimestamp =
+        timestamp;
+
+}
+
+
+// ============================================================
+// DETECT CHANGES
+// ============================================================
+
+function detectChanges(
+    oldData,
+    newData
+) {
+
+    const changes = [];
+
+
+    if (!oldData) {
+
+        return changes;
+
+    }
+
+
+    // --------------------------------------------------------
+    // ONLINE
+    // --------------------------------------------------------
+
+    if (
+        convertBoolean(oldData.online) !==
+        convertBoolean(newData.online)
+    ) {
+
+        changes.push(
+            newData.online
+                ? "ESP32 came ONLINE"
+                : "ESP32 went OFFLINE"
+        );
+
+    }
+
+
+    // --------------------------------------------------------
+    // LIGHT
+    // --------------------------------------------------------
+
+    if (
+        convertBoolean(oldData.light) !==
+        convertBoolean(newData.light)
+    ) {
+
+        changes.push(
+            convertBoolean(newData.light)
+                ? "Light turned ON"
+                : "Light turned OFF"
+        );
+
+    }
+
+
+    // --------------------------------------------------------
+    // FAN
+    // --------------------------------------------------------
+
+    if (
+        convertBoolean(oldData.fan) !==
+        convertBoolean(newData.fan)
+    ) {
+
+        changes.push(
+            convertBoolean(newData.fan)
+                ? "Fan turned ON"
+                : "Fan turned OFF"
+        );
+
+    }
+
+
+    // --------------------------------------------------------
+    // DOOR
+    // --------------------------------------------------------
+
+    if (
+        convertBoolean(oldData.door) !==
+        convertBoolean(newData.door)
+    ) {
+
+        changes.push(
+            convertBoolean(newData.door)
+                ? "Door opened"
+                : "Door closed"
+        );
+
+    }
+
+
+    // --------------------------------------------------------
+    // ALARM
+    // --------------------------------------------------------
+
+    if (
+        convertBoolean(oldData.alarm) !==
+        convertBoolean(newData.alarm)
+    ) {
+
+        changes.push(
+            convertBoolean(newData.alarm)
+                ? "Alarm turned ON"
+                : "Alarm turned OFF"
+        );
+
+    }
+
+
+    // --------------------------------------------------------
+    // IP CHANGE
+    // --------------------------------------------------------
+
+    if (
+        oldData.ip !== newData.ip &&
+        newData.ip
+    ) {
+
+        changes.push(
+            "ESP32 IP changed to " +
+            newData.ip
+        );
+
+    }
+
+
+    return changes;
+
+}
+
+
+// ============================================================
+// SAVE HISTORY RECORD
+// ============================================================
+
+function saveHistoryRecord(
+    data,
+    activity
+) {
+
+    const historyRef =
+        database.ref(
+            "smartStorage/history"
+        );
+
+
+    const record =
+        {
+
+            activity: activity,
+
+            timestamp:
+                getTimestampForFirebase(
+                    data.timestamp
+                ),
+
+            timestampRaw:
+                data.timestamp || "",
+
+            online:
+                convertBoolean(
+                    data.online
+                ),
+
+            ip:
+                data.ip || "",
+
+            wifi:
+                data.wifi || "",
+
+            light:
+                convertBoolean(
+                    data.light
+                ),
+
+            fan:
+                convertBoolean(
+                    data.fan
+                ),
+
+            door:
+                convertBoolean(
+                    data.door
+                ),
+
+            alarm:
+                convertBoolean(
+                    data.alarm
+                ),
+
+            source:
+                "ESP32",
+
+            createdAt:
+                firebase.database.ServerValue.TIMESTAMP
+
+        };
+
+
+    historyRef
+        .push(record)
+        .then(function () {
+
+            console.log(
+                "History saved:",
+                activity
+            );
+
+        })
+        .catch(function (error) {
+
+            console.error(
+                "History save failed:",
+                error
+            );
+
+        });
+
+}
+
+
+// ============================================================
+// SAVE ALERT
+// ============================================================
+
+function saveAlert(
+    data,
+    message
+) {
+
+    const alertRef =
+        database.ref(
+            "smartStorage/alerts"
+        );
+
+
+    const alert =
+        {
+
+            message:
+                message,
+
+            timestamp:
+                getTimestampForFirebase(
+                    data.timestamp
+                ),
+
+            online:
+                convertBoolean(
+                    data.online
+                ),
+
+            ip:
+                data.ip || "",
+
+            wifi:
+                data.wifi || "",
+
+            light:
+                convertBoolean(
+                    data.light
+                ),
+
+            fan:
+                convertBoolean(
+                    data.fan
+                ),
+
+            door:
+                convertBoolean(
+                    data.door
+                ),
+
+            alarm:
+                convertBoolean(
+                    data.alarm
+                ),
+
+            source:
+                "ESP32",
+
+            createdAt:
+                firebase.database.ServerValue.TIMESTAMP
+
+        };
+
+
+    alertRef
+        .push(alert)
+        .then(function () {
+
+            console.log(
+                "Alert saved:",
+                message
+            );
+
+        })
+        .catch(function (error) {
+
+            console.error(
+                "Alert save failed:",
+                error
+            );
+
+        });
+
+}
+
+
+// ============================================================
+// TIMESTAMP DISPLAY
 // ============================================================
 
 function updateTimestamp(timestamp) {
@@ -426,124 +922,92 @@ function updateTimestamp(timestamp) {
         timestamp === ""
     ) {
 
-        if (dateTimeElement) {
+        setText(
+            "deviceDateTime",
+            "Waiting for ESP32..."
+        );
 
-            dateTimeElement.textContent =
-                "Waiting for ESP32...";
 
-        }
+        setText(
+            "lastUpdate",
+            "No timestamp received yet."
+        );
 
-        if (lastUpdateElement) {
-
-            lastUpdateElement.textContent =
-                "No timestamp received yet.";
-
-        }
 
         return;
 
     }
 
 
-    let date;
-
-
-    // Firebase timestamp number
-    if (
-        typeof timestamp === "number"
-    ) {
-
-        date =
-            new Date(timestamp);
-
-    }
-
-
-    // Timestamp string
-    else {
-
-        // Try numeric string
-        if (
-            !isNaN(timestamp)
-        ) {
-
-            date =
-                new Date(
-                    Number(timestamp)
-                );
-
-        } else {
-
-            date =
-                new Date(timestamp);
-
-        }
-
-    }
-
-
-    // Invalid timestamp
-    if (
-        isNaN(date.getTime())
-    ) {
-
-        console.warn(
-            "Invalid timestamp:",
+    const date =
+        convertTimestampToDate(
             timestamp
         );
 
 
-        if (dateTimeElement) {
+    if (!date) {
 
-            dateTimeElement.textContent =
-                String(timestamp);
+        setText(
+            "deviceDateTime",
+            String(timestamp)
+        );
 
-        }
 
-        if (lastUpdateElement) {
+        setText(
+            "lastUpdate",
+            "ESP32 timestamp"
+        );
 
-            lastUpdateElement.textContent =
-                "ESP32 timestamp";
-
-        }
 
         return;
 
     }
 
 
-    // Philippine time
     const formattedDate =
         date.toLocaleString(
             "en-PH",
             {
-                timeZone: "Asia/Manila",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                hour12: true
+
+                timeZone:
+                    "Asia/Manila",
+
+                year:
+                    "numeric",
+
+                month:
+                    "long",
+
+                day:
+                    "numeric",
+
+                hour:
+                    "2-digit",
+
+                minute:
+                    "2-digit",
+
+                second:
+                    "2-digit",
+
+                hour12:
+                    true
+
             }
         );
 
 
-    if (dateTimeElement) {
-
-        dateTimeElement.textContent =
-            formattedDate;
-
-    }
+    setText(
+        "deviceDateTime",
+        formattedDate
+    );
 
 
-    if (lastUpdateElement) {
-
-        lastUpdateElement.textContent =
-            "Last ESP32 update: " +
-            formattedDate;
-
-    }
+    setText(
+        "lastUpdate",
+        "Last ESP32 update: " +
+        formattedDate
+    );
 
 }
 
@@ -669,7 +1133,7 @@ function updateAlarm(state) {
 
 
 // ============================================================
-// DEVICE SWITCH
+// DEVICE CONTROL
 // ============================================================
 
 function setupSwitch(
@@ -716,15 +1180,17 @@ function setupSwitch(
                     commandName
                 )
                 .set(state)
+
                 .then(function () {
 
                     console.log(
-                        "Command sent:",
+                        "Command sent successfully:",
                         commandName,
                         state
                     );
 
                 })
+
                 .catch(function (error) {
 
                     console.error(
@@ -768,7 +1234,7 @@ function loadCommands() {
 
 
             console.log(
-                "Commands:",
+                "Commands received:",
                 commands
             );
 
@@ -835,6 +1301,286 @@ function loadCommands() {
 
 
 // ============================================================
+// BOOLEAN CONVERTER
+// ============================================================
+
+function convertBoolean(value) {
+
+    if (
+        value === true ||
+        value === 1 ||
+        value === "1" ||
+        value === "true" ||
+        value === "TRUE" ||
+        value === "on" ||
+        value === "ON" ||
+        value === "open" ||
+        value === "OPEN"
+    ) {
+
+        return true;
+
+    }
+
+
+    return false;
+
+}
+
+
+// ============================================================
+// TIMESTAMP CONVERTER
+// ============================================================
+
+function convertTimestampToDate(
+    timestamp
+) {
+
+    if (
+        timestamp === undefined ||
+        timestamp === null ||
+        timestamp === ""
+    ) {
+
+        return null;
+
+    }
+
+
+    // Number
+    if (
+        typeof timestamp === "number"
+    ) {
+
+        // Seconds -> milliseconds
+        if (
+            timestamp < 100000000000
+        ) {
+
+            timestamp =
+                timestamp * 1000;
+
+        }
+
+
+        const date =
+            new Date(timestamp);
+
+
+        return isNaN(
+            date.getTime()
+        )
+            ? null
+            : date;
+
+    }
+
+
+    // String
+    const stringValue =
+        String(timestamp);
+
+
+    // Numeric string
+    if (
+        !isNaN(stringValue)
+    ) {
+
+        let number =
+            Number(stringValue);
+
+
+        if (
+            number < 100000000000
+        ) {
+
+            number =
+                number * 1000;
+
+        }
+
+
+        const date =
+            new Date(number);
+
+
+        return isNaN(
+            date.getTime()
+        )
+            ? null
+            : date;
+
+    }
+
+
+    // Date string
+    const date =
+        new Date(stringValue);
+
+
+    return isNaN(
+        date.getTime()
+    )
+        ? null
+        : date;
+
+}
+
+
+// ============================================================
+// GET TIMESTAMP VALUE
+// ============================================================
+
+function getTimestampValue(
+    timestamp
+) {
+
+    if (
+        timestamp === undefined ||
+        timestamp === null ||
+        timestamp === ""
+    ) {
+
+        return null;
+
+    }
+
+
+    const date =
+        convertTimestampToDate(
+            timestamp
+        );
+
+
+    if (!date) {
+
+        return String(timestamp);
+
+    }
+
+
+    return date.getTime();
+
+}
+
+
+// ============================================================
+// GET FIREBASE TIMESTAMP
+// ============================================================
+
+function getTimestampForFirebase(
+    timestamp
+) {
+
+    const converted =
+        getTimestampValue(
+            timestamp
+        );
+
+
+    if (converted) {
+
+        return converted;
+
+    }
+
+
+    return firebase.database.ServerValue.TIMESTAMP;
+
+}
+
+
+// ============================================================
+// WIFI FORMAT
+// ============================================================
+
+function formatWifi(value) {
+
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
+
+        return "--";
+
+    }
+
+
+    const number =
+        Number(value);
+
+
+    if (!isNaN(number)) {
+
+        return number + " dBm";
+
+    }
+
+
+    return String(value);
+
+}
+
+
+// ============================================================
+// CREATE COPY
+// ============================================================
+
+function createCopy(data) {
+
+    return JSON.parse(
+        JSON.stringify(data)
+    );
+
+}
+
+
+// ============================================================
+// OFFLINE STATE
+// ============================================================
+
+function setOfflineState() {
+
+    setText(
+        "deviceStatus",
+        "OFFLINE"
+    );
+
+
+    setText(
+        "deviceSource",
+        "Waiting for ESP32..."
+    );
+
+
+    setText(
+        "wifiSignal",
+        "--"
+    );
+
+
+    setText(
+        "deviceIP",
+        "--"
+    );
+
+
+    setText(
+        "deviceDateTime",
+        "Waiting for ESP32..."
+    );
+
+
+    setText(
+        "lastUpdate",
+        "No ESP32 data received yet."
+    );
+
+}
+
+
+// ============================================================
 // SET SWITCH
 // ============================================================
 
@@ -880,111 +1626,6 @@ function setText(
             value;
 
     }
-
-}
-
-
-// ============================================================
-// BOOLEAN CONVERTER
-// ============================================================
-
-function convertBoolean(value) {
-
-    if (
-        value === true ||
-        value === 1 ||
-        value === "1" ||
-        value === "true" ||
-        value === "TRUE" ||
-        value === "on" ||
-        value === "ON" ||
-        value === "open" ||
-        value === "OPEN"
-    ) {
-
-        return true;
-
-    }
-
-
-    return false;
-
-}
-
-
-// ============================================================
-// WIFI FORMAT
-// ============================================================
-
-function formatWifi(value) {
-
-    if (
-        value === undefined ||
-        value === null ||
-        value === ""
-    ) {
-
-        return "--";
-
-    }
-
-
-    const number =
-        Number(value);
-
-
-    if (!isNaN(number)) {
-
-        return number + " dBm";
-
-    }
-
-
-    return String(value);
-
-}
-
-
-// ============================================================
-// OFFLINE STATE
-// ============================================================
-
-function setOfflineState() {
-
-    setText(
-        "deviceStatus",
-        "OFFLINE"
-    );
-
-
-    setText(
-        "deviceSource",
-        "Waiting for ESP32..."
-    );
-
-
-    setText(
-        "wifiSignal",
-        "--"
-    );
-
-
-    setText(
-        "deviceIP",
-        "--"
-    );
-
-
-    setText(
-        "deviceDateTime",
-        "Waiting for ESP32..."
-    );
-
-
-    setText(
-        "lastUpdate",
-        "No ESP32 data received yet."
-    );
 
 }
 
