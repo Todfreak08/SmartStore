@@ -12,6 +12,12 @@
 
     <title>Smart Storage Dashboard</title>
 
+    <!-- =====================================================
+         SMART STORAGE CSS
+         ===================================================== -->
+
+    <link rel="stylesheet" href="style.css">
+
 
     <!-- =====================================================
          FIREBASE
@@ -22,8 +28,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-
-    </style>
 
 </head>
 
@@ -199,7 +203,6 @@
                 <div
                     class="value"
                     id="lastUpdate"
-                    style="font-size:14px;"
                 >
                     --
                 </div>
@@ -217,16 +220,13 @@
 
 
             <div class="logs-title">
-
                 Realtime Data Logs
-
             </div>
 
 
             <div class="table-container">
 
                 <table id="dataLogs">
-
 
                     <thead>
 
@@ -269,7 +269,6 @@
 
                     </tbody>
 
-
                 </table>
 
             </div>
@@ -286,7 +285,9 @@
 
             <span>
                 Total records:
-                <strong id="recordCount">0</strong>
+                <strong id="recordCount">
+                    0
+                </strong>
             </span>
 
 
@@ -304,14 +305,10 @@
 
 
     <!-- =====================================================
-         FIREBASE CONFIG + DASHBOARD
+         FIREBASE CONFIG
          ===================================================== -->
 
     <script>
-
-        // ====================================================
-        // REPLACE THESE WITH YOUR FIREBASE PROJECT VALUES
-        // ====================================================
 
         const firebaseConfig = {
 
@@ -347,6 +344,10 @@
 
     </script>
 
+
+    <!-- =====================================================
+         DASHBOARD JAVASCRIPT
+         ===================================================== -->
 
     <script src="dashboard.js"></script>
 
