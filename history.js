@@ -370,11 +370,34 @@ historyRef.on(
 
 
 
-        // =================================================
-        // NEWEST FIRST
-        // =================================================
+       // =================================================
+// SORT: NEWEST RECORD FIRST
+// =================================================
 
-        records.reverse();
+records.sort(function(a, b) {
+
+    const dataA = a.data || {};
+    const dataB = b.data || {};
+
+    const timestampA =
+        Number(
+            dataA.timestamp ||
+            dataA.timestampRaw ||
+            dataA.createdAt ||
+            0
+        );
+
+    const timestampB =
+        Number(
+            dataB.timestamp ||
+            dataB.timestampRaw ||
+            dataB.createdAt ||
+            0
+        );
+
+    return timestampB - timestampA;
+
+});
 
 
 
