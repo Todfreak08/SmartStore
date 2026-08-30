@@ -1,11 +1,11 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
 <title>Smart Storage | History</title>
 
@@ -151,7 +151,7 @@ body {
     background: #173249;
 }
 
-/* STAT BAR */
+/* STATS */
 
 .stats {
     display: grid;
@@ -235,6 +235,11 @@ tbody tr:hover {
     background: #111d2c;
 }
 
+.number {
+    color: #56677e;
+    width: 55px;
+}
+
 .float-value {
     color: #00e5ff;
     font-weight: bold;
@@ -247,6 +252,7 @@ tbody tr:hover {
 
 .string-value {
     color: #28e48b;
+    font-weight: bold;
 }
 
 .empty {
@@ -255,9 +261,20 @@ tbody tr:hover {
     color: #627188;
 }
 
-.number {
-    color: #56677e;
-    width: 55px;
+/* NEWEST RECORD */
+
+tbody tr:first-child {
+    background: rgba(0, 229, 255, 0.035);
+}
+
+tbody tr:first-child td:first-child::before {
+    content: "NEW";
+    color: #00e5ff;
+    font-size: 8px;
+    border: 1px solid #00e5ff;
+    padding: 3px 5px;
+    border-radius: 5px;
+    margin-right: 5px;
 }
 
 /* MOBILE */
@@ -292,28 +309,44 @@ tbody tr:hover {
     .stats {
         grid-template-columns: 1fr;
     }
+
 }
 
 </style>
 
 </head>
 
+
 <body>
+
 
 <aside class="sidebar">
 
     <div class="logo">
 
-        <div class="logo-icon">▣</div>
+        <div class="logo-icon">
+            ▣
+        </div>
 
         <div>
-            <h2>Smart Storage</h2>
-            <span>MONITORING CORE</span>
+
+            <h2>
+                Smart Storage
+            </h2>
+
+            <span>
+                MONITORING CORE
+            </span>
+
         </div>
 
     </div>
 
-    <div class="nav-title">CONTROL</div>
+
+    <div class="nav-title">
+        CONTROL
+    </div>
+
 
     <nav class="nav">
 
@@ -321,13 +354,18 @@ tbody tr:hover {
             ◈ &nbsp; Dashboard
         </a>
 
-        <a href="history.html" class="active">
+        <a href="history.html"
+           class="active">
             ◷ &nbsp; History
         </a>
 
     </nav>
 
-    <div class="nav-title">SYSTEM</div>
+
+    <div class="nav-title">
+        SYSTEM
+    </div>
+
 
     <nav class="nav">
 
@@ -337,13 +375,17 @@ tbody tr:hover {
 
     </nav>
 
+
     <div class="connection">
 
         <span class="connection-dot"></span>
-        <b>ESP32 ONLINE</b>
+
+        <b>
+            ESP32 ONLINE
+        </b>
 
         <small>
-            Local Access Point
+            LittleFS Storage
         </small>
 
     </div>
@@ -353,18 +395,27 @@ tbody tr:hover {
 
 <main class="main">
 
+
     <div class="heading">
 
         <div>
-            <h1>Monitoring History</h1>
+
+            <h1>
+                Monitoring History
+            </h1>
 
             <p>
-                Stored sensor records from LittleFS
+                Records stored locally inside ESP32 LittleFS
             </p>
+
         </div>
 
-        <button class="refresh" onclick="loadHistory()">
+
+        <button class="refresh"
+                onclick="loadHistory()">
+
             ⟳ Refresh Records
+
         </button>
 
     </div>
@@ -372,9 +423,12 @@ tbody tr:hover {
 
     <section class="stats">
 
+
         <div class="stat">
 
-            <label>TOTAL RECORDS</label>
+            <label>
+                TOTAL RECORDS
+            </label>
 
             <strong id="totalRecords">
                 0
@@ -385,7 +439,9 @@ tbody tr:hover {
 
         <div class="stat">
 
-            <label>LATEST FLOAT</label>
+            <label>
+                LATEST FLOAT
+            </label>
 
             <strong id="latestFloat">
                 --
@@ -396,7 +452,9 @@ tbody tr:hover {
 
         <div class="stat">
 
-            <label>LATEST STATUS</label>
+            <label>
+                LATEST STRING
+            </label>
 
             <strong id="latestString">
                 --
@@ -404,14 +462,18 @@ tbody tr:hover {
 
         </div>
 
+
     </section>
 
 
     <section class="table-box">
 
+
         <div class="table-top">
 
-            <h3>Stored Records</h3>
+            <h3>
+                Stored Data Records
+            </h3>
 
             <span>
                 NEWEST FIRST
@@ -422,38 +484,66 @@ tbody tr:hover {
 
         <div class="table-wrapper">
 
+
             <table>
+
 
                 <thead>
 
                     <tr>
 
-                        <th>#</th>
-                        <th>DATE</th>
-                        <th>TIME</th>
-                        <th>FLOAT</th>
-                        <th>INTEGER</th>
-                        <th>STRING</th>
+                        <th>
+                            #
+                        </th>
+
+                        <th>
+                            DATE
+                        </th>
+
+                        <th>
+                            TIME
+                        </th>
+
+                        <th>
+                            FLOAT
+                        </th>
+
+                        <th>
+                            INTEGER
+                        </th>
+
+                        <th>
+                            STRING
+                        </th>
 
                     </tr>
 
                 </thead>
 
+
                 <tbody id="historyBody">
 
                     <tr>
-                        <td colspan="6" class="empty">
-                            Loading records...
+
+                        <td colspan="6"
+                            class="empty">
+
+                            Reading LittleFS...
+
                         </td>
+
                     </tr>
 
                 </tbody>
 
+
             </table>
+
 
         </div>
 
     </section>
+
 
 </main>
 
@@ -463,4 +553,3 @@ tbody tr:hover {
 </body>
 
 </html>
-```
