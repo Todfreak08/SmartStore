@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,11 +15,11 @@
 body {
     font-family: Arial, Helvetica, sans-serif;
     background: #080d16;
-    color: #eef4ff;
+    color: #edf4ff;
     min-height: 100vh;
 }
 
-/* ---------- SIDEBAR ---------- */
+/* SIDEBAR */
 
 .sidebar {
     position: fixed;
@@ -46,8 +45,8 @@ body {
     border-radius: 13px;
     background: linear-gradient(135deg, #00e5ff, #6c63ff);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     font-size: 22px;
 }
 
@@ -71,12 +70,11 @@ body {
 
 .nav a {
     display: block;
-    text-decoration: none;
     color: #8d9bb0;
+    text-decoration: none;
     padding: 13px 14px;
     margin: 5px 0;
     border-radius: 10px;
-    transition: .2s;
 }
 
 .nav a:hover,
@@ -99,9 +97,9 @@ body {
 .connection-dot {
     width: 9px;
     height: 9px;
+    display: inline-block;
     background: #28e48b;
     border-radius: 50%;
-    display: inline-block;
     margin-right: 7px;
     box-shadow: 0 0 10px #28e48b;
 }
@@ -112,7 +110,7 @@ body {
     margin-top: 7px;
 }
 
-/* ---------- MAIN ---------- */
+/* MAIN */
 
 .main {
     margin-left: 240px;
@@ -148,7 +146,7 @@ body {
     color: #718096;
 }
 
-/* ---------- STATUS ---------- */
+/* STATUS */
 
 .status-banner {
     background: linear-gradient(110deg, #101d2d, #101827);
@@ -199,7 +197,7 @@ body {
     font-size: 12px;
 }
 
-/* ---------- CARDS ---------- */
+/* DATA CARDS */
 
 .cards {
     display: grid;
@@ -212,7 +210,7 @@ body {
     border: 1px solid #1b293c;
     border-radius: 17px;
     padding: 23px;
-    min-height: 180px;
+    min-height: 190px;
     position: relative;
     overflow: hidden;
 }
@@ -251,7 +249,7 @@ body {
 }
 
 .value {
-    font-size: 42px;
+    font-size: 40px;
     font-weight: bold;
     margin-top: 22px;
 }
@@ -268,11 +266,11 @@ body {
     font-size: 11px;
 }
 
-/* ---------- LOWER SECTION ---------- */
+/* LOWER */
 
 .lower {
     display: grid;
-    grid-template-columns: 1.5fr 1fr;
+    grid-template-columns: 1.4fr 1fr;
     gap: 18px;
     margin-top: 18px;
 }
@@ -318,6 +316,10 @@ body {
     color: #dbe7f7;
 }
 
+.string-display {
+    color: #28e48b !important;
+}
+
 .quick-button {
     display: block;
     width: 100%;
@@ -336,9 +338,10 @@ body {
     background: #162b40;
 }
 
-/* ---------- RESPONSIVE ---------- */
+/* MOBILE */
 
 @media(max-width: 900px) {
+
     .sidebar {
         width: 190px;
     }
@@ -357,6 +360,7 @@ body {
 }
 
 @media(max-width: 650px) {
+
     .sidebar {
         position: relative;
         width: 100%;
@@ -391,120 +395,205 @@ body {
 <aside class="sidebar">
 
     <div class="logo">
+
         <div class="logo-icon">▣</div>
+
         <div>
             <h2>Smart Storage</h2>
             <span>MONITORING CORE</span>
         </div>
+
     </div>
 
     <div class="nav-title">CONTROL</div>
 
     <nav class="nav">
-        <a href="dashboard.html" class="active">◈ &nbsp; Dashboard</a>
-        <a href="history.html">◷ &nbsp; History</a>
+
+        <a href="dashboard.html" class="active">
+            ◈ &nbsp; Dashboard
+        </a>
+
+        <a href="history.html">
+            ◷ &nbsp; History
+        </a>
+
     </nav>
 
     <div class="nav-title">SYSTEM</div>
 
     <nav class="nav">
-        <a href="#" onclick="syncTime()">↻ &nbsp; Sync Time</a>
+
+        <a href="#" onclick="syncTime()">
+            ↻ &nbsp; Sync Time
+        </a>
+
     </nav>
 
     <div class="connection">
+
         <span class="connection-dot"></span>
         <b>ESP32 ONLINE</b>
-        <small>192.168.4.1</small>
+
+        <small>
+            192.168.4.1
+        </small>
+
     </div>
 
 </aside>
 
+
 <main class="main">
 
     <div class="topbar">
+
         <div>
+
             <h1>Storage Dashboard</h1>
-            <p>Real-time environmental monitoring</p>
+
+            <p>
+                Real-time local storage monitoring
+            </p>
+
         </div>
 
         <div class="clock">
-            <strong id="clock">--:--:--</strong>
+
+            <strong id="clock">
+                --:--:--
+            </strong>
+
             <br>
-            <small id="date">Loading date...</small>
+
+            <small id="date">
+                Loading date...
+            </small>
+
         </div>
+
     </div>
+
 
     <section class="status-banner">
 
         <div class="status-left">
-            <div class="status-symbol">✓</div>
+
+            <div class="status-symbol">
+                ✓
+            </div>
 
             <div>
-                <h3 id="systemStatus">System Normal</h3>
-                <p id="statusMessage">Monitoring storage conditions</p>
+
+                <h3>
+                    Data Collection Active
+                </h3>
+
+                <p>
+                    ESP32 is collecting and storing monitoring records.
+                </p>
+
             </div>
+
         </div>
 
-        <div class="status-pill" id="statusPill">
-            ACTIVE
+        <div class="status-pill">
+            LITTLEFS
         </div>
 
     </section>
 
+
     <section class="cards">
 
+        <!-- FLOAT -->
+
         <div class="card">
 
             <div class="card-header">
-                <span class="card-label">TEMPERATURE</span>
-                <div class="card-icon">°C</div>
+
+                <span class="card-label">
+                    FLOAT VALUE
+                </span>
+
+                <div class="card-icon">
+                    ½
+                </div>
+
             </div>
 
             <div class="value">
-                <span id="temperature">--</span>
-                <span class="unit">°C</span>
+
+                <span id="floatValue">
+                    --
+                </span>
+
             </div>
 
             <div class="card-footer">
-                Floating-point sensor value
+                Decimal / floating-point data
             </div>
 
         </div>
 
 
+        <!-- INTEGER -->
+
         <div class="card">
 
             <div class="card-header">
-                <span class="card-label">MOTION</span>
-                <div class="card-icon">◉</div>
+
+                <span class="card-label">
+                    INTEGER VALUE
+                </span>
+
+                <div class="card-icon">
+                    #
+                </div>
+
             </div>
 
             <div class="value">
-                <span id="motion">--</span>
-                <span class="unit">INT</span>
+
+                <span id="integerValue">
+                    --
+                </span>
+
             </div>
 
             <div class="card-footer">
-                1 = Motion detected · 0 = Clear
+                Whole-number data
             </div>
 
         </div>
 
 
+        <!-- STRING -->
+
         <div class="card">
 
             <div class="card-header">
-                <span class="card-label">HUMIDITY</span>
-                <div class="card-icon">%</div>
+
+                <span class="card-label">
+                    STRING VALUE
+                </span>
+
+                <div class="card-icon">
+                    Aa
+                </div>
+
             </div>
 
-            <div class="value">
-                <span id="humidity">--</span>
-                <span class="unit">%</span>
+            <div class="value"
+                 style="font-size:27px;">
+
+                <span id="stringValue">
+                    --
+                </span>
+
             </div>
 
             <div class="card-footer">
-                Relative humidity
+                Generated string identifier
             </div>
 
         </div>
@@ -514,31 +603,85 @@ body {
 
     <section class="lower">
 
+
         <div class="panel">
 
             <div class="panel-header">
-                <h3>Current Storage State</h3>
-                <span>LIVE DATA</span>
+
+                <h3>
+                    Current Record
+                </h3>
+
+                <span>
+                    LIVE
+                </span>
+
             </div>
 
-            <div class="info-row">
-                <label>Temperature</label>
-                <strong id="tempInfo">-- °C</strong>
-            </div>
 
             <div class="info-row">
-                <label>Humidity</label>
-                <strong id="humidityInfo">-- %</strong>
+
+                <label>
+                    Date
+                </label>
+
+                <strong id="dateInfo">
+                    --
+                </strong>
+
             </div>
 
-            <div class="info-row">
-                <label>Motion Value</label>
-                <strong id="motionInfo">--</strong>
-            </div>
 
             <div class="info-row">
-                <label>Condition</label>
-                <strong id="conditionInfo">Waiting...</strong>
+
+                <label>
+                    Time
+                </label>
+
+                <strong id="timeInfo">
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <label>
+                    Float
+                </label>
+
+                <strong id="floatInfo">
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <label>
+                    Integer
+                </label>
+
+                <strong id="integerInfo">
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <label>
+                    String
+                </label>
+
+                <strong class="string-display"
+                        id="stringInfo">
+                    --
+                </strong>
+
             </div>
 
         </div>
@@ -547,20 +690,39 @@ body {
         <div class="panel">
 
             <div class="panel-header">
-                <h3>Quick Access</h3>
-                <span>ESP32</span>
+
+                <h3>
+                    Quick Access
+                </h3>
+
+                <span>
+                    LOCAL
+                </span>
+
             </div>
 
-            <a href="history.html" class="quick-button">
-                ◷ &nbsp; Open Monitoring History
+
+            <a href="history.html"
+               class="quick-button">
+
+                ◷ &nbsp; Open History
+
             </a>
 
-            <button class="quick-button" onclick="syncTime()">
-                ↻ &nbsp; Synchronize Date & Time
+
+            <button class="quick-button"
+                    onclick="syncTime()">
+
+                ↻ &nbsp; Synchronize Time
+
             </button>
 
-            <button class="quick-button" onclick="loadData()">
-                ⟳ &nbsp; Refresh Sensor Data
+
+            <button class="quick-button"
+                    onclick="loadCurrentData()">
+
+                ⟳ &nbsp; Refresh Data
+
             </button>
 
         </div>
@@ -572,7 +734,7 @@ body {
 
 <script>
 
-function updateClock() {
+function updateBrowserClock() {
 
     const now = new Date();
 
@@ -587,104 +749,148 @@ function updateClock() {
         });
 }
 
-setInterval(updateClock, 1000);
-updateClock();
+setInterval(updateBrowserClock, 1000);
+
+updateBrowserClock();
 
 
 async function syncTime() {
 
     const now = new Date();
 
-    const data =
+    const date =
         now.getFullYear() + "-" +
         String(now.getMonth() + 1).padStart(2, "0") + "-" +
-        String(now.getDate()).padStart(2, "0") + "|" +
+        String(now.getDate()).padStart(2, "0");
+
+    const time =
         String(now.getHours()).padStart(2, "0") + ":" +
         String(now.getMinutes()).padStart(2, "0") + ":" +
         String(now.getSeconds()).padStart(2, "0");
 
+
     try {
 
         await fetch("/api/settime", {
+
             method: "POST",
+
             headers: {
                 "Content-Type": "text/plain"
             },
-            body: data
+
+            body: date + "|" + time
+
         });
 
-        console.log("ESP32 clock synchronized.");
+        console.log("ESP32 time synchronized.");
 
-    } catch(error) {
-        console.log("Time synchronization failed.");
     }
+
+    catch(error) {
+
+        console.log(
+            "Unable to synchronize ESP32 time."
+        );
+
+    }
+
 }
 
 
-async function loadData() {
+async function loadCurrentData() {
 
     try {
 
-        const response = await fetch("/api/current");
+        const response =
+            await fetch("/api/current");
 
-        if (!response.ok)
-            throw new Error("ESP32 response error");
+        if (!response.ok) {
 
-        const data = await response.json();
+            throw new Error(
+                "ESP32 response error"
+            );
 
-        document.getElementById("temperature").textContent =
-            Number(data.temperature).toFixed(2);
+        }
 
-        document.getElementById("humidity").textContent =
-            Number(data.humidity).toFixed(1);
 
-        document.getElementById("motion").textContent =
-            data.motion;
+        const data =
+            await response.json();
 
-        document.getElementById("tempInfo").textContent =
-            Number(data.temperature).toFixed(2) + " °C";
 
-        document.getElementById("humidityInfo").textContent =
-            Number(data.humidity).toFixed(1) + " %";
+        document.getElementById(
+            "floatValue"
+        ).textContent =
+            Number(data.float).toFixed(2);
 
-        document.getElementById("motionInfo").textContent =
-            data.motion;
 
-        document.getElementById("conditionInfo").textContent =
-            data.status;
+        document.getElementById(
+            "integerValue"
+        ).textContent =
+            data.integer;
 
-        document.getElementById("systemStatus").textContent =
-            data.status;
 
-        document.getElementById("statusMessage").textContent =
-            data.message;
+        document.getElementById(
+            "stringValue"
+        ).textContent =
+            data.string;
 
-        document.getElementById("statusPill").textContent =
-            data.motion == 1 ? "MOTION" : "ACTIVE";
 
-    } catch(error) {
+        document.getElementById(
+            "dateInfo"
+        ).textContent =
+            data.date;
 
-        document.getElementById("systemStatus").textContent =
-            "Connection Error";
 
-        document.getElementById("statusMessage").textContent =
-            "Unable to read ESP32 sensor data";
+        document.getElementById(
+            "timeInfo"
+        ).textContent =
+            data.time;
+
+
+        document.getElementById(
+            "floatInfo"
+        ).textContent =
+            Number(data.float).toFixed(2);
+
+
+        document.getElementById(
+            "integerInfo"
+        ).textContent =
+            data.integer;
+
+
+        document.getElementById(
+            "stringInfo"
+        ).textContent =
+            data.string;
 
     }
+
+    catch(error) {
+
+        console.error(error);
+
+        document.getElementById(
+            "stringValue"
+        ).textContent =
+            "OFFLINE";
+
+    }
+
 }
 
 
-// synchronize browser time when dashboard opens
 syncTime();
 
-// get data immediately
-loadData();
+loadCurrentData();
 
-// refresh every 2 seconds
-setInterval(loadData, 2000);
+setInterval(
+    loadCurrentData,
+    2000
+);
 
 </script>
 
 </body>
 </html>
-```
