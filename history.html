@@ -1,272 +1,720 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <title>Smart Storage | History</title>
 
-    <title>Smart Storage - History</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    <link
-        rel="stylesheet"
-        href="history.css"
-    >
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f3f6f9;
+            color: #1f2937;
+        }
 
+        /* ================= HEADER ================= */
+
+        header {
+            background: linear-gradient(135deg, #123c69, #1d70a2);
+            color: white;
+            padding: 22px 30px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .brand h1 {
+            font-size: 25px;
+            margin-bottom: 5px;
+        }
+
+        .brand p {
+            font-size: 13px;
+            opacity: 0.85;
+        }
+
+        .back-btn {
+            text-decoration: none;
+            color: white;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 17px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+
+        .back-btn:hover {
+            background: white;
+            color: #123c69;
+        }
+
+        /* ================= MAIN ================= */
+
+        main {
+            width: 94%;
+            max-width: 1200px;
+            margin: 30px auto;
+        }
+
+        .page-title {
+            margin-bottom: 20px;
+        }
+
+        .page-title h2 {
+            font-size: 27px;
+            color: #123c69;
+        }
+
+        .page-title p {
+            color: #6b7280;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        /* ================= SUMMARY ================= */
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+            border-left: 5px solid #1d70a2;
+        }
+
+        .summary-card span {
+            display: block;
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .summary-card strong {
+            font-size: 24px;
+            color: #123c69;
+        }
+
+        /* ================= TABLE CARD ================= */
+
+        .table-card {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .table-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            gap: 15px;
+        }
+
+        .table-top h3 {
+            color: #123c69;
+        }
+
+        .table-top p {
+            font-size: 13px;
+            color: #777;
+            margin-top: 4px;
+        }
+
+        .clear-btn {
+            border: none;
+            background: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .clear-btn:hover {
+            background: #b02a37;
+        }
+
+        /* ================= TABLE ================= */
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        thead {
+            background: #123c69;
+            color: white;
+        }
+
+        th {
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 13px;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 13px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        tbody tr:hover {
+            background: #f0f7fc;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* DATE */
+
+        .date-value {
+            font-weight: bold;
+            color: #123c69;
+        }
+
+        /* TIME */
+
+        .time-value {
+            color: #555;
+            font-family: monospace;
+        }
+
+        /* FLOAT */
+
+        .float-value {
+            font-weight: bold;
+            color: #087f5b;
+        }
+
+        /* INTEGER */
+
+        .integer-value {
+            font-weight: bold;
+            color: #7c3aed;
+        }
+
+        /* STRING */
+
+        .string-value {
+            color: #b45309;
+        }
+
+        /* ================= EMPTY ================= */
+
+        .empty {
+            text-align: center;
+            padding: 45px 20px;
+            color: #777;
+        }
+
+        .empty-icon {
+            font-size: 38px;
+            margin-bottom: 10px;
+        }
+
+        /* ================= FOOTER ================= */
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #777;
+            font-size: 12px;
+        }
+
+        /* ================= MOBILE ================= */
+
+        @media (max-width: 700px) {
+
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .summary {
+                grid-template-columns: 1fr;
+            }
+
+            .table-top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .page-title h2 {
+                font-size: 23px;
+            }
+        }
+    </style>
 </head>
-
 
 <body>
 
+<header>
+    <div class="header-content">
 
-    <!-- =====================================================
-         HEADER
-         ===================================================== -->
-
-    <header class="header">
-
-        <div class="header-left">
-
-            <h1>
-                Smart Storage Monitoring System
-            </h1>
-
-            <p>
-                Data History
-            </p>
-
+        <div class="brand">
+            <h1>Smart Storage Monitoring</h1>
+            <p>Data History & Record Management</p>
         </div>
 
+        <a href="/" class="back-btn">
+            ← Dashboard
+        </a>
 
-        <div class="header-right">
-
-            <span
-                id="connectionStatus"
-                class="status offline"
-            >
-                ● ESP32 Offline
-            </span>
+    </div>
+</header>
 
 
-            <button
-                id="backButton"
-                class="back-button"
-            >
-                Back
-            </button>
+<main>
 
+    <div class="page-title">
+        <h2>Storage History</h2>
+        <p>View previously collected monitoring records.</p>
+    </div>
+
+
+    <!-- SUMMARY -->
+
+    <section class="summary">
+
+        <div class="summary-card">
+            <span>Total Records</span>
+            <strong id="totalRecords">0</strong>
         </div>
 
-    </header>
+        <div class="summary-card">
+            <span>Latest Date</span>
+            <strong id="latestDate">---</strong>
+        </div>
+
+        <div class="summary-card">
+            <span>Latest Time</span>
+            <strong id="latestTime">---</strong>
+        </div>
+
+    </section>
 
 
+    <!-- HISTORY TABLE -->
 
-    <!-- =====================================================
-         MAIN CONTENT
-         ===================================================== -->
+    <section class="table-card">
 
-    <main class="container">
+        <div class="table-top">
 
+            <div>
+                <h3>Recorded Data</h3>
+                <p>Newest records are displayed first.</p>
+            </div>
 
-        <!-- =================================================
-             TITLE
-             ================================================= -->
-
-        <section class="page-title">
-
-            <h2>
-                History Records
-            </h2>
-
-            <p>
-                Latest records are displayed first.
-            </p>
-
-        </section>
-
-
-
-        <!-- =================================================
-             CONTROLS
-             ================================================= -->
-
-        <section class="controls">
-
-
-            <input
-                type="text"
-                id="historySearch"
-                placeholder="Search date, time, float, integer, or string..."
-                autocomplete="off"
-            >
-
-
-            <button
-                type="button"
-                id="refreshButton"
-                class="button refresh"
-            >
-                Refresh
-            </button>
-
-
-            <button
-                type="button"
-                id="clearButton"
-                class="button clear"
-            >
+            <button class="clear-btn" onclick="clearHistory()">
                 Clear History
             </button>
 
-        </section>
-
-
-
-        <!-- =================================================
-             STATUS CARDS
-             ================================================= -->
-
-        <section class="info-cards">
-
-
-            <div class="info-card">
-
-                <span>
-                    Collection Status
-                </span>
-
-                <strong
-                    id="collectionStatus"
-                    class="stopped"
-                >
-                    STOPPED
-                </strong>
-
-            </div>
-
-
-
-            <div class="info-card">
-
-                <span>
-                    Total Records
-                </span>
-
-                <strong
-                    id="recordCount"
-                >
-                    0
-                </strong>
-
-            </div>
-
-
-
-            <div class="info-card">
-
-                <span>
-                    Current Seconds
-                </span>
-
-                <strong
-                    id="secondsCount"
-                >
-                    0
-                </strong>
-
-            </div>
-
-        </section>
-
-
-
-        <!-- =================================================
-             HISTORY MESSAGE
-             ================================================= -->
-
-        <div
-            id="historyMessage"
-            class="history-message"
-        >
-            Loading history...
         </div>
 
 
+        <div class="table-container">
 
-        <!-- =================================================
-             HISTORY TABLE
-             ================================================= -->
-
-        <section class="table-container">
-
-            <table
-                id="historyTable"
-            >
-
+            <table>
 
                 <thead>
-
                     <tr>
-
-                        <th>
-                            DATE
-                        </th>
-
-                        <th>
-                            TIME
-                        </th>
-
-                        <th>
-                            FLOAT
-                        </th>
-
-                        <th>
-                            INTEGER
-                        </th>
-
-                        <th>
-                            STRING
-                        </th>
-
+                        <th>DATE</th>
+                        <th>TIME</th>
+                        <th>FLOAT</th>
+                        <th>INTEGER</th>
+                        <th>STRING</th>
                     </tr>
-
                 </thead>
 
-
-
-                <tbody
-                    id="historyBody"
-                >
-
-                    <!--
-                        JavaScript will automatically
-                        insert history records here.
-                    -->
+                <tbody id="historyBody">
 
                 </tbody>
 
-
             </table>
 
-        </section>
+        </div>
+
+    </section>
+
+</main>
 
 
-    </main>
+<footer>
+    Smart Storage Monitoring System &copy; 2026
+</footer>
 
 
+<script>
 
-    <!-- =====================================================
-         JAVASCRIPT
-         ===================================================== -->
+    /*
+       ======================================================
+       SMART STORAGE HISTORY
+       ======================================================
 
-    <script src="history.js"></script>
+       IMPORTANT:
+       The first column is DATE.
 
+       Example:
+
+       DATE        TIME       FLOAT    INTEGER    STRING
+       ---------------------------------------------------
+       2026-08-30  20:45:04   12.75       3       value_4000
+       2026-08-30  20:45:03   12.00       2       value_3000
+       2026-08-30  20:45:02   11.25       1       value_2000
+
+       Newest record appears at the TOP.
+    */
+
+
+    // ======================================================
+    // LOAD HISTORY
+    // ======================================================
+
+    function loadHistory() {
+
+        const body = document.getElementById("historyBody");
+
+        body.innerHTML = "";
+
+        /*
+           The ESP32 should provide the history through:
+
+           /api/history
+
+           Expected JSON format:
+
+           [
+               {
+                   "date": "2026-08-30",
+                   "time": "20:45:04",
+                   "float": 12.75,
+                   "integer": 3,
+                   "string": "value_4000"
+               }
+           ]
+        */
+
+        fetch("/api/history")
+            .then(response => {
+
+                if (!response.ok) {
+                    throw new Error("History API unavailable");
+                }
+
+                return response.json();
+
+            })
+
+            .then(records => {
+
+                displayHistory(records);
+
+            })
+
+            .catch(error => {
+
+                console.log(error);
+
+                /*
+                   If the ESP32 API is not available,
+                   load locally saved records instead.
+                */
+
+                loadLocalHistory();
+
+            });
+    }
+
+
+    // ======================================================
+    // DISPLAY HISTORY
+    // ======================================================
+
+    function displayHistory(records) {
+
+        const body = document.getElementById("historyBody");
+
+        body.innerHTML = "";
+
+
+        if (!records || records.length === 0) {
+
+            showEmpty();
+
+            updateSummary([]);
+
+            return;
+        }
+
+
+        /*
+           SORT NEWEST FIRST
+
+           This makes sure the latest record appears
+           at the upper part of the table.
+        */
+
+        records.sort(function(a, b) {
+
+            const dateA = String(a.date || "");
+            const timeA = String(a.time || "");
+
+            const dateB = String(b.date || "");
+            const timeB = String(b.time || "");
+
+            return (dateB + " " + timeB)
+                 .localeCompare(dateA + " " + timeA);
+
+        });
+
+
+        records.forEach(function(record) {
+
+            const row = document.createElement("tr");
+
+
+            const date = record.date ?? "---";
+            const time = record.time ?? "---";
+            const floatValue = record.float ?? 0;
+            const integerValue = record.integer ?? 0;
+            const stringValue = record.string ?? "---";
+
+
+            row.innerHTML = `
+
+                <td class="date-value">
+                    ${escapeHTML(date)}
+                </td>
+
+                <td class="time-value">
+                    ${escapeHTML(time)}
+                </td>
+
+                <td class="float-value">
+                    ${Number(floatValue).toFixed(2)}
+                </td>
+
+                <td class="integer-value">
+                    ${escapeHTML(integerValue)}
+                </td>
+
+                <td class="string-value">
+                    ${escapeHTML(stringValue)}
+                </td>
+
+            `;
+
+
+            body.appendChild(row);
+
+        });
+
+
+        updateSummary(records);
+    }
+
+
+    // ======================================================
+    // EMPTY TABLE
+    // ======================================================
+
+    function showEmpty() {
+
+        document.getElementById("historyBody").innerHTML = `
+
+            <tr>
+                <td colspan="5" class="empty">
+
+                    <div class="empty-icon">
+                        📋
+                    </div>
+
+                    <strong>No history records yet.</strong>
+
+                    <br>
+
+                    <span>
+                        Records collected by the ESP32 will appear here.
+                    </span>
+
+                </td>
+            </tr>
+
+        `;
+    }
+
+
+    // ======================================================
+    // SUMMARY
+    // ======================================================
+
+    function updateSummary(records) {
+
+        document.getElementById("totalRecords").textContent =
+            records.length;
+
+
+        if (records.length > 0) {
+
+            document.getElementById("latestDate").textContent =
+                records[0].date || "---";
+
+            document.getElementById("latestTime").textContent =
+                records[0].time || "---";
+
+        } else {
+
+            document.getElementById("latestDate").textContent =
+                "---";
+
+            document.getElementById("latestTime").textContent =
+                "---";
+        }
+    }
+
+
+    // ======================================================
+    // LOCAL HISTORY
+    // ======================================================
+
+    function loadLocalHistory() {
+
+        let records = [];
+
+        try {
+
+            records =
+                JSON.parse(
+                    localStorage.getItem("storageHistory")
+                ) || [];
+
+        } catch (error) {
+
+            records = [];
+
+        }
+
+        displayHistory(records);
+    }
+
+
+    // ======================================================
+    // CLEAR HISTORY
+    // ======================================================
+
+    function clearHistory() {
+
+        const confirmClear =
+            confirm(
+                "Are you sure you want to clear all history records?"
+            );
+
+
+        if (!confirmClear) {
+            return;
+        }
+
+
+        localStorage.removeItem("storageHistory");
+
+
+        /*
+           If your ESP32 has a DELETE endpoint,
+           you can connect it here later.
+
+           Example:
+
+           fetch("/api/history/clear", {
+               method: "DELETE"
+           });
+        */
+
+
+        showEmpty();
+
+        updateSummary([]);
+
+    }
+
+
+    // ======================================================
+    // HTML SECURITY
+    // ======================================================
+
+    function escapeHTML(value) {
+
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+
+    // ======================================================
+    // START
+    // ======================================================
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function() {
+
+            loadHistory();
+
+        }
+    );
+
+
+    // ======================================================
+    // AUTOMATIC REFRESH
+    // ======================================================
+
+    /*
+       Refresh the history every 5 seconds
+       so newly collected ESP32 records can appear.
+    */
+
+    setInterval(function() {
+
+        loadHistory();
+
+    }, 5000);
+
+</script>
 
 </body>
-
 </html>
-```
