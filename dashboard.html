@@ -1,357 +1,690 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Storage | Dashboard</title>
 
-    <meta charset="UTF-8">
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #080d16;
+    color: #eef4ff;
+    min-height: 100vh;
+}
 
-    <title>Smart Storage Dashboard</title>
+/* ---------- SIDEBAR ---------- */
 
-    <!-- =====================================================
-         SMART STORAGE CSS
-         ===================================================== -->
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 240px;
+    height: 100vh;
+    background: #0d1421;
+    border-right: 1px solid #1d2a3d;
+    padding: 25px 18px;
+}
 
-    <link rel="stylesheet" href="style.css">
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 45px;
+}
 
+.logo-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #00e5ff, #6c63ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
 
-    <!-- =====================================================
-         FIREBASE
-         ===================================================== -->
+.logo h2 {
+    font-size: 17px;
+}
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+.logo span {
+    display: block;
+    color: #77869d;
+    font-size: 10px;
+    margin-top: 3px;
+}
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+.nav-title {
+    color: #53647b;
+    font-size: 10px;
+    letter-spacing: 2px;
+    margin: 20px 12px 10px;
+}
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+.nav a {
+    display: block;
+    text-decoration: none;
+    color: #8d9bb0;
+    padding: 13px 14px;
+    margin: 5px 0;
+    border-radius: 10px;
+    transition: .2s;
+}
 
+.nav a:hover,
+.nav a.active {
+    background: #162237;
+    color: #00e5ff;
+}
+
+.connection {
+    position: absolute;
+    bottom: 25px;
+    left: 18px;
+    right: 18px;
+    background: #111c2c;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid #1d2a3d;
+}
+
+.connection-dot {
+    width: 9px;
+    height: 9px;
+    background: #28e48b;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 7px;
+    box-shadow: 0 0 10px #28e48b;
+}
+
+.connection small {
+    color: #6f7e93;
+    display: block;
+    margin-top: 7px;
+}
+
+/* ---------- MAIN ---------- */
+
+.main {
+    margin-left: 240px;
+    padding: 30px;
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.topbar h1 {
+    font-size: 28px;
+}
+
+.topbar p {
+    color: #718096;
+    margin-top: 6px;
+}
+
+.clock {
+    text-align: right;
+}
+
+.clock strong {
+    font-size: 20px;
+    color: #00e5ff;
+}
+
+.clock small {
+    color: #718096;
+}
+
+/* ---------- STATUS ---------- */
+
+.status-banner {
+    background: linear-gradient(110deg, #101d2d, #101827);
+    border: 1px solid #1e3047;
+    border-radius: 17px;
+    padding: 20px 23px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.status-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.status-symbol {
+    width: 48px;
+    height: 48px;
+    background: #122e29;
+    border: 1px solid #1c765f;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #28e48b;
+    font-size: 23px;
+}
+
+.status-left h3 {
+    font-size: 15px;
+}
+
+.status-left p {
+    color: #74839a;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.status-pill {
+    color: #28e48b;
+    background: #102d27;
+    border: 1px solid #1b6c58;
+    padding: 8px 15px;
+    border-radius: 30px;
+    font-size: 12px;
+}
+
+/* ---------- CARDS ---------- */
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.card {
+    background: #0d1522;
+    border: 1px solid #1b293c;
+    border-radius: 17px;
+    padding: 23px;
+    min-height: 180px;
+    position: relative;
+    overflow: hidden;
+}
+
+.card::after {
+    content: "";
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    right: -40px;
+    bottom: -45px;
+    border-radius: 50%;
+    background: rgba(0,229,255,.05);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-label {
+    color: #77869d;
+    font-size: 12px;
+}
+
+.card-icon {
+    width: 37px;
+    height: 37px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #142337;
+    color: #00e5ff;
+}
+
+.value {
+    font-size: 42px;
+    font-weight: bold;
+    margin-top: 22px;
+}
+
+.unit {
+    color: #718096;
+    font-size: 14px;
+    margin-left: 5px;
+}
+
+.card-footer {
+    margin-top: 15px;
+    color: #607086;
+    font-size: 11px;
+}
+
+/* ---------- LOWER SECTION ---------- */
+
+.lower {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 18px;
+    margin-top: 18px;
+}
+
+.panel {
+    background: #0d1522;
+    border: 1px solid #1b293c;
+    border-radius: 17px;
+    padding: 22px;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.panel-header h3 {
+    font-size: 15px;
+}
+
+.panel-header span {
+    color: #64748b;
+    font-size: 11px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 1px solid #182437;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-row label {
+    color: #74839a;
+}
+
+.info-row strong {
+    color: #dbe7f7;
+}
+
+.quick-button {
+    display: block;
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #1e354b;
+    background: #111e2f;
+    color: #00e5ff;
+    border-radius: 10px;
+    margin-top: 10px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+}
+
+.quick-button:hover {
+    background: #162b40;
+}
+
+/* ---------- RESPONSIVE ---------- */
+
+@media(max-width: 900px) {
+    .sidebar {
+        width: 190px;
+    }
+
+    .main {
+        margin-left: 190px;
+    }
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    .lower {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media(max-width: 650px) {
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #1d2a3d;
+    }
+
+    .connection {
+        display: none;
+    }
+
+    .main {
+        margin-left: 0;
+        padding: 18px;
+    }
+
+    .topbar {
+        display: block;
+    }
+
+    .clock {
+        text-align: left;
+        margin-top: 15px;
+    }
+}
+</style>
 </head>
-
 
 <body>
 
+<aside class="sidebar">
 
-    <!-- =====================================================
-         HEADER
-         ===================================================== -->
+    <div class="logo">
+        <div class="logo-icon">▣</div>
+        <div>
+            <h2>Smart Storage</h2>
+            <span>MONITORING CORE</span>
+        </div>
+    </div>
 
-    <header class="top-header">
+    <div class="nav-title">CONTROL</div>
 
-        <div class="brand">
-            Smart Storage
+    <nav class="nav">
+        <a href="dashboard.html" class="active">◈ &nbsp; Dashboard</a>
+        <a href="history.html">◷ &nbsp; History</a>
+    </nav>
+
+    <div class="nav-title">SYSTEM</div>
+
+    <nav class="nav">
+        <a href="#" onclick="syncTime()">↻ &nbsp; Sync Time</a>
+    </nav>
+
+    <div class="connection">
+        <span class="connection-dot"></span>
+        <b>ESP32 ONLINE</b>
+        <small>192.168.4.1</small>
+    </div>
+
+</aside>
+
+<main class="main">
+
+    <div class="topbar">
+        <div>
+            <h1>Storage Dashboard</h1>
+            <p>Real-time environmental monitoring</p>
+        </div>
+
+        <div class="clock">
+            <strong id="clock">--:--:--</strong>
+            <br>
+            <small id="date">Loading date...</small>
+        </div>
+    </div>
+
+    <section class="status-banner">
+
+        <div class="status-left">
+            <div class="status-symbol">✓</div>
+
+            <div>
+                <h3 id="systemStatus">System Normal</h3>
+                <p id="statusMessage">Monitoring storage conditions</p>
+            </div>
+        </div>
+
+        <div class="status-pill" id="statusPill">
+            ACTIVE
+        </div>
+
+    </section>
+
+    <section class="cards">
+
+        <div class="card">
+
+            <div class="card-header">
+                <span class="card-label">TEMPERATURE</span>
+                <div class="card-icon">°C</div>
+            </div>
+
+            <div class="value">
+                <span id="temperature">--</span>
+                <span class="unit">°C</span>
+            </div>
+
+            <div class="card-footer">
+                Floating-point sensor value
+            </div>
+
         </div>
 
 
-        <div class="header-right">
+        <div class="card">
 
-            <span id="firebaseStatus">
-                🔴 Connecting...
-            </span>
+            <div class="card-header">
+                <span class="card-label">MOTION</span>
+                <div class="card-icon">◉</div>
+            </div>
 
-            <span id="userEmail">
-                Not logged in
-            </span>
+            <div class="value">
+                <span id="motion">--</span>
+                <span class="unit">INT</span>
+            </div>
 
-            <button
-                id="logoutButton"
-                type="button"
-            >
-                Logout
+            <div class="card-footer">
+                1 = Motion detected · 0 = Clear
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-header">
+                <span class="card-label">HUMIDITY</span>
+                <div class="card-icon">%</div>
+            </div>
+
+            <div class="value">
+                <span id="humidity">--</span>
+                <span class="unit">%</span>
+            </div>
+
+            <div class="card-footer">
+                Relative humidity
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="lower">
+
+        <div class="panel">
+
+            <div class="panel-header">
+                <h3>Current Storage State</h3>
+                <span>LIVE DATA</span>
+            </div>
+
+            <div class="info-row">
+                <label>Temperature</label>
+                <strong id="tempInfo">-- °C</strong>
+            </div>
+
+            <div class="info-row">
+                <label>Humidity</label>
+                <strong id="humidityInfo">-- %</strong>
+            </div>
+
+            <div class="info-row">
+                <label>Motion Value</label>
+                <strong id="motionInfo">--</strong>
+            </div>
+
+            <div class="info-row">
+                <label>Condition</label>
+                <strong id="conditionInfo">Waiting...</strong>
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel-header">
+                <h3>Quick Access</h3>
+                <span>ESP32</span>
+            </div>
+
+            <a href="history.html" class="quick-button">
+                ◷ &nbsp; Open Monitoring History
+            </a>
+
+            <button class="quick-button" onclick="syncTime()">
+                ↻ &nbsp; Synchronize Date & Time
+            </button>
+
+            <button class="quick-button" onclick="loadData()">
+                ⟳ &nbsp; Refresh Sensor Data
             </button>
 
         </div>
 
-    </header>
+    </section>
 
+</main>
 
-    <!-- =====================================================
-         DASHBOARD
-         ===================================================== -->
 
-    <main class="dashboard">
+<script>
 
+function updateClock() {
 
-        <!-- =================================================
-             TITLE
-             ================================================= -->
+    const now = new Date();
 
-        <div class="page-title">
+    document.getElementById("clock").textContent =
+        now.toLocaleTimeString();
 
-            <h1>
-                Smart Storage Dashboard
-            </h1>
+    document.getElementById("date").textContent =
+        now.toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        });
+}
 
-            <p>
-                Monitor and control realtime ESP32 data collection.
-            </p>
+setInterval(updateClock, 1000);
+updateClock();
 
-        </div>
 
+async function syncTime() {
 
-        <!-- =================================================
-             CONTROL
-             ================================================= -->
+    const now = new Date();
 
-        <section class="control-card">
+    const data =
+        now.getFullYear() + "-" +
+        String(now.getMonth() + 1).padStart(2, "0") + "-" +
+        String(now.getDate()).padStart(2, "0") + "|" +
+        String(now.getHours()).padStart(2, "0") + ":" +
+        String(now.getMinutes()).padStart(2, "0") + ":" +
+        String(now.getSeconds()).padStart(2, "0");
 
-            <div class="control-top">
+    try {
 
+        await fetch("/api/settime", {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain"
+            },
+            body: data
+        });
 
-                <div class="status-area">
+        console.log("ESP32 clock synchronized.");
 
-                    <span class="status-label">
-                        Collection Status:
-                    </span>
+    } catch(error) {
+        console.log("Time synchronization failed.");
+    }
+}
 
-                    <span id="collectionStatus">
-                        STOPPED
-                    </span>
 
-                </div>
+async function loadData() {
 
+    try {
 
-                <div class="button-area">
+        const response = await fetch("/api/current");
 
-                    <button
-                        id="startCollection"
-                        type="button"
-                    >
-                        Start Collection
-                    </button>
+        if (!response.ok)
+            throw new Error("ESP32 response error");
 
+        const data = await response.json();
 
-                    <button
-                        id="stopCollection"
-                        type="button"
-                        disabled
-                    >
-                        Stop Collection
-                    </button>
+        document.getElementById("temperature").textContent =
+            Number(data.temperature).toFixed(2);
 
-                </div>
+        document.getElementById("humidity").textContent =
+            Number(data.humidity).toFixed(1);
 
-            </div>
+        document.getElementById("motion").textContent =
+            data.motion;
 
-        </section>
+        document.getElementById("tempInfo").textContent =
+            Number(data.temperature).toFixed(2) + " °C";
 
+        document.getElementById("humidityInfo").textContent =
+            Number(data.humidity).toFixed(1) + " %";
 
-        <!-- =================================================
-             SUMMARY
-             ================================================= -->
+        document.getElementById("motionInfo").textContent =
+            data.motion;
 
-        <section class="summary-grid">
+        document.getElementById("conditionInfo").textContent =
+            data.status;
 
+        document.getElementById("systemStatus").textContent =
+            data.status;
 
-            <div class="summary-card">
+        document.getElementById("statusMessage").textContent =
+            data.message;
 
-                <div class="label">
-                    Collection
-                </div>
+        document.getElementById("statusPill").textContent =
+            data.motion == 1 ? "MOTION" : "ACTIVE";
 
-                <div
-                    class="value"
-                    id="summaryCollection"
-                >
-                    STOPPED
-                </div>
+    } catch(error) {
 
-            </div>
+        document.getElementById("systemStatus").textContent =
+            "Connection Error";
 
+        document.getElementById("statusMessage").textContent =
+            "Unable to read ESP32 sensor data";
 
-            <div class="summary-card">
+    }
+}
 
-                <div class="label">
-                    Records
-                </div>
 
-                <div
-                    class="value"
-                    id="summaryRecords"
-                >
-                    0
-                </div>
+// synchronize browser time when dashboard opens
+syncTime();
 
-            </div>
+// get data immediately
+loadData();
 
+// refresh every 2 seconds
+setInterval(loadData, 2000);
 
-            <div class="summary-card">
-
-                <div class="label">
-                    Device
-                </div>
-
-                <div
-                    class="value"
-                    id="deviceStatus"
-                >
-                    OFFLINE
-                </div>
-
-            </div>
-
-
-            <div class="summary-card">
-
-                <div class="label">
-                    Last Update
-                </div>
-
-                <div
-                    class="value"
-                    id="lastUpdate"
-                >
-                    --
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =================================================
-             REALTIME DATA LOGS
-             ================================================= -->
-
-        <section class="logs-card">
-
-
-            <div class="logs-title">
-                Realtime Data Logs
-            </div>
-
-
-            <div class="table-container">
-
-                <table id="dataLogs">
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Date
-                            </th>
-
-                            <th>
-                                Time
-                            </th>
-
-                            <th>
-                                Float
-                            </th>
-
-                            <th>
-                                Integer
-                            </th>
-
-                            <th>
-                                String
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody id="dataLogBody">
-
-                        <tr class="empty-row">
-
-                            <td colspan="5">
-                                Waiting for Firebase data...
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-
-        </section>
-
-
-        <!-- =================================================
-             FOOTER INFO
-             ================================================= -->
-
-        <div class="footer-info">
-
-            <span>
-                Total records:
-                <strong id="recordCount">
-                    0
-                </strong>
-            </span>
-
-
-            <span>
-                ESP32:
-                <strong id="deviceSource">
-                    Waiting for data
-                </strong>
-            </span>
-
-        </div>
-
-
-    </main>
-
-
-    <!-- =====================================================
-         FIREBASE CONFIG
-         ===================================================== -->
-
-    <script>
-
-        const firebaseConfig = {
-
-            apiKey:
-                "AIzaSyA5QX9AyP2_ktesCGvbAA4nQ2Y2zO7Szrs",
-
-            authDomain:
-                "storage-monitoring-48413.firebaseapp.com",
-
-            databaseURL:
-                "https://storage-monitoring-48413-default-rtdb.asia-southeast1.firebasedatabase.app",
-
-            projectId:
-                "storage-monitoring-48413",
-
-            storageBucket:
-                "storage-monitoring-48413.firebasestorage.app",
-
-            messagingSenderId:
-                "83679547898",
-
-            appId:
-                "1:836795478981:web:a7ebcfa7676bb8a36ed1ac"
-
-        };
-
-
-        // Initialize Firebase
-
-        firebase.initializeApp(
-            firebaseConfig
-        );
-
-    </script>
-
-
-    <!-- =====================================================
-         DASHBOARD JAVASCRIPT
-         ===================================================== -->
-
-    <script src="dashboard.js"></script>
-
+</script>
 
 </body>
-
 </html>
+```
