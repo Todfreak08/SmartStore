@@ -1,7 +1,8 @@
-```javascript
 async function loadHistory() {
 
-    const body = document.getElementById("historyBody");
+    const body =
+        document.getElementById("historyBody");
+
 
     body.innerHTML = `
         <tr>
@@ -11,52 +12,100 @@ async function loadHistory() {
         </tr>
     `;
 
+
     try {
 
-        const response = await fetch("/api/history");
+        const response =
+            await fetch("/api/history");
+
 
         if (!response.ok) {
-            throw new Error("History request failed");
+
+            throw new Error(
+                "History request failed"
+            );
+
         }
 
-        const records = await response.json();
 
-        // Newest record first
+        let records =
+            await response.json();
+
+
+        /*
+            The Arduino sends records
+            from oldest to newest.
+
+            Reverse them so the newest
+            record appears FIRST.
+        */
+
         records.reverse();
 
-        document.getElementById("totalRecords").textContent =
+
+        document.getElementById(
+            "totalRecords"
+        ).textContent =
             records.length;
+
 
         if (records.length === 0) {
 
             body.innerHTML = `
                 <tr>
-                    <td colspan="6" class="empty">
-                        No records have been stored yet.
+                    <td colspan="6"
+                        class="empty">
+
+                        No records stored yet.
+
                     </td>
                 </tr>
             `;
 
-            document.getElementById("latestFloat").textContent = "--";
-            document.getElementById("latestString").textContent = "--";
+
+            document.getElementById(
+                "latestFloat"
+            ).textContent = "--";
+
+
+            document.getElementById(
+                "latestString"
+            ).textContent = "--";
+
 
             return;
+
         }
 
 
-        document.getElementById("latestFloat").textContent =
-            Number(records[0].float).toFixed(2);
+        /*
+            Latest record
+        */
 
-        document.getElementById("latestString").textContent =
+        document.getElementById(
+            "latestFloat"
+        ).textContent =
+            Number(
+                records[0].float
+            ).toFixed(2);
+
+
+        document.getElementById(
+            "latestString"
+        ).textContent =
             records[0].string;
 
 
         body.innerHTML = "";
 
 
-        records.forEach((record, index) => {
+        records.forEach(
+            (record, index) => {
 
-            const row = document.createElement("tr");
+
+            const row =
+                document.createElement("tr");
+
 
             row.innerHTML = `
 
@@ -86,9 +135,11 @@ async function loadHistory() {
 
             `;
 
+
             body.appendChild(row);
 
         });
+
 
     }
 
@@ -96,15 +147,28 @@ async function loadHistory() {
 
         console.error(error);
 
+
         body.innerHTML = `
+
             <tr>
-                <td colspan="6" class="empty">
+
+                <td colspan="6"
+                    class="empty">
+
                     Unable to connect to ESP32.
+
                     <br><br>
-                    Make sure you are connected to
-                    SmartStorage-ESP32.
+
+                    Connect to:
+
+                    <b>
+                        SmartStorage-ESP32
+                    </b>
+
                 </td>
+
             </tr>
+
         `;
 
     }
@@ -112,21 +176,56 @@ async function loadHistory() {
 }
 
 
+/*
+    Protect the HTML table
+    from unwanted HTML characters.
+*/
+
 function escapeHTML(value) {
 
     return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 
 }
 
 
+/*
+    Load immediately.
+*/
+
 loadHistory();
 
 
-// Automatically refresh history every 5 seconds
-setInterval(loadHistory, 5000);
-```
+/*
+    Automatically refresh
+    every 5 seconds.
+*/
+
+setInterval(
+    loadHistory,
+    5000
+);
