@@ -1,6 +1,8 @@
 // =====================================================
 // SMART STORAGE HISTORY
 // ESP32 → Firebase → Website
+// Fields:
+// Date | Time | Float | Integer | String
 // =====================================================
 
 
@@ -24,7 +26,6 @@ auth.onAuthStateChanged(function(user) {
 });
 
 
-
 // =====================================================
 // LOGOUT
 // =====================================================
@@ -34,36 +35,31 @@ const logoutButton =
 
 if (logoutButton) {
 
-    logoutButton.addEventListener(
-        "click",
-        function() {
+    logoutButton.addEventListener("click", function() {
 
-            auth.signOut()
-                .then(function() {
+        auth.signOut()
+            .then(function() {
 
-                    window.location.href =
-                        "index.html";
+                window.location.href = "index.html";
 
-                })
-                .catch(function(error) {
+            })
+            .catch(function(error) {
 
-                    console.error(
-                        "Logout error:",
-                        error
-                    );
+                console.error(
+                    "Logout error:",
+                    error
+                );
 
-                    alert(
-                        "Logout failed: " +
-                        error.message
-                    );
+                alert(
+                    "Logout failed: " +
+                    error.message
+                );
 
-                });
+            });
 
-        }
-    );
+    });
 
 }
-
 
 
 // =====================================================
@@ -71,25 +67,19 @@ if (logoutButton) {
 // =====================================================
 
 const firebaseStatus =
-    document.getElementById(
-        "firebaseStatus"
-    );
-
+    document.getElementById("firebaseStatus");
 
 
 // =====================================================
-// FIREBASE HISTORY REFERENCE
+// FIREBASE HISTORY
 // =====================================================
 
 const historyRef =
-    database.ref(
-        "smartStorage/history"
-    );
-
+    database.ref("smartStorage/history");
 
 
 // =====================================================
-// TIMESTAMP → DATE
+// TIMESTAMP → DATE OBJECT
 // =====================================================
 
 function convertTimestampToDate(timestamp) {
@@ -108,7 +98,8 @@ function convertTimestampToDate(timestamp) {
         return null;
     }
 
-    // Firebase timestamp in seconds
+    // If timestamp is in seconds,
+    // convert to milliseconds.
     if (value < 100000000000) {
         value = value * 1000;
     }
@@ -123,10 +114,8 @@ function convertTimestampToDate(timestamp) {
 }
 
 
-
 // =====================================================
 // FORMAT DATE
-// Philippines: Asia/Manila
 // =====================================================
 
 function formatDate(timestamp) {
@@ -151,10 +140,9 @@ function formatDate(timestamp) {
 }
 
 
-
 // =====================================================
 // FORMAT TIME
-// Philippines: Asia/Manila
+// MILITARY / 24-HOUR TIME
 // =====================================================
 
 function formatTime(timestamp) {
@@ -173,94 +161,34 @@ function formatTime(timestamp) {
             hour: "2-digit",
             minute: "2-digit",
             second: "2-digit",
-            hour12: true
+            hour12: false
         }
     );
 
 }
 
 
-
 // =====================================================
-// FORMAT MOTION
+// GET TIMESTAMP
 // =====================================================
 
-function formatMotion(value) {
+function getRecordTimestamp(data) {
 
-    if (
-        value === true ||
-        value === 1 ||
-        value === "1" ||
-        value === "true" ||
-        value === "TRUE"
-    ) {
-        return "Motion Detected";
+    let timestamp =
+        data.timestamp ??
+        data.timestampRaw ??
+        data.createdAt ??
+        data.timeStamp ??
+        0;
+
+    timestamp = Number(timestamp);
+
+    if (isNaN(timestamp)) {
+        return 0;
     }
 
-    if (
-        value === false ||
-        value === 0 ||
-        value === "0" ||
-        value === "false" ||
-        value === "FALSE"
-    ) {
-        return "No Motion";
-    }
-
-    if (
-        value === undefined ||
-        value === null ||
-        value === ""
-    ) {
-        return "-";
-    }
-
-    return String(value);
-
+    return timestamp;
 }
-
-
-
-// =====================================================
-// FORMAT STATUS
-// =====================================================
-
-function formatStatus(data) {
-
-    // If ESP32 sends status directly
-    if (
-        data.status !== undefined &&
-        data.status !== null &&
-        data.status !== ""
-    ) {
-        return String(data.status);
-    }
-
-    // Otherwise use online field
-    if (
-        data.online === true ||
-        data.online === 1 ||
-        data.online === "true" ||
-        data.online === "TRUE" ||
-        data.online === "1"
-    ) {
-        return "ONLINE";
-    }
-
-    if (
-        data.online === false ||
-        data.online === 0 ||
-        data.online === "false" ||
-        data.online === "FALSE" ||
-        data.online === "0"
-    ) {
-        return "OFFLINE";
-    }
-
-    return "-";
-
-}
-
 
 
 // =====================================================
@@ -279,6 +207,10 @@ historyRef.on(
         );
 
 
+        // -------------------------------------------------
+        // FIREBASE STATUS
+        // -------------------------------------------------
+
         if (firebaseStatus) {
 
             firebaseStatus.textContent =
@@ -289,6 +221,10 @@ historyRef.on(
 
         }
 
+
+        // -------------------------------------------------
+        // TABLE BODY
+        // -------------------------------------------------
 
         const tbody =
             document.getElementById(
@@ -313,13 +249,13 @@ historyRef.on(
         }
 
 
+        // Clear existing records
         tbody.innerHTML = "";
 
 
-
-        // =================================================
+        // -------------------------------------------------
         // NO DATA
-        // =================================================
+        // -------------------------------------------------
 
         if (!snapshot.exists()) {
 
@@ -346,9 +282,8 @@ historyRef.on(
         }
 
 
-
         // =================================================
-        // CONVERT FIREBASE RECORDS TO ARRAY
+        // CONVERT FIREBASE DATA TO ARRAY
         // =================================================
 
         const records = [];
@@ -356,62 +291,45 @@ historyRef.on(
 
         snapshot.forEach(function(child) {
 
+            const data =
+                child.val() || {};
+
+
             records.push({
 
                 key:
                     child.key,
 
                 data:
-                    child.val()
+                    data
 
             });
 
         });
 
 
+        // =================================================
+        // SORT NEWEST RECORD FIRST
+        // =================================================
 
-       // =================================================
-// =================================================
-// SORT: NEWEST RECORD FIRST
-// =================================================
+        records.sort(function(a, b) {
 
-records.sort(function(a, b) {
+            const timestampA =
+                getRecordTimestamp(
+                    a.data
+                );
 
-    const dataA = a.data || {};
-    const dataB = b.data || {};
 
-    // Get timestamp from the available Firebase field
-    function getTimestamp(data) {
+            const timestampB =
+                getRecordTimestamp(
+                    b.data
+                );
 
-        let value =
-            data.timestamp ??
-            data.timestampRaw ??
-            data.createdAt ??
-            data.timeStamp ??
-            0;
 
-        value = Number(value);
+            // Newest → oldest
+            return timestampB - timestampA;
 
-        if (isNaN(value)) {
-            return 0;
-        }
-
-        // Convert seconds to milliseconds
-        if (value < 100000000000) {
-            value = value * 1000;
-        }
-
-        return value;
-    }
-
-    const timestampA = getTimestamp(dataA);
-    const timestampB = getTimestamp(dataB);
-
-    // NEWEST → OLDEST
-    return timestampB - timestampA;
-
-});
-
+        });
 
 
         // =================================================
@@ -425,10 +343,7 @@ records.sort(function(a, b) {
 
 
             const row =
-                document.createElement(
-                    "tr"
-                );
-
+                document.createElement("tr");
 
 
             // -------------------------------------------------
@@ -436,11 +351,7 @@ records.sort(function(a, b) {
             // -------------------------------------------------
 
             const timestamp =
-                data.timestamp ||
-                data.timestampRaw ||
-                data.createdAt ||
-                null;
-
+                getRecordTimestamp(data);
 
 
             // -------------------------------------------------
@@ -452,7 +363,6 @@ records.sort(function(a, b) {
                 formatDate(timestamp);
 
 
-
             // -------------------------------------------------
             // TIME
             // -------------------------------------------------
@@ -462,88 +372,95 @@ records.sort(function(a, b) {
                 formatTime(timestamp);
 
 
-
             // -------------------------------------------------
-            // TEMPERATURE
+            // FLOAT
             // -------------------------------------------------
 
-            let temperature = "-";
+            let floatValue = "-";
+
 
             if (
-                data.temperature !== undefined &&
-                data.temperature !== null &&
-                data.temperature !== ""
+                data.float !== undefined &&
+                data.float !== null &&
+                data.float !== ""
             ) {
 
-                const temp =
-                    Number(data.temperature);
+                const value =
+                    Number(data.float);
 
-                temperature =
-                    isNaN(temp)
-                        ? String(data.temperature)
-                        : temp.toFixed(1) + " °C";
+
+                if (!isNaN(value)) {
+
+                    floatValue =
+                        value.toFixed(2);
+
+                } else {
+
+                    floatValue =
+                        String(data.float);
+
+                }
 
             }
 
 
-
             // -------------------------------------------------
-            // HUMIDITY
+            // INTEGER
             // -------------------------------------------------
 
-            let humidity = "-";
+            let integerValue = "-";
+
 
             if (
-                data.humidity !== undefined &&
-                data.humidity !== null &&
-                data.humidity !== ""
+                data.integer !== undefined &&
+                data.integer !== null &&
+                data.integer !== ""
             ) {
 
-                const hum =
-                    Number(data.humidity);
+                const value =
+                    Number(data.integer);
 
-                humidity =
-                    isNaN(hum)
-                        ? String(data.humidity)
-                        : hum.toFixed(1) + " %";
+
+                if (
+                    !isNaN(value) &&
+                    Number.isInteger(value)
+                ) {
+
+                    integerValue =
+                        String(value);
+
+                } else {
+
+                    integerValue =
+                        String(data.integer);
+
+                }
 
             }
 
 
-
             // -------------------------------------------------
-            // MOTION
-            // -------------------------------------------------
-
-            const motion =
-                formatMotion(
-                    data.motion
-                );
-
-
-
-            // -------------------------------------------------
-            // STATUS
+            // STRING
             // -------------------------------------------------
 
-            const status =
-                formatStatus(data);
+            let stringValue = "-";
 
 
+            if (
+                data.string !== undefined &&
+                data.string !== null &&
+                data.string !== ""
+            ) {
 
-            // -------------------------------------------------
-            // SOURCE
-            // -------------------------------------------------
+                stringValue =
+                    String(data.string);
 
-            const source =
-                data.source ||
-                "ESP32";
+            }
 
 
-
-            // -------------------------------------------------
-            // CREATE ROW
-            // -------------------------------------------------
+            // =================================================
+            // CREATE TABLE ROW
+            // =================================================
 
             row.innerHTML = `
 
@@ -556,52 +473,31 @@ records.sort(function(a, b) {
                 </td>
 
                 <td>
-                    ${escapeHTML(
-                        timestamp || "-"
-                    )}
+                    ${escapeHTML(floatValue)}
                 </td>
 
                 <td>
-                    ${escapeHTML(
-                        temperature
-                    )}
+                    ${escapeHTML(integerValue)}
                 </td>
 
                 <td>
-                    ${escapeHTML(
-                        humidity
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        motion
-                    )}
-                </td>
-
-                <td>
-                    <strong>
-                        ${escapeHTML(
-                            status
-                        )}
-                    </strong>
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        source
-                    )}
+                    ${escapeHTML(stringValue)}
                 </td>
 
             `;
 
 
+            // Newest records appear first
             tbody.appendChild(row);
 
         });
 
     },
 
+
+    // =====================================================
+    // FIREBASE ERROR
+    // =====================================================
 
     function(error) {
 
@@ -642,7 +538,6 @@ records.sort(function(a, b) {
     }
 
 );
-
 
 
 // =====================================================
@@ -692,21 +587,19 @@ if (searchInput) {
 }
 
 
-
 // =====================================================
 // SECURITY
-// Prevent Firebase values from injecting HTML
 // =====================================================
 
 function escapeHTML(value) {
 
     const div =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
+
 
     div.textContent =
         String(value);
+
 
     return div.innerHTML;
 
