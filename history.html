@@ -4,268 +4,461 @@
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<title>Smart Storage | History</title>
 
-    <title>Smart Storage - History</title>
+<style>
 
-    <link
-        rel="stylesheet"
-        href="history.css"
-    >
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #080d16;
+    color: #edf4ff;
+    min-height: 100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 240px;
+    height: 100vh;
+    background: #0d1421;
+    border-right: 1px solid #1d2a3d;
+    padding: 25px 18px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 45px;
+}
+
+.logo-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #00e5ff, #6c63ff);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 22px;
+}
+
+.logo h2 {
+    font-size: 17px;
+}
+
+.logo span {
+    display: block;
+    color: #77869d;
+    font-size: 10px;
+    margin-top: 3px;
+}
+
+.nav-title {
+    color: #53647b;
+    font-size: 10px;
+    letter-spacing: 2px;
+    margin: 20px 12px 10px;
+}
+
+.nav a {
+    display: block;
+    color: #8d9bb0;
+    text-decoration: none;
+    padding: 13px 14px;
+    margin: 5px 0;
+    border-radius: 10px;
+}
+
+.nav a:hover,
+.nav a.active {
+    background: #162237;
+    color: #00e5ff;
+}
+
+.connection {
+    position: absolute;
+    bottom: 25px;
+    left: 18px;
+    right: 18px;
+    background: #111c2c;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid #1d2a3d;
+}
+
+.connection-dot {
+    width: 9px;
+    height: 9px;
+    display: inline-block;
+    background: #28e48b;
+    border-radius: 50%;
+    margin-right: 7px;
+    box-shadow: 0 0 10px #28e48b;
+}
+
+.connection small {
+    color: #6f7e93;
+    display: block;
+    margin-top: 7px;
+}
+
+/* MAIN */
+
+.main {
+    margin-left: 240px;
+    padding: 30px;
+}
+
+.heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.heading h1 {
+    font-size: 28px;
+}
+
+.heading p {
+    color: #718096;
+    margin-top: 7px;
+}
+
+.refresh {
+    border: 1px solid #1d4257;
+    background: #102333;
+    color: #00e5ff;
+    padding: 11px 17px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.refresh:hover {
+    background: #173249;
+}
+
+/* STAT BAR */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat {
+    background: #0d1522;
+    border: 1px solid #1b293c;
+    padding: 18px;
+    border-radius: 14px;
+}
+
+.stat label {
+    color: #718096;
+    font-size: 11px;
+}
+
+.stat strong {
+    display: block;
+    font-size: 25px;
+    margin-top: 8px;
+}
+
+/* TABLE */
+
+.table-box {
+    background: #0d1522;
+    border: 1px solid #1b293c;
+    border-radius: 17px;
+    overflow: hidden;
+}
+
+.table-top {
+    padding: 20px;
+    border-bottom: 1px solid #1b293c;
+    display: flex;
+    justify-content: space-between;
+}
+
+.table-top h3 {
+    font-size: 15px;
+}
+
+.table-top span {
+    color: #66778e;
+    font-size: 11px;
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #111c2b;
+}
+
+th {
+    text-align: left;
+    padding: 16px;
+    font-size: 11px;
+    color: #6f8098;
+    letter-spacing: 1px;
+}
+
+td {
+    padding: 16px;
+    border-top: 1px solid #172336;
+    font-size: 13px;
+}
+
+tbody tr:hover {
+    background: #111d2c;
+}
+
+.float-value {
+    color: #00e5ff;
+    font-weight: bold;
+}
+
+.integer-value {
+    color: #b59cff;
+    font-weight: bold;
+}
+
+.string-value {
+    color: #28e48b;
+}
+
+.empty {
+    text-align: center;
+    padding: 50px;
+    color: #627188;
+}
+
+.number {
+    color: #56677e;
+    width: 55px;
+}
+
+/* MOBILE */
+
+@media(max-width: 700px) {
+
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #1d2a3d;
+    }
+
+    .connection {
+        display: none;
+    }
+
+    .main {
+        margin-left: 0;
+        padding: 18px;
+    }
+
+    .heading {
+        display: block;
+    }
+
+    .refresh {
+        margin-top: 15px;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+</style>
 
 </head>
 
-
 <body>
 
+<aside class="sidebar">
 
-    <!-- =====================================================
-         HEADER
-         ===================================================== -->
+    <div class="logo">
 
-    <header class="header">
+        <div class="logo-icon">▣</div>
 
-        <div class="header-left">
+        <div>
+            <h2>Smart Storage</h2>
+            <span>MONITORING CORE</span>
+        </div>
 
-            <h1>
-                Smart Storage Monitoring System
-            </h1>
+    </div>
+
+    <div class="nav-title">CONTROL</div>
+
+    <nav class="nav">
+
+        <a href="dashboard.html">
+            ◈ &nbsp; Dashboard
+        </a>
+
+        <a href="history.html" class="active">
+            ◷ &nbsp; History
+        </a>
+
+    </nav>
+
+    <div class="nav-title">SYSTEM</div>
+
+    <nav class="nav">
+
+        <a href="dashboard.html">
+            ← &nbsp; Return Dashboard
+        </a>
+
+    </nav>
+
+    <div class="connection">
+
+        <span class="connection-dot"></span>
+        <b>ESP32 ONLINE</b>
+
+        <small>
+            Local Access Point
+        </small>
+
+    </div>
+
+</aside>
+
+
+<main class="main">
+
+    <div class="heading">
+
+        <div>
+            <h1>Monitoring History</h1>
 
             <p>
-                Data History
+                Stored sensor records from LittleFS
             </p>
+        </div>
+
+        <button class="refresh" onclick="loadHistory()">
+            ⟳ Refresh Records
+        </button>
+
+    </div>
+
+
+    <section class="stats">
+
+        <div class="stat">
+
+            <label>TOTAL RECORDS</label>
+
+            <strong id="totalRecords">
+                0
+            </strong>
 
         </div>
 
 
-        <div class="header-right">
+        <div class="stat">
 
-            <span
-                id="connectionStatus"
-                class="status offline"
-            >
-                ● ESP32 Offline
+            <label>LATEST FLOAT</label>
+
+            <strong id="latestFloat">
+                --
+            </strong>
+
+        </div>
+
+
+        <div class="stat">
+
+            <label>LATEST STATUS</label>
+
+            <strong id="latestString">
+                --
+            </strong>
+
+        </div>
+
+    </section>
+
+
+    <section class="table-box">
+
+        <div class="table-top">
+
+            <h3>Stored Records</h3>
+
+            <span>
+                NEWEST FIRST
             </span>
 
-
-            <button
-                id="backButton"
-                class="back-button"
-            >
-                Back
-            </button>
-
-        </div>
-
-    </header>
-
-
-
-    <!-- =====================================================
-         MAIN CONTENT
-         ===================================================== -->
-
-    <main class="container">
-
-
-        <!-- =================================================
-             TITLE
-             ================================================= -->
-
-        <section class="page-title">
-
-            <h2>
-                History Records
-            </h2>
-
-            <p>
-                Latest records are displayed first.
-            </p>
-
-        </section>
-
-
-
-        <!-- =================================================
-             CONTROLS
-             ================================================= -->
-
-        <section class="controls">
-
-
-            <input
-                type="text"
-                id="historySearch"
-                placeholder="Search date, time, float, integer, or string..."
-                autocomplete="off"
-            >
-
-
-            <button
-                type="button"
-                id="refreshButton"
-                class="button refresh"
-            >
-                Refresh
-            </button>
-
-
-            <button
-                type="button"
-                id="clearButton"
-                class="button clear"
-            >
-                Clear History
-            </button>
-
-        </section>
-
-
-
-        <!-- =================================================
-             STATUS CARDS
-             ================================================= -->
-
-        <section class="info-cards">
-
-
-            <div class="info-card">
-
-                <span>
-                    Collection Status
-                </span>
-
-                <strong
-                    id="collectionStatus"
-                    class="stopped"
-                >
-                    STOPPED
-                </strong>
-
-            </div>
-
-
-
-            <div class="info-card">
-
-                <span>
-                    Total Records
-                </span>
-
-                <strong
-                    id="recordCount"
-                >
-                    0
-                </strong>
-
-            </div>
-
-
-
-            <div class="info-card">
-
-                <span>
-                    Current Seconds
-                </span>
-
-                <strong
-                    id="secondsCount"
-                >
-                    0
-                </strong>
-
-            </div>
-
-        </section>
-
-
-
-        <!-- =================================================
-             HISTORY MESSAGE
-             ================================================= -->
-
-        <div
-            id="historyMessage"
-            class="history-message"
-        >
-            Loading history...
         </div>
 
 
+        <div class="table-wrapper">
 
-        <!-- =================================================
-             HISTORY TABLE
-             ================================================= -->
-
-        <section class="table-container">
-
-            <table
-                id="historyTable"
-            >
-
+            <table>
 
                 <thead>
 
                     <tr>
 
-                        <th>
-                            DATE
-                        </th>
-
-                        <th>
-                            TIME
-                        </th>
-
-                        <th>
-                            FLOAT
-                        </th>
-
-                        <th>
-                            INTEGER
-                        </th>
-
-                        <th>
-                            STRING
-                        </th>
+                        <th>#</th>
+                        <th>DATE</th>
+                        <th>TIME</th>
+                        <th>FLOAT</th>
+                        <th>INTEGER</th>
+                        <th>STRING</th>
 
                     </tr>
 
                 </thead>
 
+                <tbody id="historyBody">
 
-
-                <tbody
-                    id="historyBody"
-                >
-
-                    <!--
-                        JavaScript will automatically
-                        insert history records here.
-                    -->
+                    <tr>
+                        <td colspan="6" class="empty">
+                            Loading records...
+                        </td>
+                    </tr>
 
                 </tbody>
 
-
             </table>
 
-        </section>
+        </div>
+
+    </section>
+
+</main>
 
 
-    </main>
-
-
-
-    <!-- =====================================================
-         JAVASCRIPT
-         ===================================================== -->
-
-    <script src="history.js"></script>
-
+<script src="history.js"></script>
 
 </body>
 
