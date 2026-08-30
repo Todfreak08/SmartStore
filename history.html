@@ -7,343 +7,187 @@
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1.0">
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Smart Storage - History</title>
 
-    <link rel="stylesheet" href="style.css">
+    <link
+        rel="stylesheet"
+        href="history.css"
+    >
 
 </head>
 
 
 <body>
 
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
 
-<!-- =====================================================
-     SIDEBAR
-===================================================== -->
+    <header class="header">
 
-<div class="sidebar">
-
-    <h2>📦 Smart Storage</h2>
-
-    <a href="dashboard.html">
-        🏠 Dashboard
-    </a>
-
-    <a href="history.html" class="active">
-        📋 History
-    </a>
-
-    <a href="alerts.html">
-        🚨 Alerts
-    </a>
-
-    <a href="reports.html">
-        📊 Reports
-    </a>
-
-    <a href="settings.html">
-        ⚙️ Settings
-    </a>
-
-    <a href="profile.html">
-        👤 Profile
-    </a>
-
-    <a href="about.html">
-        ℹ️ About
-    </a>
-
-
-    <button
-        type="button"
-        class="logout-btn"
-        id="logoutButton">
-
-        🚪 Logout
-
-    </button>
-
-</div>
-
-
-
-<!-- =====================================================
-     MAIN CONTENT
-===================================================== -->
-
-<div class="main-content">
-
-
-    <div class="top-bar">
-
-        <div>
+        <div class="header-left">
 
             <h1>
-                Sensor History
+                Smart Storage Monitoring System
             </h1>
 
             <p>
-                ESP32 Real-Time Data Logs
+                Data History
             </p>
 
         </div>
 
 
-        <div class="user-card">
+        <div class="header-right">
 
-            Logged in as:
+            <span
+                id="connectionStatus"
+                class="status offline"
+            >
+                ● ESP32 Offline
+            </span>
 
-            <b id="userEmail">
-                Loading...
-            </b>
-
-        </div>
-
-    </div>
-
-
-
-    <!-- =================================================
-         FIREBASE STATUS
-    ================================================= -->
-
-    <div
-        id="firebaseStatus"
-        class="status-card"
-        style="padding:15px;margin-bottom:20px;">
-
-        ● Connecting to Firebase...
-
-    </div>
-
-
-
-    <!-- =================================================
-         SEARCH
-    ================================================= -->
-
-    <div class="chart-card">
-
-        <h2>
-            📋 ESP32 Data History
-        </h2>
-
-
-        <input
-            type="text"
-            id="historySearch"
-            placeholder="Search date, time, status, or source..."
-            style="
-                width:100%;
-                padding:12px;
-                margin:15px 0;
-                border:1px solid #ccc;
-                border-radius:8px;
-                box-sizing:border-box;
-            ">
-
-
-        <div style="overflow-x:auto;">
-
-            <table
-                id="historyTable"
-                style="
-                    width:100%;
-                    border-collapse:collapse;
-                ">
-
-                <thead>
-
-                    <tr>
-
-                        <th>Date</th>
-
-                        <th>Time</th>
-
-                        <th>Timestamp</th>
-
-                        <th>Temperature</th>
-
-                        <th>Humidity</th>
-
-                        <th>Motion</th>
-
-                        <th>Status</th>
-
-                        <th>Source</th>
-
-                    </tr>
-
-                </thead>
-
-
-                <tbody id="historyBody">
-
-                </tbody>
-
-            </table>
+            <button
+                id="backButton"
+                class="back-button"
+            >
+                Back
+            </button>
 
         </div>
 
-
-        <p
-            id="historyMessage"
-            style="
-                text-align:center;
-                padding:20px;
-                color:#666;
-            ">
-
-            Waiting for ESP32 data...
-
-        </p>
-
-    </div>
-
-
-</div>
+    </header>
 
 
 
-<!-- =====================================================
-     FIREBASE
-===================================================== -->
+    <!-- =====================================================
+         MAIN
+         ===================================================== -->
 
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
+    <main class="container">
 
 
-<!-- YOUR FIREBASE CONFIG -->
+        <!-- =================================================
+             PAGE TITLE
+             ================================================= -->
 
-<script src="firebase-config.js"></script>
+        <section class="page-title">
 
+            <h2>
+                History Records
+            </h2>
 
-<!-- HISTORY SCRIPT -->
+            <p>
+                Latest records are displayed first.
+            </p>
 
-<script src="history.js"></script>
-
-
-</body>
-
-</html>
-        </div>
-
-
-        <div class="user-card">
-
-            Logged in as:
-
-            <b id="userEmail">
-                Loading...
-            </b>
-
-        </div>
-
-    </div>
+        </section>
 
 
 
-    <!-- =================================================
-         FIREBASE STATUS
-    ================================================== -->
+        <!-- =================================================
+             CONTROLS
+             ================================================= -->
 
-    <div
-        id="firebaseStatus"
-        class="status-card"
-    >
+        <section class="controls">
 
-        🔄 Connecting to Firebase...
-
-    </div>
-
+            <input
+                type="text"
+                id="historySearch"
+                placeholder="Search history..."
+            >
 
 
-    <!-- =================================================
-         HISTORY CARD
-    ================================================== -->
-
-    <div class="chart-card">
-
-        <h2>
-            📋 ESP32 Activity History
-        </h2>
+            <button
+                id="refreshButton"
+                class="button refresh"
+            >
+                Refresh
+            </button>
 
 
-        <p
-            style="
-            color:#666;
-            margin-bottom:20px;
-            "
-        >
+            <button
+                id="clearButton"
+                class="button clear"
+            >
+                Clear History
+            </button>
 
-            All activities received from the ESP32
-            are displayed below.
-
-        </p>
+        </section>
 
 
 
-        <!-- SEARCH -->
+        <!-- =================================================
+             COLLECTION STATUS
+             ================================================= -->
 
-        <input
-            type="text"
-            id="historySearch"
-            placeholder="🔎 Search activity, date, time, IP, Wi-Fi, source..."
-            autocomplete="off"
-            style="
-            width:100%;
-            padding:14px;
-            border:1px solid #ccc;
-            border-radius:10px;
-            margin-bottom:20px;
-            font-size:15px;
-            box-sizing:border-box;
-            "
-        >
+        <section class="info-cards">
+
+            <div class="info-card">
+
+                <span>
+                    Collection Status
+                </span>
+
+                <strong id="collectionStatus">
+                    STOPPED
+                </strong>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <span>
+                    Records
+                </span>
+
+                <strong id="recordCount">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <span>
+                    Seconds
+                </span>
+
+                <strong id="secondsCount">
+                    0
+                </strong>
+
+            </div>
+
+        </section>
 
 
 
-        <!-- RECORD COUNT -->
+        <!-- =================================================
+             HISTORY MESSAGE
+             ================================================= -->
 
         <div
-            id="recordCount"
-            style="
-            margin-bottom:15px;
-            color:#666;
-            font-weight:600;
-            "
+            id="historyMessage"
+            class="history-message"
         >
-
-            Loading records...
-
+            Waiting for ESP32 data...
         </div>
 
 
 
         <!-- =================================================
-             TABLE WRAPPER
-        ================================================== -->
+             HISTORY TABLE
+             ================================================= -->
 
-        <div
-            style="
-            width:100%;
-            overflow-x:auto;
-            "
-        >
+        <section class="table-container">
 
-            <table
-                id="historyTable"
-                style="
-                width:100%;
-                min-width:1100px;
-                border-collapse:collapse;
-                "
-            >
+            <table id="historyTable">
 
                 <thead>
 
@@ -358,39 +202,15 @@
                         </th>
 
                         <th>
-                            Timestamp
+                            Float
                         </th>
 
                         <th>
-                            Activity
+                            Integer
                         </th>
 
                         <th>
-                            Light
-                        </th>
-
-                        <th>
-                            Fan
-                        </th>
-
-                        <th>
-                            Door
-                        </th>
-
-                        <th>
-                            Alarm
-                        </th>
-
-                        <th>
-                            IP
-                        </th>
-
-                        <th>
-                            Wi-Fi
-                        </th>
-
-                        <th>
-                            Source
+                            String
                         </th>
 
                     </tr>
@@ -400,97 +220,21 @@
 
                 <tbody id="historyBody">
 
-                    <tr>
-
-                        <td
-                            colspan="11"
-                            style="
-                            text-align:center;
-                            padding:30px;
-                            "
-                        >
-
-                            🔄 Loading ESP32 history...
-
-                        </td>
-
-                    </tr>
-
                 </tbody>
 
             </table>
 
-        </div>
+        </section>
 
 
-    </div>
+    </main>
 
 
+    <!-- =====================================================
+         JAVASCRIPT
+         ===================================================== -->
 
-    <!-- =================================================
-         INFORMATION
-    ================================================== -->
-
-    <div class="status-card">
-
-        <h3>
-            ℹ️ History Information
-        </h3>
-
-        <p>
-            This page reads directly from:
-        </p>
-
-        <strong>
-            smartStorage/history
-        </strong>
-
-        <p>
-            New ESP32 activities will appear
-            automatically without refreshing the page.
-        </p>
-
-    </div>
-
-
-</div>
-
-
-
-<!-- =====================================================
-     FIREBASE
-===================================================== -->
-
-<script
-    src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"
-></script>
-
-
-<script
-    src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"
-></script>
-
-
-<script
-    src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"
-></script>
-
-
-
-<!-- =====================================================
-     FIREBASE CONFIG
-===================================================== -->
-
-<script src="firebase-config.js"></script>
-
-
-
-<!-- =====================================================
-     HISTORY JAVASCRIPT
-===================================================== -->
-
-<script src="history.js"></script>
-
+    <script src="history.js"></script>
 
 </body>
 
