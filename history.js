@@ -1,193 +1,104 @@
 // =====================================================
-// SMART STORAGE HISTORY
-// ESP32 → Firebase → Website
-// Fields:
-// Date | Time | Float | Integer | String
+// SMART STORAGE MONITORING SYSTEM
+// HISTORY JAVASCRIPT
+//
+// ESP32 LOCAL WEB SERVER
+//
+// Arduino API:
+// /api/history
+// /api/status
+// /api/clear
+//
+// Data:
+// Date
+// Time
+// Float
+// Integer
+// String
 // =====================================================
 
 
 // =====================================================
-// LOGIN CHECK
+// ELEMENTS
 // =====================================================
 
-auth.onAuthStateChanged(function(user) {
+const historyBody =
+    document.getElementById("historyBody");
 
-    if (!user) {
-        window.location.href = "index.html";
+const historyMessage =
+    document.getElementById("historyMessage");
+
+const searchInput =
+    document.getElementById("historySearch");
+
+const refreshButton =
+    document.getElementById("refreshButton");
+
+const clearButton =
+    document.getElementById("clearButton");
+
+const backButton =
+    document.getElementById("backButton");
+
+const connectionStatus =
+    document.getElementById("connectionStatus");
+
+const collectionStatus =
+    document.getElementById("collectionStatus");
+
+const recordCount =
+    document.getElementById("recordCount");
+
+const secondsCount =
+    document.getElementById("secondsCount");
+
+
+// =====================================================
+// ESCAPE HTML
+// =====================================================
+
+function escapeHTML(value) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        String(value);
+
+    return div.innerHTML;
+}
+
+
+// =====================================================
+// UPDATE CONNECTION STATUS
+// =====================================================
+
+function setConnectionStatus(connected) {
+
+    if (!connectionStatus) {
         return;
     }
 
-    const email = document.getElementById("userEmail");
 
-    if (email) {
-        email.textContent = user.email;
+    if (connected) {
+
+        connectionStatus.textContent =
+            "● ESP32 Online";
+
+        connectionStatus.className =
+            "status online";
+
+    }
+    else {
+
+        connectionStatus.textContent =
+            "● ESP32 Offline";
+
+        connectionStatus.className =
+            "status offline";
+
     }
 
-});
-
-
-// =====================================================
-// LOGOUT
-// =====================================================
-
-const logoutButton =
-    document.getElementById("logoutButton");
-
-if (logoutButton) {
-
-    logoutButton.addEventListener("click", function() {
-
-        auth.signOut()
-            .then(function() {
-
-                window.location.href = "index.html";
-
-            })
-            .catch(function(error) {
-
-                console.error(
-                    "Logout error:",
-                    error
-                );
-
-                alert(
-                    "Logout failed: " +
-                    error.message
-                );
-
-            });
-
-    });
-
-}
-
-
-// =====================================================
-// FIREBASE STATUS
-// =====================================================
-
-const firebaseStatus =
-    document.getElementById("firebaseStatus");
-
-
-// =====================================================
-// FIREBASE HISTORY
-// =====================================================
-
-const historyRef =
-    database.ref("smartStorage/history");
-
-
-// =====================================================
-// TIMESTAMP → DATE OBJECT
-// =====================================================
-
-function convertTimestampToDate(timestamp) {
-
-    if (
-        timestamp === undefined ||
-        timestamp === null ||
-        timestamp === ""
-    ) {
-        return null;
-    }
-
-    let value = Number(timestamp);
-
-    if (isNaN(value)) {
-        return null;
-    }
-
-    // If timestamp is in seconds,
-    // convert to milliseconds.
-    if (value < 100000000000) {
-        value = value * 1000;
-    }
-
-    const date = new Date(value);
-
-    if (isNaN(date.getTime())) {
-        return null;
-    }
-
-    return date;
-}
-
-
-// =====================================================
-// FORMAT DATE
-// =====================================================
-
-function formatDate(timestamp) {
-
-    const date =
-        convertTimestampToDate(timestamp);
-
-    if (!date) {
-        return "-";
-    }
-
-    return date.toLocaleDateString(
-        "en-PH",
-        {
-            timeZone: "Asia/Manila",
-            year: "numeric",
-            month: "short",
-            day: "numeric"
-        }
-    );
-
-}
-
-
-// =====================================================
-// FORMAT TIME
-// MILITARY / 24-HOUR TIME
-// =====================================================
-
-function formatTime(timestamp) {
-
-    const date =
-        convertTimestampToDate(timestamp);
-
-    if (!date) {
-        return "-";
-    }
-
-    return date.toLocaleTimeString(
-        "en-PH",
-        {
-            timeZone: "Asia/Manila",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: false
-        }
-    );
-
-}
-
-
-// =====================================================
-// GET TIMESTAMP
-// =====================================================
-
-function getRecordTimestamp(data) {
-
-    let timestamp =
-        data.timestamp ??
-        data.timestampRaw ??
-        data.createdAt ??
-        data.timeStamp ??
-        0;
-
-    timestamp = Number(timestamp);
-
-    if (isNaN(timestamp)) {
-        return 0;
-    }
-
-    return timestamp;
 }
 
 
@@ -195,163 +106,126 @@ function getRecordTimestamp(data) {
 // LOAD HISTORY
 // =====================================================
 
-historyRef.on(
+async function loadHistory() {
 
-    "value",
+    try {
 
-    function(snapshot) {
+        const response =
+            await fetch(
+                "/api/history",
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
+            );
 
-        console.log(
-            "ESP32 HISTORY:",
-            snapshot.val()
-        );
 
+        if (!response.ok) {
 
-        // -------------------------------------------------
-        // FIREBASE STATUS
-        // -------------------------------------------------
-
-        if (firebaseStatus) {
-
-            firebaseStatus.textContent =
-                "● Firebase Connected";
-
-            firebaseStatus.style.color =
-                "#28a745";
+            throw new Error(
+                "ESP32 returned HTTP " +
+                response.status
+            );
 
         }
 
 
+        const records =
+            await response.json();
+
+
+        setConnectionStatus(true);
+
+
         // -------------------------------------------------
-        // TABLE BODY
+        // CLEAR TABLE
         // -------------------------------------------------
 
-        const tbody =
-            document.getElementById(
-                "historyBody"
-            );
+        historyBody.innerHTML = "";
 
 
-        const message =
-            document.getElementById(
-                "historyMessage"
-            );
+        // -------------------------------------------------
+        // NO RECORDS
+        // -------------------------------------------------
+
+        if (
+            !Array.isArray(records) ||
+            records.length === 0
+        ) {
+
+            historyMessage.textContent =
+                "No history records yet.";
+
+            historyMessage.style.display =
+                "block";
 
 
-        if (!tbody) {
+            recordCount.textContent =
+                "0";
 
-            console.error(
-                "historyBody not found."
-            );
+
+            secondsCount.textContent =
+                "0";
+
 
             return;
 
         }
 
 
-        // Clear existing records
-        tbody.innerHTML = "";
+        historyMessage.style.display =
+            "none";
 
 
         // -------------------------------------------------
-        // NO DATA
+        // SORT NEWEST FIRST
+        //
+        // Arduino already sends newest first.
+        // This additional sort ensures that the newest
+        // record remains at the top.
         // -------------------------------------------------
-
-        if (!snapshot.exists()) {
-
-            if (message) {
-
-                message.textContent =
-                    "Waiting for ESP32 data...";
-
-                message.style.display =
-                    "block";
-
-            }
-
-            return;
-
-        }
-
-
-        if (message) {
-
-            message.style.display =
-                "none";
-
-        }
-
-
-        // =================================================
-        // CONVERT FIREBASE DATA TO ARRAY
-        // =================================================
-
-        const records = [];
-
-
-        snapshot.forEach(function(child) {
-
-            const data =
-                child.val() || {};
-
-
-            records.push({
-
-                key:
-                    child.key,
-
-                data:
-                    data
-
-            });
-
-        });
-
-
-        // =================================================
-        // SORT NEWEST RECORD FIRST
-        // =================================================
 
         records.sort(function(a, b) {
 
-            const timestampA =
-                getRecordTimestamp(
-                    a.data
-                );
+            const secondsA =
+                Number(a.seconds || 0);
 
+            const secondsB =
+                Number(b.seconds || 0);
 
-            const timestampB =
-                getRecordTimestamp(
-                    b.data
-                );
-
-
-            // Newest → oldest
-            return timestampB - timestampA;
+            return secondsB - secondsA;
 
         });
 
 
-        // =================================================
+        // -------------------------------------------------
+        // UPDATE RECORD COUNT
+        // -------------------------------------------------
+
+        recordCount.textContent =
+            records.length;
+
+
+        // -------------------------------------------------
+        // LATEST SECONDS
+        // -------------------------------------------------
+
+        if (records.length > 0) {
+
+            secondsCount.textContent =
+                records[0].seconds ?? 0;
+
+        }
+
+
+        // -------------------------------------------------
         // DISPLAY RECORDS
-        // =================================================
+        // -------------------------------------------------
 
         records.forEach(function(record) {
 
-            const data =
-                record.data || {};
-
-
             const row =
                 document.createElement("tr");
-
-
-            // -------------------------------------------------
-            // TIMESTAMP
-            // -------------------------------------------------
-
-            const timestamp =
-                getRecordTimestamp(data);
 
 
             // -------------------------------------------------
@@ -359,8 +233,7 @@ historyRef.on(
             // -------------------------------------------------
 
             const date =
-                data.date ||
-                formatDate(timestamp);
+                record.date ?? "-";
 
 
             // -------------------------------------------------
@@ -368,36 +241,36 @@ historyRef.on(
             // -------------------------------------------------
 
             const time =
-                data.time ||
-                formatTime(timestamp);
+                record.time ?? "-";
 
 
             // -------------------------------------------------
             // FLOAT
             // -------------------------------------------------
 
-            let floatValue = "-";
+            let floatValue =
+                "-";
 
 
             if (
-                data.float !== undefined &&
-                data.float !== null &&
-                data.float !== ""
+                record.float !== undefined &&
+                record.float !== null
             ) {
 
-                const value =
-                    Number(data.float);
+                const number =
+                    Number(record.float);
 
 
-                if (!isNaN(value)) {
-
-                    floatValue =
-                        value.toFixed(2);
-
-                } else {
+                if (!isNaN(number)) {
 
                     floatValue =
-                        String(data.float);
+                        number.toFixed(2);
+
+                }
+                else {
+
+                    floatValue =
+                        String(record.float);
 
                 }
 
@@ -408,33 +281,22 @@ historyRef.on(
             // INTEGER
             // -------------------------------------------------
 
-            let integerValue = "-";
+            let integerValue =
+                "-";
 
 
             if (
-                data.integer !== undefined &&
-                data.integer !== null &&
-                data.integer !== ""
+                record.integer !== undefined &&
+                record.integer !== null
             ) {
 
-                const value =
-                    Number(data.integer);
-
-
-                if (
-                    !isNaN(value) &&
-                    Number.isInteger(value)
-                ) {
-
-                    integerValue =
-                        String(value);
-
-                } else {
-
-                    integerValue =
-                        String(data.integer);
-
-                }
+                integerValue =
+                    String(
+                        parseInt(
+                            record.integer,
+                            10
+                        )
+                    );
 
             }
 
@@ -443,24 +305,13 @@ historyRef.on(
             // STRING
             // -------------------------------------------------
 
-            let stringValue = "-";
+            const stringValue =
+                record.string ?? "-";
 
 
-            if (
-                data.string !== undefined &&
-                data.string !== null &&
-                data.string !== ""
-            ) {
-
-                stringValue =
-                    String(data.string);
-
-            }
-
-
-            // =================================================
-            // CREATE TABLE ROW
-            // =================================================
+            // -------------------------------------------------
+            // CREATE ROW
+            // -------------------------------------------------
 
             row.innerHTML = `
 
@@ -468,102 +319,188 @@ historyRef.on(
                     ${escapeHTML(date)}
                 </td>
 
-                <td>
+                <td class="time-cell">
                     ${escapeHTML(time)}
                 </td>
 
-                <td>
+                <td class="float-cell">
                     ${escapeHTML(floatValue)}
                 </td>
 
-                <td>
+                <td class="integer-cell">
                     ${escapeHTML(integerValue)}
                 </td>
 
-                <td>
+                <td class="string-cell">
                     ${escapeHTML(stringValue)}
                 </td>
 
             `;
 
 
-            // Newest records appear first
-            tbody.appendChild(row);
+            // -------------------------------------------------
+            // NEWEST RECORD
+            // -------------------------------------------------
+
+            if (
+                records.indexOf(record) === 0
+            ) {
+
+                row.classList.add(
+                    "latest-record"
+                );
+
+            }
+
+
+            historyBody.appendChild(row);
 
         });
 
-    },
-
-
-    // =====================================================
-    // FIREBASE ERROR
-    // =====================================================
-
-    function(error) {
+    }
+    catch (error) {
 
         console.error(
-            "History Firebase error:",
+            "History loading error:",
             error
         );
 
 
-        if (firebaseStatus) {
+        setConnectionStatus(false);
 
-            firebaseStatus.textContent =
-                "● Firebase Error";
 
-            firebaseStatus.style.color =
-                "#dc3545";
+        historyMessage.textContent =
+            "Unable to connect to ESP32.";
+
+
+        historyMessage.style.display =
+            "block";
+
+    }
+
+}
+
+
+// =====================================================
+// LOAD ESP32 STATUS
+// =====================================================
+
+async function loadStatus() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/status",
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Status request failed"
+            );
 
         }
 
 
-        const message =
-            document.getElementById(
-                "historyMessage"
-            );
+        const data =
+            await response.json();
 
 
-        if (message) {
+        setConnectionStatus(true);
 
-            message.textContent =
-                "Unable to load Firebase history: " +
-                error.message;
 
-            message.style.display =
-                "block";
+        // -------------------------------------------------
+        // COLLECTION STATUS
+        // -------------------------------------------------
+
+        if (collectionStatus) {
+
+            if (data.collecting) {
+
+                collectionStatus.textContent =
+                    "COLLECTING";
+
+                collectionStatus.className =
+                    "collecting";
+
+            }
+            else {
+
+                collectionStatus.textContent =
+                    "STOPPED";
+
+                collectionStatus.className =
+                    "stopped";
+
+            }
+
+        }
+
+
+        // -------------------------------------------------
+        // RECORD COUNT
+        // -------------------------------------------------
+
+        if (recordCount) {
+
+            recordCount.textContent =
+                data.records ?? 0;
+
+        }
+
+
+        // -------------------------------------------------
+        // SECONDS
+        // -------------------------------------------------
+
+        if (secondsCount) {
+
+            secondsCount.textContent =
+                data.seconds ?? 0;
 
         }
 
     }
+    catch (error) {
 
-);
+        console.error(
+            "Status error:",
+            error
+        );
+
+
+        setConnectionStatus(false);
+
+    }
+
+}
 
 
 // =====================================================
-// SEARCH
+// SEARCH HISTORY
 // =====================================================
-
-const searchInput =
-    document.getElementById(
-        "historySearch"
-    );
-
 
 if (searchInput) {
 
     searchInput.addEventListener(
-        "keyup",
+        "input",
         function() {
 
             const filter =
                 searchInput.value
+                    .trim()
                     .toLowerCase();
 
 
             const rows =
-                document.querySelectorAll(
-                    "#historyBody tr"
+                historyBody.querySelectorAll(
+                    "tr"
                 );
 
 
@@ -574,10 +511,20 @@ if (searchInput) {
                         .toLowerCase();
 
 
-                row.style.display =
+                if (
                     text.includes(filter)
-                        ? ""
-                        : "none";
+                ) {
+
+                    row.style.display =
+                        "";
+
+                }
+                else {
+
+                    row.style.display =
+                        "none";
+
+                }
 
             });
 
@@ -588,19 +535,175 @@ if (searchInput) {
 
 
 // =====================================================
-// SECURITY
+// REFRESH BUTTON
 // =====================================================
 
-function escapeHTML(value) {
+if (refreshButton) {
 
-    const div =
-        document.createElement("div");
+    refreshButton.addEventListener(
+        "click",
+        async function() {
+
+            refreshButton.disabled =
+                true;
 
 
-    div.textContent =
-        String(value);
+            refreshButton.textContent =
+                "Loading...";
 
 
-    return div.innerHTML;
+            await loadHistory();
+
+            await loadStatus();
+
+
+            refreshButton.disabled =
+                false;
+
+
+            refreshButton.textContent =
+                "Refresh";
+
+        }
+    );
 
 }
+
+
+// =====================================================
+// CLEAR HISTORY
+// =====================================================
+
+if (clearButton) {
+
+    clearButton.addEventListener(
+        "click",
+        async function() {
+
+            const confirmed =
+                confirm(
+                    "Are you sure you want to clear all history records?"
+                );
+
+
+            if (!confirmed) {
+                return;
+            }
+
+
+            try {
+
+                clearButton.disabled =
+                    true;
+
+
+                clearButton.textContent =
+                    "Clearing...";
+
+
+                const response =
+                    await fetch(
+                        "/api/clear",
+                        {
+                            method: "GET",
+                            cache: "no-store"
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Unable to clear history"
+                    );
+
+                }
+
+
+                await loadHistory();
+
+                await loadStatus();
+
+
+                alert(
+                    "History cleared successfully."
+                );
+
+            }
+            catch (error) {
+
+                console.error(
+                    "Clear history error:",
+                    error
+                );
+
+
+                alert(
+                    "Failed to clear history."
+                );
+
+            }
+            finally {
+
+                clearButton.disabled =
+                    false;
+
+
+                clearButton.textContent =
+                    "Clear History";
+
+            }
+
+        }
+    );
+
+}
+
+
+// =====================================================
+// BACK BUTTON
+// =====================================================
+
+if (backButton) {
+
+    backButton.addEventListener(
+        "click",
+        function() {
+
+            window.location.href =
+                "ap-dashboard.html";
+
+        }
+    );
+
+}
+
+
+// =====================================================
+// AUTOMATIC REFRESH
+// =====================================================
+//
+// Refresh history every 1 second.
+// This matches the Arduino's 1-second
+// data collection interval.
+//
+
+setInterval(
+    function() {
+
+        loadHistory();
+
+        loadStatus();
+
+    },
+    1000
+);
+
+
+// =====================================================
+// INITIAL LOAD
+// =====================================================
+
+loadHistory();
+
+loadStatus();
