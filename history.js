@@ -1,709 +1,960 @@
-// =====================================================
-// SMART STORAGE MONITORING SYSTEM
-// HISTORY JAVASCRIPT
-//
-// ESP32 LOCAL WEB SERVER
-//
-// Arduino API:
-// /api/history
-// /api/status
-// /api/clear
-//
-// Data:
-// Date
-// Time
-// Float
-// Integer
-// String
-// =====================================================
+/*
+=========================================================
+ SMART STORAGE MONITORING SYSTEM
+ HISTORY.JS
+=========================================================
+
+ Matches:
+    history.html
+
+ Table:
+    DATE | TIME | FLOAT | INTEGER | STRING
+
+ Example:
+    2026-08-30 | 20:45:04 | 12.75 | 3 | value_4000
+
+ IMPORTANT:
+    Latest record is always displayed FIRST.
+=========================================================
+*/
 
 
-// =====================================================
-// ELEMENTS
-// =====================================================
+// =======================================================
+// GLOBAL DATA
+// =======================================================
 
-const historyBody =
-    document.getElementById("historyBody");
-
-const historyMessage =
-    document.getElementById("historyMessage");
-
-const searchInput =
-    document.getElementById("historySearch");
-
-const refreshButton =
-    document.getElementById("refreshButton");
-
-const clearButton =
-    document.getElementById("clearButton");
-
-const backButton =
-    document.getElementById("backButton");
-
-const connectionStatus =
-    document.getElementById("connectionStatus");
-
-const collectionStatus =
-    document.getElementById("collectionStatus");
-
-const recordCount =
-    document.getElementById("recordCount");
-
-const secondsCount =
-    document.getElementById("secondsCount");
+let historyRecords = [];
 
 
-// =====================================================
-// ESCAPE HTML
-// =====================================================
+// =======================================================
+// PAGE LOAD
+// =======================================================
 
-function escapeHTML(value) {
+document.addEventListener("DOMContentLoaded", function () {
 
-    const div =
-        document.createElement("div");
+    loadHistory();
 
-    div.textContent =
-        String(value);
+});
 
-    return div.innerHTML;
+
+// =======================================================
+// LOAD HISTORY FROM ESP32
+// =======================================================
+
+function loadHistory() {
+
+    fetch("/api/history", {
+        method: "GET",
+        cache: "no-cache"
+    })
+
+    .then(function (response) {
+
+        if (!response.ok) {
+            throw new Error("Unable to connect to history API");
+        }
+
+        return response.json();
+
+    })
+
+    .then(function (data) {
+
+        /*
+        Accept different possible API structures.
+
+        Example 1:
+        [
+            {...},
+            {...}
+        ]
+
+        Example 2:
+        {
+            "history": [...]
+        }
+
+        Example 3:
+        {
+            "records": [...]
+        }
+        */
+
+        if (Array.isArray(data)) {
+
+            historyRecords = data;
+
+        }
+
+        else if (Array.isArray(data.history)) {
+
+            historyRecords = data.history;
+
+        }
+
+        else if (Array.isArray(data.records)) {
+
+            historyRecords = data.records;
+
+        }
+
+        else {
+
+            historyRecords = [];
+
+        }
+
+
+        displayHistory(historyRecords);
+
+    })
+
+    .catch(function (error) {
+
+        console.log("ESP32 history error:", error);
+
+        /*
+        If ESP32 API is unavailable,
+        try browser local storage.
+        */
+
+        loadLocalHistory();
+
+    });
+
 }
 
 
-// =====================================================
-// UPDATE CONNECTION STATUS
-// =====================================================
+// =======================================================
+// DISPLAY HISTORY
+// =======================================================
 
-function setConnectionStatus(connected) {
+function displayHistory(records) {
 
-    if (!connectionStatus) {
+    const tableBody =
+        document.getElementById("historyBody");
+
+
+    if (!tableBody) {
+
+        console.error(
+            "historyBody was not found in history.html"
+        );
+
+        return;
+
+    }
+
+
+    tableBody.innerHTML = "";
+
+
+    // ---------------------------------------------------
+    // NO RECORDS
+    // ---------------------------------------------------
+
+    if (!records || records.length === 0) {
+
+        showEmptyHistory();
+
+        updateSummary([]);
+
+        return;
+
+    }
+
+
+    // ---------------------------------------------------
+    // COPY ARRAY
+    // ---------------------------------------------------
+
+    let sortedRecords = [...records];
+
+
+    // ---------------------------------------------------
+    // SORT NEWEST RECORD FIRST
+    // ---------------------------------------------------
+
+    sortedRecords.sort(function (a, b) {
+
+        const dateA =
+            getRecordDate(a);
+
+        const dateB =
+            getRecordDate(b);
+
+
+        return dateB - dateA;
+
+    });
+
+
+    // ---------------------------------------------------
+    // DISPLAY EACH RECORD
+    // ---------------------------------------------------
+
+    sortedRecords.forEach(function (record) {
+
+        const row =
+            document.createElement("tr");
+
+
+        // DATE
+        const date =
+            getDate(record);
+
+
+        // TIME
+        const time =
+            getTime(record);
+
+
+        // FLOAT
+        const floatValue =
+            getFloat(record);
+
+
+        // INTEGER
+        const integerValue =
+            getInteger(record);
+
+
+        // STRING
+        const stringValue =
+            getString(record);
+
+
+        row.innerHTML = `
+
+            <td class="date-value">
+                ${escapeHTML(date)}
+            </td>
+
+            <td class="time-value">
+                ${escapeHTML(time)}
+            </td>
+
+            <td class="float-value">
+                ${formatFloat(floatValue)}
+            </td>
+
+            <td class="integer-value">
+                ${escapeHTML(integerValue)}
+            </td>
+
+            <td class="string-value">
+                ${escapeHTML(stringValue)}
+            </td>
+
+        `;
+
+
+        tableBody.appendChild(row);
+
+    });
+
+
+    // ---------------------------------------------------
+    // UPDATE SUMMARY
+    // ---------------------------------------------------
+
+    updateSummary(sortedRecords);
+
+}
+
+
+// =======================================================
+// GET DATE
+// =======================================================
+
+function getDate(record) {
+
+    /*
+    Preferred:
+        record.date
+
+    Other possible names:
+        record.DATE
+        record.Date
+        record.timestamp
+    */
+
+    if (record.date !== undefined) {
+
+        return String(record.date);
+
+    }
+
+
+    if (record.DATE !== undefined) {
+
+        return String(record.DATE);
+
+    }
+
+
+    if (record.Date !== undefined) {
+
+        return String(record.Date);
+
+    }
+
+
+    // Try timestamp
+
+    if (record.timestamp !== undefined) {
+
+        const date =
+            new Date(record.timestamp);
+
+        if (!isNaN(date.getTime())) {
+
+            return formatDate(date);
+
+        }
+
+    }
+
+
+    return "---";
+
+}
+
+
+// =======================================================
+// GET TIME
+// =======================================================
+
+function getTime(record) {
+
+    if (record.time !== undefined) {
+
+        return String(record.time);
+
+    }
+
+
+    if (record.TIME !== undefined) {
+
+        return String(record.TIME);
+
+    }
+
+
+    if (record.Time !== undefined) {
+
+        return String(record.Time);
+
+    }
+
+
+    // Try timestamp
+
+    if (record.timestamp !== undefined) {
+
+        const date =
+            new Date(record.timestamp);
+
+        if (!isNaN(date.getTime())) {
+
+            return formatTime(date);
+
+        }
+
+    }
+
+
+    return "---";
+
+}
+
+
+// =======================================================
+// GET FLOAT
+// =======================================================
+
+function getFloat(record) {
+
+    if (record.float !== undefined) {
+
+        return record.float;
+
+    }
+
+
+    if (record.FLOAT !== undefined) {
+
+        return record.FLOAT;
+
+    }
+
+
+    if (record.floatValue !== undefined) {
+
+        return record.floatValue;
+
+    }
+
+
+    return 0;
+
+}
+
+
+// =======================================================
+// GET INTEGER
+// =======================================================
+
+function getInteger(record) {
+
+    if (record.integer !== undefined) {
+
+        return record.integer;
+
+    }
+
+
+    if (record.INTEGER !== undefined) {
+
+        return record.INTEGER;
+
+    }
+
+
+    if (record.int !== undefined) {
+
+        return record.int;
+
+    }
+
+
+    if (record.integerValue !== undefined) {
+
+        return record.integerValue;
+
+    }
+
+
+    return 0;
+
+}
+
+
+// =======================================================
+// GET STRING
+// =======================================================
+
+function getString(record) {
+
+    if (record.string !== undefined) {
+
+        return record.string;
+
+    }
+
+
+    if (record.STRING !== undefined) {
+
+        return record.STRING;
+
+    }
+
+
+    if (record.stringValue !== undefined) {
+
+        return record.stringValue;
+
+    }
+
+
+    return "---";
+
+}
+
+
+// =======================================================
+// CREATE DATE FOR SORTING
+// =======================================================
+
+function getRecordDate(record) {
+
+    let date =
+        getDate(record);
+
+    let time =
+        getTime(record);
+
+
+    /*
+    Convert:
+
+        2026-08-30
+        20:45:04
+
+    Into:
+
+        2026-08-30T20:45:04
+    */
+
+    if (
+        date !== "---" &&
+        time !== "---"
+    ) {
+
+        const combined =
+            `${date}T${time}`;
+
+
+        const result =
+            new Date(combined);
+
+
+        if (!isNaN(result.getTime())) {
+
+            return result;
+
+        }
+
+    }
+
+
+    /*
+    If timestamp exists,
+    use it as a backup.
+    */
+
+    if (record.timestamp !== undefined) {
+
+        const result =
+            new Date(record.timestamp);
+
+
+        if (!isNaN(result.getTime())) {
+
+            return result;
+
+        }
+
+    }
+
+
+    return new Date(0);
+
+}
+
+
+// =======================================================
+// FORMAT FLOAT
+// =======================================================
+
+function formatFloat(value) {
+
+    const number =
+        Number(value);
+
+
+    if (isNaN(number)) {
+
+        return "0.00";
+
+    }
+
+
+    return number.toFixed(2);
+
+}
+
+
+// =======================================================
+// FORMAT DATE
+// =======================================================
+
+function formatDate(date) {
+
+    const year =
+        date.getFullYear();
+
+
+    const month =
+        String(date.getMonth() + 1)
+            .padStart(2, "0");
+
+
+    const day =
+        String(date.getDate())
+            .padStart(2, "0");
+
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
+// =======================================================
+// FORMAT TIME
+// =======================================================
+
+function formatTime(date) {
+
+    const hours =
+        String(date.getHours())
+            .padStart(2, "0");
+
+
+    const minutes =
+        String(date.getMinutes())
+            .padStart(2, "0");
+
+
+    const seconds =
+        String(date.getSeconds())
+            .padStart(2, "0");
+
+
+    return `${hours}:${minutes}:${seconds}`;
+
+}
+
+
+// =======================================================
+// EMPTY HISTORY
+// =======================================================
+
+function showEmptyHistory() {
+
+    const tableBody =
+        document.getElementById("historyBody");
+
+
+    if (!tableBody) {
         return;
     }
 
 
-    if (connected) {
+    tableBody.innerHTML = `
 
-        connectionStatus.textContent =
-            "● ESP32 Online";
+        <tr>
 
-        connectionStatus.className =
-            "status online";
+            <td
+                colspan="5"
+                class="empty"
+            >
 
-    }
-    else {
+                <div class="empty-icon">
+                    📋
+                </div>
 
-        connectionStatus.textContent =
-            "● ESP32 Offline";
+                <strong>
+                    No history records yet.
+                </strong>
 
-        connectionStatus.className =
-            "status offline";
+                <br>
 
-    }
+                <span>
+                    Records collected by the ESP32
+                    will appear here.
+                </span>
+
+            </td>
+
+        </tr>
+
+    `;
 
 }
 
 
-// =====================================================
-// LOAD HISTORY
-// =====================================================
+// =======================================================
+// UPDATE SUMMARY
+// =======================================================
 
-async function loadHistory() {
+function updateSummary(records) {
 
-    try {
-
-        const response =
-            await fetch(
-                "/api/history",
-                {
-                    method: "GET",
-                    cache: "no-store"
-                }
-            );
+    const total =
+        document.getElementById("totalRecords");
 
 
-        if (!response.ok) {
-
-            throw new Error(
-                "ESP32 returned HTTP " +
-                response.status
-            );
-
-        }
+    const latestDate =
+        document.getElementById("latestDate");
 
 
-        const records =
-            await response.json();
+    const latestTime =
+        document.getElementById("latestTime");
 
 
-        setConnectionStatus(true);
+    // TOTAL
 
+    if (total) {
 
-        // -------------------------------------------------
-        // CLEAR TABLE
-        // -------------------------------------------------
-
-        historyBody.innerHTML = "";
-
-
-        // -------------------------------------------------
-        // NO RECORDS
-        // -------------------------------------------------
-
-        if (
-            !Array.isArray(records) ||
-            records.length === 0
-        ) {
-
-            historyMessage.textContent =
-                "No history records yet.";
-
-            historyMessage.style.display =
-                "block";
-
-
-            recordCount.textContent =
-                "0";
-
-
-            secondsCount.textContent =
-                "0";
-
-
-            return;
-
-        }
-
-
-        historyMessage.style.display =
-            "none";
-
-
-        // -------------------------------------------------
-        // SORT NEWEST FIRST
-        //
-        // Arduino already sends newest first.
-        // This additional sort ensures that the newest
-        // record remains at the top.
-        // -------------------------------------------------
-
-        records.sort(function(a, b) {
-
-            const secondsA =
-                Number(a.seconds || 0);
-
-            const secondsB =
-                Number(b.seconds || 0);
-
-            return secondsB - secondsA;
-
-        });
-
-
-        // -------------------------------------------------
-        // UPDATE RECORD COUNT
-        // -------------------------------------------------
-
-        recordCount.textContent =
+        total.textContent =
             records.length;
 
+    }
 
-        // -------------------------------------------------
-        // LATEST SECONDS
-        // -------------------------------------------------
 
-        if (records.length > 0) {
+    // NO DATA
 
-            secondsCount.textContent =
-                records[0].seconds ?? 0;
+    if (records.length === 0) {
 
+        if (latestDate) {
+            latestDate.textContent = "---";
         }
 
+        if (latestTime) {
+            latestTime.textContent = "---";
+        }
 
-        // -------------------------------------------------
-        // DISPLAY RECORDS
-        // -------------------------------------------------
-
-        records.forEach(function(record) {
-
-            const row =
-                document.createElement("tr");
-
-
-            // -------------------------------------------------
-            // DATE
-            // -------------------------------------------------
-
-            const date =
-                record.date ?? "-";
-
-
-            // -------------------------------------------------
-            // TIME
-            // -------------------------------------------------
-
-            const time =
-                record.time ?? "-";
-
-
-            // -------------------------------------------------
-            // FLOAT
-            // -------------------------------------------------
-
-            let floatValue =
-                "-";
-
-
-            if (
-                record.float !== undefined &&
-                record.float !== null
-            ) {
-
-                const number =
-                    Number(record.float);
-
-
-                if (!isNaN(number)) {
-
-                    floatValue =
-                        number.toFixed(2);
-
-                }
-                else {
-
-                    floatValue =
-                        String(record.float);
-
-                }
-
-            }
-
-
-            // -------------------------------------------------
-            // INTEGER
-            // -------------------------------------------------
-
-            let integerValue =
-                "-";
-
-
-            if (
-                record.integer !== undefined &&
-                record.integer !== null
-            ) {
-
-                integerValue =
-                    String(
-                        parseInt(
-                            record.integer,
-                            10
-                        )
-                    );
-
-            }
-
-
-            // -------------------------------------------------
-            // STRING
-            // -------------------------------------------------
-
-            const stringValue =
-                record.string ?? "-";
-
-
-            // -------------------------------------------------
-            // CREATE ROW
-            // -------------------------------------------------
-
-            row.innerHTML = `
-
-                <td>
-                    ${escapeHTML(date)}
-                </td>
-
-                <td class="time-cell">
-                    ${escapeHTML(time)}
-                </td>
-
-                <td class="float-cell">
-                    ${escapeHTML(floatValue)}
-                </td>
-
-                <td class="integer-cell">
-                    ${escapeHTML(integerValue)}
-                </td>
-
-                <td class="string-cell">
-                    ${escapeHTML(stringValue)}
-                </td>
-
-            `;
-
-
-            // -------------------------------------------------
-            // NEWEST RECORD
-            // -------------------------------------------------
-
-            if (
-                records.indexOf(record) === 0
-            ) {
-
-                row.classList.add(
-                    "latest-record"
-                );
-
-            }
-
-
-            historyBody.appendChild(row);
-
-        });
+        return;
 
     }
-    catch (error) {
-
-        console.error(
-            "History loading error:",
-            error
-        );
 
 
-        setConnectionStatus(false);
+    // LATEST RECORD
+
+    const latest =
+        records[0];
 
 
-        historyMessage.textContent =
-            "Unable to connect to ESP32.";
+    if (latestDate) {
+
+        latestDate.textContent =
+            getDate(latest);
+
+    }
 
 
-        historyMessage.style.display =
-            "block";
+    if (latestTime) {
+
+        latestTime.textContent =
+            getTime(latest);
 
     }
 
 }
 
 
-// =====================================================
-// LOAD ESP32 STATUS
-// =====================================================
+// =======================================================
+// LOAD LOCAL STORAGE
+// =======================================================
 
-async function loadStatus() {
+function loadLocalHistory() {
 
     try {
 
-        const response =
-            await fetch(
-                "/api/status",
-                {
-                    method: "GET",
-                    cache: "no-store"
-                }
+        const saved =
+            localStorage.getItem(
+                "storageHistory"
             );
 
 
-        if (!response.ok) {
+        if (!saved) {
 
-            throw new Error(
-                "Status request failed"
-            );
+            historyRecords = [];
+
+        }
+
+        else {
+
+            historyRecords =
+                JSON.parse(saved);
 
         }
 
 
-        const data =
-            await response.json();
+        if (!Array.isArray(historyRecords)) {
 
-
-        setConnectionStatus(true);
-
-
-        // -------------------------------------------------
-        // COLLECTION STATUS
-        // -------------------------------------------------
-
-        if (collectionStatus) {
-
-            if (data.collecting) {
-
-                collectionStatus.textContent =
-                    "COLLECTING";
-
-                collectionStatus.className =
-                    "collecting";
-
-            }
-            else {
-
-                collectionStatus.textContent =
-                    "STOPPED";
-
-                collectionStatus.className =
-                    "stopped";
-
-            }
+            historyRecords = [];
 
         }
 
 
-        // -------------------------------------------------
-        // RECORD COUNT
-        // -------------------------------------------------
-
-        if (recordCount) {
-
-            recordCount.textContent =
-                data.records ?? 0;
-
-        }
-
-
-        // -------------------------------------------------
-        // SECONDS
-        // -------------------------------------------------
-
-        if (secondsCount) {
-
-            secondsCount.textContent =
-                data.seconds ?? 0;
-
-        }
+        displayHistory(historyRecords);
 
     }
+
     catch (error) {
 
-        console.error(
-            "Status error:",
+        console.log(
+            "Local history error:",
             error
         );
 
 
-        setConnectionStatus(false);
+        historyRecords = [];
+
+        displayHistory([]);
 
     }
 
 }
 
 
-// =====================================================
-// SEARCH HISTORY
-// =====================================================
+// =======================================================
+// SAVE HISTORY LOCALLY
+// =======================================================
 
-if (searchInput) {
+function saveLocalHistory(records) {
 
-    searchInput.addEventListener(
-        "input",
-        function() {
+    try {
 
-            const filter =
-                searchInput.value
-                    .trim()
-                    .toLowerCase();
+        localStorage.setItem(
+            "storageHistory",
+            JSON.stringify(records)
+        );
 
+    }
 
-            const rows =
-                historyBody.querySelectorAll(
-                    "tr"
-                );
+    catch (error) {
 
+        console.log(
+            "Unable to save history:",
+            error
+        );
 
-            rows.forEach(function(row) {
-
-                const text =
-                    row.textContent
-                        .toLowerCase();
-
-
-                if (
-                    text.includes(filter)
-                ) {
-
-                    row.style.display =
-                        "";
-
-                }
-                else {
-
-                    row.style.display =
-                        "none";
-
-                }
-
-            });
-
-        }
-    );
+    }
 
 }
 
 
-// =====================================================
-// REFRESH BUTTON
-// =====================================================
-
-if (refreshButton) {
-
-    refreshButton.addEventListener(
-        "click",
-        async function() {
-
-            refreshButton.disabled =
-                true;
-
-
-            refreshButton.textContent =
-                "Loading...";
-
-
-            await loadHistory();
-
-            await loadStatus();
-
-
-            refreshButton.disabled =
-                false;
-
-
-            refreshButton.textContent =
-                "Refresh";
-
-        }
-    );
-
-}
-
-
-// =====================================================
+// =======================================================
 // CLEAR HISTORY
-// =====================================================
+// =======================================================
 
-if (clearButton) {
+function clearHistory() {
 
-    clearButton.addEventListener(
-        "click",
-        async function() {
-
-            const confirmed =
-                confirm(
-                    "Are you sure you want to clear all history records?"
-                );
+    const confirmation =
+        confirm(
+            "Are you sure you want to clear all history records?"
+        );
 
 
-            if (!confirmed) {
-                return;
-            }
+    if (!confirmation) {
+
+        return;
+
+    }
 
 
-            try {
+    /*
+    Clear browser storage
+    */
 
-                clearButton.disabled =
-                    true;
-
-
-                clearButton.textContent =
-                    "Clearing...";
-
-
-                const response =
-                    await fetch(
-                        "/api/clear",
-                        {
-                            method: "GET",
-                            cache: "no-store"
-                        }
-                    );
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        "Unable to clear history"
-                    );
-
-                }
-
-
-                await loadHistory();
-
-                await loadStatus();
-
-
-                alert(
-                    "History cleared successfully."
-                );
-
-            }
-            catch (error) {
-
-                console.error(
-                    "Clear history error:",
-                    error
-                );
-
-
-                alert(
-                    "Failed to clear history."
-                );
-
-            }
-            finally {
-
-                clearButton.disabled =
-                    false;
-
-
-                clearButton.textContent =
-                    "Clear History";
-
-            }
-
-        }
+    localStorage.removeItem(
+        "storageHistory"
     );
+
+
+    /*
+    Clear current records
+    */
+
+    historyRecords = [];
+
+
+    /*
+    Update table
+    */
+
+    showEmptyHistory();
+
+
+    /*
+    Update counters
+    */
+
+    updateSummary([]);
+
+
+    /*
+    Optional ESP32 endpoint.
+
+    If your Arduino code supports:
+
+        DELETE /api/history
+
+    this will also clear ESP32 history.
+    */
+
+    fetch("/api/history", {
+        method: "DELETE"
+    })
+
+    .then(function (response) {
+
+        console.log(
+            "ESP32 history clear response:",
+            response.status
+        );
+
+    })
+
+    .catch(function (error) {
+
+        console.log(
+            "ESP32 clear unavailable:",
+            error
+        );
+
+    });
 
 }
 
 
-// =====================================================
-// BACK BUTTON
-// =====================================================
+// =======================================================
+// HTML ESCAPE
+// =======================================================
 
-if (backButton) {
+function escapeHTML(value) {
 
-    backButton.addEventListener(
-        "click",
-        function() {
+    return String(value)
 
-            window.location.href =
-                "ap-dashboard.html";
+        .replace(
+            /&/g,
+            "&amp;"
+        )
 
-        }
-    );
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
 
 }
 
 
-// =====================================================
+// =======================================================
 // AUTOMATIC REFRESH
-// =====================================================
-//
-// Refresh history every 1 second.
-// This matches the Arduino's 1-second
-// data collection interval.
-//
+// =======================================================
 
-setInterval(
-    function() {
+/*
+    The ESP32 history is refreshed every 5 seconds.
 
-        loadHistory();
+    This means if the ESP32 records:
 
-        loadStatus();
+    20:45:02
+    20:45:03
+    20:45:04
 
-    },
-    1000
-);
+    the newest one will automatically
+    move to the top.
+*/
 
+setInterval(function () {
 
-// =====================================================
-// INITIAL LOAD
-// =====================================================
+    loadHistory();
 
-loadHistory();
-
-loadStatus();
+}, 5000);
