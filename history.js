@@ -371,6 +371,7 @@ historyRef.on(
 
 
        // =================================================
+// =================================================
 // SORT: NEWEST RECORD FIRST
 // =================================================
 
@@ -379,22 +380,34 @@ records.sort(function(a, b) {
     const dataA = a.data || {};
     const dataB = b.data || {};
 
-    const timestampA =
-        Number(
-            dataA.timestamp ||
-            dataA.timestampRaw ||
-            dataA.createdAt ||
-            0
-        );
+    // Get timestamp from the available Firebase field
+    function getTimestamp(data) {
 
-    const timestampB =
-        Number(
-            dataB.timestamp ||
-            dataB.timestampRaw ||
-            dataB.createdAt ||
-            0
-        );
+        let value =
+            data.timestamp ??
+            data.timestampRaw ??
+            data.createdAt ??
+            data.timeStamp ??
+            0;
 
+        value = Number(value);
+
+        if (isNaN(value)) {
+            return 0;
+        }
+
+        // Convert seconds to milliseconds
+        if (value < 100000000000) {
+            value = value * 1000;
+        }
+
+        return value;
+    }
+
+    const timestampA = getTimestamp(dataA);
+    const timestampB = getTimestamp(dataB);
+
+    // NEWEST → OLDEST
     return timestampB - timestampA;
 
 });
