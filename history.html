@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -21,6 +22,7 @@
 
 
 <body>
+
 
     <!-- =====================================================
          HEADER
@@ -50,6 +52,7 @@
                 ● ESP32 Offline
             </span>
 
+
             <button
                 id="backButton"
                 class="back-button"
@@ -64,14 +67,14 @@
 
 
     <!-- =====================================================
-         MAIN
+         MAIN CONTENT
          ===================================================== -->
 
     <main class="container">
 
 
         <!-- =================================================
-             PAGE TITLE
+             TITLE
              ================================================= -->
 
         <section class="page-title">
@@ -94,14 +97,17 @@
 
         <section class="controls">
 
+
             <input
                 type="text"
                 id="historySearch"
-                placeholder="Search history..."
+                placeholder="Search date, time, float, integer, or string..."
+                autocomplete="off"
             >
 
 
             <button
+                type="button"
                 id="refreshButton"
                 class="button refresh"
             >
@@ -110,6 +116,7 @@
 
 
             <button
+                type="button"
                 id="clearButton"
                 class="button clear"
             >
@@ -121,10 +128,11 @@
 
 
         <!-- =================================================
-             COLLECTION STATUS
+             STATUS CARDS
              ================================================= -->
 
         <section class="info-cards">
+
 
             <div class="info-card">
 
@@ -132,33 +140,42 @@
                     Collection Status
                 </span>
 
-                <strong id="collectionStatus">
+                <strong
+                    id="collectionStatus"
+                    class="stopped"
+                >
                     STOPPED
                 </strong>
 
             </div>
 
 
+
             <div class="info-card">
 
                 <span>
-                    Records
+                    Total Records
                 </span>
 
-                <strong id="recordCount">
+                <strong
+                    id="recordCount"
+                >
                     0
                 </strong>
 
             </div>
 
 
+
             <div class="info-card">
 
                 <span>
-                    Seconds
+                    Current Seconds
                 </span>
 
-                <strong id="secondsCount">
+                <strong
+                    id="secondsCount"
+                >
                     0
                 </strong>
 
@@ -176,7 +193,7 @@
             id="historyMessage"
             class="history-message"
         >
-            Waiting for ESP32 data...
+            Loading history...
         </div>
 
 
@@ -187,30 +204,33 @@
 
         <section class="table-container">
 
-            <table id="historyTable">
+            <table
+                id="historyTable"
+            >
+
 
                 <thead>
 
                     <tr>
 
                         <th>
-                            Date
+                            DATE
                         </th>
 
                         <th>
-                            Time
+                            TIME
                         </th>
 
                         <th>
-                            Float
+                            FLOAT
                         </th>
 
                         <th>
-                            Integer
+                            INTEGER
                         </th>
 
                         <th>
-                            String
+                            STRING
                         </th>
 
                     </tr>
@@ -218,9 +238,18 @@
                 </thead>
 
 
-                <tbody id="historyBody">
+
+                <tbody
+                    id="historyBody"
+                >
+
+                    <!--
+                        JavaScript will automatically
+                        insert history records here.
+                    -->
 
                 </tbody>
+
 
             </table>
 
@@ -230,12 +259,15 @@
     </main>
 
 
+
     <!-- =====================================================
          JAVASCRIPT
          ===================================================== -->
 
     <script src="history.js"></script>
 
+
 </body>
 
 </html>
+```
